@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cf-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+  </defs>
+  <!-- Full bleed dark background -->
+  <rect width="512" height="512" fill="url(#cf-bg)" />
+
+  <!-- Back Card: Mint Emerald Glowing Line, tilted 14 deg -->
+  <g transform="rotate(14 256 256)">
+    <rect x="96" y="146" width="320" height="220" rx="36" fill="none" stroke="#34D399" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" />
+    <line x1="96" y1="205" x2="416" y2="205" stroke="#34D399" stroke-width="20" stroke-linecap="round" opacity="0.85" />
+    <circle cx="360" cy="290" r="16" fill="#FBBF24" opacity="0.8" />
+  </g>
+
+  <!-- Front Card: Pure White Glowing Line, tilted -8 deg -->
+  <g transform="rotate(-8 256 256)">
+    <!-- Dark mask interior so back card does not create clutter -->
+    <rect x="86" y="146" width="340" height="220" rx="36" fill="#0F172A" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Magnetic stripe -->
+    <line x1="86" y1="205" x2="426" y2="205" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" />
+    <!-- EMV Chip Line Box in Gold -->
+    <rect x="136" y="260" width="56" height="42" rx="10" fill="none" stroke="#FBBF24" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Dual accent dots -->
+    <circle cx="236" cy="281" r="12" fill="#34D399" />
+    <circle cx="272" cy="281" r="12" fill="#FBBF24" />
+    <!-- Contactless waves in pure white -->
+    <g transform="translate(340, 252)" stroke="#FFFFFF" fill="none" stroke-linecap="round">
+      <path d="M0 10 A20 20 0 0 1 0 46" stroke-width="12" />
+      <path d="M16 2 A34 34 0 0 1 16 54" stroke-width="12" />
+    </g>
+  </g>
+</svg>

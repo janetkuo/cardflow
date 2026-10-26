@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>CardFlow - Smart Credit Card & Loyalty Tracker</title>
+  
+  <!-- PWA Meta Tags & Responsive Dynamic URL Bar Theme -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+
+  <script>
+    // Immediate Theme & URL Bar Synchronization to prevent color mismatch flash
+    (function() {
+      try {
+        var theme = localStorage.getItem('cardflow_theme_v1');
+        var isDark = theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+        var color = isDark ? '#0f172a' : '#ffffff';
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        metas.forEach(function(m) { m.setAttribute('content', color); });
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Google Identity Services (GIS) for Google Drive Sync -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            indigo: {
+              50: 'rgb(var(--pf-primary-rgb) / 0.12)',
+              100: '#F1F5F9',
+              200: 'rgb(var(--pf-primary-rgb) / 0.35)',
+              300: 'rgb(var(--pf-primary-rgb) / 0.5)',
+              400: 'rgb(var(--pf-primary-rgb) / 0.7)',
+              500: 'rgb(var(--pf-primary-rgb) / <alpha-value>)',
+              600: 'rgb(var(--pf-primary-rgb) / <alpha-value>)',
+              700: 'rgb(var(--pf-primary-dark-rgb) / <alpha-value>)',
+              800: 'rgb(var(--pf-primary-dark-rgb) / 0.85)',
+              900: 'rgb(var(--pf-primary-dark-rgb) / 0.95)',
+              950: 'rgb(var(--pf-primary-dark-rgb) / 0.4)',
+            },
+            emerald: {
+              200: '#A7F3D0',
+              300: '#6EE7B7',
+              400: '#34D399',
+              500: 'var(--pf-income)',
+              600: 'rgb(var(--pf-income-rgb) / 0.9)',
+            },
+            rose: {
+              200: '#FECDD3',
+              300: '#FDA4AF',
+              400: '#FB7185',
+              500: 'var(--pf-expense)',
+              600: 'rgb(var(--pf-expense-rgb) / 0.9)',
+            },
+            pocket: {
+              primary: 'var(--pf-primary, #4EB896)',
+              income: 'var(--pf-income, #3BBF8F)',
+              expense: 'var(--pf-expense, #F47B89)',
+              card: '#ffffff',
+              darkcard: '#1e293b'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Noto Sans TC', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --pf-primary: #4EB896;
+      --pf-primary-rgb: 78 184 150;
+      --pf-primary-dark: #3DA080;
+      --pf-primary-dark-rgb: 61 160 128;
+      --pf-income: #3BBF8F;
+      --pf-income-rgb: 59 191 143;
+      --pf-expense: #F47B89;
+      --pf-expense-rgb: 244 123 137;
+      --pf-bg-light: #F3F7F5;
+      --pf-bg-dark: #17201D;
+    }
+    body {
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      background-color: var(--pf-bg-light, #F3F7F5);
+      transition: background-color 0.25s ease;
+    }
+    html.dark body {
+      background-color: var(--pf-bg-dark, #17201D);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .donut-slice {
+      transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+      transform-origin: 100px 100px;
+      cursor: pointer;
+    }
+    .donut-slice:hover {
+      opacity: 0.85;
+      filter: drop-shadow(0 0 5px rgba(78, 184, 150, 0.4));
+      transform: scale(1.03);
+    }
+    .palette-btn {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .palette-btn:hover {
+      transform: translateY(-1px);
+    }
+    .palette-btn:active {
+      transform: scale(0.97);
+    }
+    #app-subtitle {
+      white-space: nowrap !important;
+    }
+  </style>
+</head>
+<body class="text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-2.5 sm:px-4 py-2 sm:py-3">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
+      <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink">
+        <img src="./icon.svg" alt="CardFlow" class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl shadow-sm border border-slate-700/40 shrink-0 overflow-hidden">
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+            Card<span class="text-indigo-600 dark:text-indigo-400">Flow</span>
+          </h1>
+          <p id="app-subtitle" class="text-[10px] sm:text-xs text-slate-400 font-medium whitespace-nowrap truncate max-w-[125px] sm:max-w-none">美卡與常旅客權益追蹤</p>
+        </div>
+      </div>
+
+      <!-- Controls & Actions -->
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <!-- Fold State Indicator Pill -->
+        <div id="fold-indicator" class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50">
+          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+          <span id="screen-mode-text">雙欄展開模式 (Dual-Pane)</span>
+        </div>
+
+        <!-- Language Switcher Toggle Button -->
+        <button id="lang-toggle-btn" title="Switch Language / 切換語言" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1 text-xs font-bold border border-slate-200 dark:border-slate-700/60 shrink-0">
+          <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+          <span id="lang-label" class="hidden sm:inline">English</span>
+        </button>
+
+        <!-- Morandi Palette Quick Switcher Button -->
+        <button id="palette-toggle-btn" title="Morandi Palette / 莫蘭迪色盤" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700/60 shrink-0">
+          <span id="palette-quick-dot" class="w-3 h-3 rounded-full shadow-sm shrink-0" style="background-color: var(--pf-primary, #4EB896)"></span>
+          <span id="palette-quick-label" class="hidden sm:inline text-[11px] font-semibold text-slate-600 dark:text-slate-300">色盤</span>
+        </button>
+
+        <!-- Settings / Data Reset Modal Button -->
+        <button id="open-settings-btn" title="Settings & Data Backup" class="p-1.5 sm:p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+
+        <!-- Dark mode toggle -->
+        <button id="theme-toggle" class="p-1.5 sm:p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">
+          <svg id="moon-icon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <svg id="sun-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Overview Info Banner (Slim & Dismissible) -->
+  <div id="demo-mode-banner" class="bg-slate-900/95 dark:bg-slate-850/95 text-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-700/60 shadow-xs transition-all duration-200">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 text-[11px] sm:text-xs">
+      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+        <span id="demo-banner-tag" class="px-1.5 py-0.5 rounded-full bg-white/20 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase shrink-0">12 張神卡配置</span>
+        <span id="demo-banner-text" class="font-medium text-white/90 truncate sm:whitespace-normal">
+          💳 已為你預先配置 12 張頂級美卡、常客會籍與週期性折抵額度。所有資料安全存於本地裝置。
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="banner-reset-month-btn" type="button" class="px-2.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold active:scale-95 shadow-xs transition text-[11px] flex items-center gap-1 shrink-0" title="重置本月狀態">
+          <span id="banner-reset-text">🔄 重置本月</span>
+        </button>
+        <button id="close-banner-btn" type="button" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition shrink-0" title="關閉提醒 / Dismiss banner" aria-label="Close notification banner">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Responsive Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-4 pb-24 sm:pb-8 space-y-4">
+    
+    <!-- Top View Navigation Tabs (Visible on Unfolded / Desktop, Hidden on Folded / Mobile) -->
+    <div class="hidden md:flex sticky top-[57px] sm:top-[65px] z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-1.5 border border-slate-200/80 dark:border-slate-800 shadow-xs items-center gap-1 overflow-x-auto hide-scrollbar">
+      <button id="nav-btn-credits" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-xs shrink-0 whitespace-nowrap">
+        <span>⚡</span>
+        <span id="tab-label-credits">待用權益</span>
+      </button>
+      <button id="nav-btn-cards" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 whitespace-nowrap">
+        <span>🎴</span>
+        <span id="tab-label-cards">我的卡片 (12)</span>
+      </button>
+      <button id="nav-btn-loyalty" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 whitespace-nowrap">
+        <span>🏨</span>
+        <span id="tab-label-loyalty">會籍與房券</span>
+      </button>
+      <button id="nav-btn-advisor" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 whitespace-nowrap">
+        <span>🎯</span>
+        <span id="tab-label-advisor">刷卡指南 & 統計</span>
+      </button>
+    </div>
+
+    <!-- ================= SUBVIEW 1: DUE CREDITS (HOME) ================= -->
+    <div id="subview-credits" class="space-y-4">
+      
+      <!-- Hero Balance Card (Morandi Ambient Anchor) -->
+      <div class="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700/90 text-white shadow-xl shadow-indigo-600/15 border border-white/20">
+        <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/15 blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+
+        <div class="relative z-10 space-y-3">
+          <div class="flex items-center justify-between text-white/95 text-xs font-bold uppercase tracking-wider">
+            <span id="monthly-credits-title" class="flex items-center gap-1.5">
+              <span>⚡</span>
+              <span>本月待用折抵額度</span>
+            </span>
+            <span id="balance-badge" class="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm">尚有待領 ⏳</span>
+          </div>
+
+          <div class="flex items-baseline justify-between gap-2 flex-wrap">
+            <div class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-baseline gap-1">
+              <span>$</span><span id="monthly-remaining-val">77.95</span>
+              <span class="text-xs font-semibold text-white/80 ml-2" id="monthly-due-label">本月尚未折抵</span>
+            </div>
+            <button id="donut-cards-count-badge" class="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full border border-white/30 backdrop-blur-sm transition flex items-center gap-1" title="點擊自選持卡 / Select Cards">
+              <span>🎴</span>
+              <span>12 張已持有</span>
+            </button>
+          </div>
+
+          <!-- Frosted Sub-metrics Chips -->
+          <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/20">
+            <!-- Monthly Progress Chip -->
+            <div class="bg-white/15 dark:bg-black/25 backdrop-blur-md rounded-2xl p-3 border border-white/25 shadow-sm">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-white/90">
+                <span class="w-2 h-2 rounded-full bg-amber-300 shadow-sm shrink-0"></span>
+                <span id="monthly-progress-title">本月折抵進度</span>
+              </div>
+              <div class="text-base sm:text-lg font-extrabold text-white mt-1 drop-shadow-sm">
+                <span id="monthly-claimed-ratio">0 / 4</span> <span class="text-xs font-medium text-white/80" id="monthly-unit-label">項已折抵</span>
+              </div>
+            </div>
+
+            <!-- Annual Value Chip -->
+            <div class="bg-white/15 dark:bg-black/25 backdrop-blur-md rounded-2xl p-3 border border-white/25 shadow-sm">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-white/90">
+                <span class="w-2 h-2 rounded-full bg-emerald-300 shadow-sm shrink-0"></span>
+                <span id="annual-value-title">年度解鎖價值</span>
+              </div>
+              <div class="text-base sm:text-lg font-extrabold text-white mt-1 drop-shadow-sm">
+                +$<span id="annual-value-amount">1,389</span><span class="text-xs font-medium text-white/80" id="annual-unit-label">/年</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Period Filter Pills -->
+      <div class="flex items-center justify-between gap-2 pt-1">
+        <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar py-0.5">
+          <button id="period-all-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs shrink-0">
+            全部
+          </button>
+          <button id="period-monthly-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
+            每月即期 ($77.95)
+          </button>
+          <button id="period-semiannual-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
+            半年期與每季
+          </button>
+          <button id="period-annual-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
+            年度續卡 ($1,139)
+          </button>
+        </div>
+        <div class="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">
+          <span id="credits-count-label">9 項折抵</span>
+        </div>
+      </div>
+
+      <!-- Credits Feed List -->
+      <div id="credits-feed-container" class="space-y-2.5">
+        <!-- Dynamically populated by JS -->
+      </div>
+    </div>
+
+    <!-- ================= SUBVIEW 2: CARDS LIST ================= -->
+    <div id="subview-cards" class="hidden space-y-4">
+      <!-- Filter & Search Bar -->
+      <div class="space-y-2.5 bg-white dark:bg-slate-900/90 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
+            <button id="issuer-all-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shrink-0">
+              全部 (12)
+            </button>
+            <button id="issuer-amex-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+              Amex (6)
+            </button>
+            <button id="issuer-chase-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+              Chase (5)
+            </button>
+            <button id="issuer-c1-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+              Capital One (1)
+            </button>
+          </div>
+          <input type="text" id="cards-search-input" placeholder="搜尋卡片名稱、回饋倍率、權益..." class="px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <!-- Ownership Sub-Filter Bar & Batch Manage Button -->
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
+            <button id="card-filter-all-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0">
+              全部卡片
+            </button>
+            <button id="card-filter-owned-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 shrink-0">
+              ✓ 僅顯示已持有
+            </button>
+            <button id="card-filter-unowned-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 shrink-0">
+              ✕ 僅顯示未持有
+            </button>
+          </div>
+          <button id="open-manage-cards-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+            <span>⚙️</span>
+            <span id="manage-cards-btn-label">快速勾選持卡</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="cards-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <!-- Dynamically populated by JS -->
+      </div>
+    </div>
+
+    <!-- ================= SUBVIEW 3: LOYALTY & FNC ================= -->
+    <div id="subview-loyalty" class="hidden space-y-4">
+      <!-- Free Night Certificates Box -->
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 id="fnc-section-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <span>🎟️</span>
+              <span>年度免費住宿券 (FNC) 到期追蹤</span>
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5" id="fnc-section-desc">清楚掌握過期倒數，避免高價值住宿券失效。</p>
+          </div>
+          <button id="open-add-fnc-btn" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs flex items-center gap-1">
+            <span>+</span>
+            <span id="add-fnc-btn-label">新增住宿券</span>
+          </button>
+        </div>
+
+        <div id="fnc-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Loyalty & Elite Statuses Overview Card -->
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 id="loyalty-card-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>👑</span>
+            <span>信用卡自帶高階會籍</span>
+          </h3>
+          <span id="loyalty-no-stays-badge" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+            持卡即享免保級
+          </span>
+        </div>
+
+        <!-- Dynamically populated in selected language -->
+        <div id="loyalty-status-list" class="space-y-2">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Transferable Points Cheat Sheet -->
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <h3 id="transfer-cheat-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+          <span>💎</span>
+          <span>四大點數體系轉點攻略與兌換建議</span>
+        </h3>
+
+        <!-- Dynamically populated in selected language -->
+        <div id="transfer-cheat-list" class="space-y-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SUBVIEW 4: CARD ADVISOR & DONUT ANALYTICS ================= -->
+    <div id="subview-advisor" class="hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div>
+          <h3 id="advisor-heading" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>🎯</span>
+            <span>「這筆消費刷哪張？」最佳決策推薦</span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mt-0.5" id="advisor-subheading">選擇消費類別，系統將自動比對 12 張卡的最高點數倍率與保險權益。</p>
+        </div>
+
+        <!-- Category Selector Pills -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button onclick="selectAdvisorCategory('dining')" id="adv-dining-btn" class="adv-cat-btn p-3 rounded-2xl border text-center transition bg-indigo-50 border-indigo-200 dark:bg-indigo-950/60 dark:border-indigo-800/60">
+            <div class="text-2xl mb-1">🍽️</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-dining">餐廳與外送</div>
+          </button>
+          <button onclick="selectAdvisorCategory('flights')" id="adv-flights-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">✈️</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-flights">機票預訂</div>
+          </button>
+          <button onclick="selectAdvisorCategory('hotels')" id="adv-hotels-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">🏨</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-hotels">飯店住宿</div>
+          </button>
+          <button onclick="selectAdvisorCategory('office')" id="adv-office-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">📦</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-office">辦公文具與電信</div>
+          </button>
+          <button onclick="selectAdvisorCategory('grocery')" id="adv-grocery-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">🛒</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-grocery">超市生鮮採買</div>
+          </button>
+          <button onclick="selectAdvisorCategory('gas')" id="adv-gas-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">⛽</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-gas">加油與交通</div>
+          </button>
+          <button onclick="selectAdvisorCategory('foreign')" id="adv-foreign-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">🌍</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-foreign">海外實體 / 免手續費</div>
+          </button>
+          <button onclick="selectAdvisorCategory('catchall')" id="adv-catchall-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
+            <div class="text-2xl mb-1">⚡</div>
+            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-catchall">一般日常消費 (萬用 2x)</div>
+          </button>
+        </div>
+
+        <!-- Dynamic Recommendation Box -->
+        <div id="advisor-result-box" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <!-- Interactive SVG Donut Chart Card (Placed in Advisor & Analytics) -->
+      <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="category-breakdown-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>📊</span>
+            <span>折抵額度類別分佈</span>
+          </h2>
+        </div>
+
+        <!-- SVG Donut Chart -->
+        <div class="relative flex items-center justify-center py-2">
+          <svg id="donut-chart-svg" class="w-48 h-48 -rotate-90" viewBox="0 0 200 200">
+            <!-- Dynamically rendered by JS -->
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+            <span id="donut-center-title" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">年度總權益</span>
+            <span id="donut-center-val" class="text-xl font-extrabold text-slate-800 dark:text-white">$3,100+</span>
+            <span id="donut-center-sub" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">折抵價值</span>
+          </div>
+        </div>
+
+        <!-- Category Legend Grid -->
+        <div id="donut-legend-list" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Mobile Floating Action Button (FAB - Preserved for ID bindings) -->
+  <button id="floating-add-btn" class="hidden" aria-label="Add Item">+</button>
+
+  <!-- Bottom Navigation Bar (Folded / Phone Mode, Hidden on Unfolded / Desktop) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-lg">
+    <button id="mob-nav-credits" class="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 text-indigo-600 dark:text-indigo-400 font-bold min-w-0 select-none">
+      <span class="text-lg leading-none">⚡</span>
+      <span id="mob-label-credits" class="text-[11px] whitespace-nowrap">待用權益</span>
+    </button>
+    <button id="mob-nav-cards" class="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-600 min-w-0 select-none">
+      <span class="text-lg leading-none">🎴</span>
+      <span id="mob-label-cards" class="text-[11px] whitespace-nowrap">我的卡片</span>
+    </button>
+    <button id="mob-nav-loyalty" class="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-600 min-w-0 select-none">
+      <span class="text-lg leading-none">🏨</span>
+      <span id="mob-label-loyalty" class="text-[11px] whitespace-nowrap">會籍房券</span>
+    </button>
+    <button id="mob-nav-advisor" class="flex-1 py-1 flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-600 min-w-0 select-none">
+      <span class="text-lg leading-none">🎯</span>
+      <span id="mob-label-advisor" class="text-[11px] whitespace-nowrap">刷卡指南</span>
+    </button>
+  </nav>
+
+  <!-- Modal: Add Free Night Certificate (FNC) -->
+  <div id="fnc-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="fnc-modal-title" class="text-base font-bold text-slate-900 dark:text-white">新增免費住宿券 (FNC)</h3>
+        <button id="close-fnc-modal-btn" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="fnc-form" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" id="fnc-name-label">住宿券名稱</label>
+          <input type="text" id="fnc-name-input" required placeholder="例如: 萬豪 85,000 分免費住宿券 (Brilliant)" class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" id="fnc-issuer-label">常客計畫</label>
+            <select id="fnc-issuer-input" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+              <option value="Marriott">萬豪 Marriott Bonvoy</option>
+              <option value="IHG">洲際 IHG One Rewards</option>
+              <option value="Hyatt">凱悅 World of Hyatt</option>
+              <option value="Hilton">希爾頓 Hilton Honors</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" id="fnc-points-label">最高折抵點數</label>
+            <input type="text" id="fnc-points-input" required placeholder="例如: 85,000 點" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" id="fnc-expire-label">到期日期</label>
+          <input type="date" id="fnc-expire-input" required class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" id="cancel-fnc-btn" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">取消</button>
+          <button type="submit" id="save-fnc-btn" class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">儲存住宿券</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Settings & Backup -->
+  <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="settings-modal-title" class="text-base font-bold text-slate-900 dark:text-white">設定與資料管理</h3>
+        <button id="close-settings-btn" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Morandi Palettes Picker Section -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" id="palette-section-label">莫蘭迪風格色盤</label>
+        <div id="palettes-picker-container" class="grid grid-cols-3 gap-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Google Drive Cloud Sync Section -->
+      <div class="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 87.3 78" fill="none">
+              <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+              <path d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44A8.9 8.9 0 0 0 0 53h27.5z" fill="#00ac47"/>
+              <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.9 10.2z" fill="#ea4335"/>
+              <path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.4-4.5 1.2z" fill="#00832d"/>
+              <path d="M59.8 53h27.5c0-1.55-.4-3.1-1.2-4.5L72.35 22.8c-.8-1.4-1.95-2.5-3.3-3.3L55.3 43.3z" fill="#ffba00"/>
+              <path d="m27.5 53 16.15-28-13.75-23.8L16.15 25z" fill="#2684fc"/>
+            </svg>
+            <label class="text-xs font-bold text-slate-800 dark:text-slate-200" id="gdrive-section-title">Google Drive 雲端備份與同步</label>
+          </div>
+          <span id="gdrive-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+            未連線
+          </span>
+        </div>
+
+        <p class="text-[11px] text-slate-400 leading-relaxed" id="gdrive-section-desc">
+          透過 Google Drive 官方 API 將卡片與折抵進度安全儲存在個人雲端硬碟，支援多裝置跨端同步。
+        </p>
+
+        <!-- Actions Row -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" id="gdrive-backup-btn" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition flex items-center justify-center gap-1.5 border border-emerald-200 dark:border-emerald-800/40">
+            <span>☁️</span>
+            <span id="gdrive-backup-label">立即備份至 Drive</span>
+          </button>
+          <button type="button" id="gdrive-restore-btn" class="px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition flex items-center justify-center gap-1.5 border border-blue-200 dark:border-blue-800/40">
+            <span>📥</span>
+            <span id="gdrive-restore-label">自 Drive 雲端還原</span>
+          </button>
+        </div>
+
+        <!-- Auto Sync & Last Sync info -->
+        <div class="flex items-center justify-between pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          <label class="flex items-center gap-1.5 cursor-pointer select-none">
+            <input type="checkbox" id="gdrive-auto-sync-check" class="rounded text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5">
+            <span id="gdrive-auto-sync-label">變更時自動同步至 Drive</span>
+          </label>
+          <span id="gdrive-last-sync-label" class="text-[10px] text-slate-400">尚未同步</span>
+        </div>
+
+        <!-- Collapsible Client ID Toggle (Hidden by Default like PocketFlow) -->
+        <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+          <button id="gdrive-toggle-config-btn" type="button" class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span id="gdrive-toggle-config-label">Google Client ID 設定</span>
+          </button>
+
+          <div id="gdrive-client-id-box" class="hidden mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300" id="gdrive-client-id-label">Google OAuth Client ID</label>
+              <button type="button" id="gdrive-help-btn" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">如何取得？</button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input type="text" id="gdrive-client-id-input" placeholder="xxxxx.apps.googleusercontent.com" class="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-mono text-[11px]">
+              <button type="button" id="gdrive-save-client-id-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition">儲存</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sign Out Button (Visible only when connected) -->
+        <div id="gdrive-signout-row" class="hidden pt-1">
+          <button type="button" id="gdrive-signout-btn" class="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
+            登出 Google 帳號
+          </button>
+        </div>
+      </div>
+
+      <!-- Data Backup & Restore -->
+      <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" id="backup-section-label">本機 JSON 備份與還原</label>
+        <p class="text-[11px] text-slate-400" id="backup-section-desc">CardFlow 具備 100% 隱私性與本機端儲存。匯出 JSON 備份檔即可隨時轉移至其他裝置。</p>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button id="export-json-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700/60">
+            <span>📥</span>
+            <span id="export-json-label">匯出 JSON 備份</span>
+          </button>
+          <button id="import-json-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700/60">
+            <span>📤</span>
+            <span id="import-json-label">匯入 JSON 還原</span>
+          </button>
+          <input type="file" id="import-file-input" accept=".json" class="hidden">
+        </div>
+      </div>
+
+      <!-- Reset Month Status & Banner Control -->
+      <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">折抵進度與提醒設定</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="settings-reset-month-btn" type="button" class="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition border border-indigo-200 dark:border-indigo-800/40 flex items-center justify-center gap-1">
+            <span>🔄</span>
+            <span>重置本月折抵</span>
+          </button>
+          <button id="restore-banner-btn" type="button" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700/60 flex items-center justify-center gap-1">
+            <span>🔔</span>
+            <span>顯示提醒橫條</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reset Data to Factory Presets -->
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+        <button id="reset-factory-btn" class="w-full px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition border border-rose-200 dark:border-rose-800/40">
+          ⚠️ 還原為 12 張卡片預設值
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Manage Owned Cards -->
+  <div id="manage-cards-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h3 id="manage-cards-modal-title" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>🎴</span>
+            <span>自選持有的信用卡清單</span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mt-0.5" id="manage-cards-modal-sub">
+            勾選您目前擁有的卡片，折抵進度與圓餅圖將自動即時重算。
+          </p>
+        </div>
+        <button id="close-manage-cards-btn" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick action buttons -->
+      <div class="flex items-center justify-between text-xs py-1">
+        <div class="flex items-center gap-2">
+          <button id="select-all-cards-btn" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-semibold border border-indigo-200 dark:border-indigo-800/40">
+            ✓ 全部選取
+          </button>
+          <button id="deselect-all-cards-btn" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 font-semibold">
+            ✕ 全部取消
+          </button>
+        </div>
+        <span id="manage-cards-count-summary" class="font-bold text-indigo-600 dark:text-indigo-400">12 / 12 張已持有</span>
+      </div>
+
+      <!-- Scrollable Checklist -->
+      <div id="manage-cards-checklist" class="space-y-2 overflow-y-auto pr-1 flex-1 max-h-[380px]">
+        <!-- Dynamically generated checkbox items -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <button id="save-manage-cards-btn" class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">
+          完成
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Google Drive Setup Help -->
+  <div id="gdrive-help-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="gdrive-help-title" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span>☁️</span>
+          <span>Google Drive 同步設定說明</span>
+        </h3>
+        <button id="close-gdrive-help-btn" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p class="font-medium">
+          CardFlow 是 100% 用戶端本地執行的應用程式。為了直接連結您的個人 Google Drive 進行私密備份，只需在 Google Cloud 免費建立一個 OAuth 用戶端 ID：
+        </p>
+
+        <ol class="list-decimal list-inside space-y-2 pl-1">
+          <li class="pl-1">
+            <strong>前往 Google Cloud Console</strong>：登入並進入 <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="text-indigo-600 dark:text-indigo-400 font-bold underline">API 與憑證頁面</a>。
+          </li>
+          <li class="pl-1">
+            <strong>啟用 Google Drive API</strong>：在「已啟用的 API 和服務」搜尋並啟用 <strong>Google Drive API</strong>。
+          </li>
+          <li class="pl-1">
+            <strong>建立 OAuth 用戶端 ID</strong>：點選「建立憑證」➔ 選擇「OAuth 用戶端 ID」➔ 應用程式類型選「網頁應用程式 (Web application)」。
+          </li>
+          <li class="pl-1">
+            <strong>設定授權來源</strong>：在「已授權的 JavaScript 來源」填入目前 CardFlow 的網址（例如：<code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">http://localhost:8000</code> 或您的自訂網址）。
+          </li>
+          <li class="pl-1">
+            <strong>貼上 Client ID</strong>：將產生的 <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">xxxxx.apps.googleusercontent.com</code> 複製並貼回上方輸入框，點擊「儲存」即可完成！
+          </li>
+        </ol>
+
+        <div class="p-3 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-[11px] text-indigo-950 dark:text-indigo-200">
+          🔒 <strong>隱私承諾</strong>：CardFlow 僅請求 <code class="font-mono">drive.file</code> 最小授權，只能存取 CardFlow 建立的 <code class="font-mono">cardflow_backup.json</code> 檔案，絕對無法檢視您雲端硬碟中的任何其他檔案。
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <button id="confirm-gdrive-help-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">
+          我知道了
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA Instant Update Notification Banner -->
+  <div id="pwa-update-banner" class="hidden fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="text-base shrink-0">✨</span>
+      <span id="pwa-update-text" class="text-xs font-semibold truncate">發現新版本！點擊立即載入最新功能</span>
+    </div>
+    <button id="pwa-update-btn" type="button" class="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition active:scale-95">
+      立即更新
+    </button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="./app.js"></script>
+</body>
+</html>
