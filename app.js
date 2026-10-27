@@ -47,6 +47,45 @@ const MORANDI_PALETTES = {
     bgLight: '#FDF6F4',
     bgDark: '#261C1B',
     cardDark: '#332625'
+  },
+  lilac: {
+    id: 'lilac',
+    name: { en: 'Lilac Mist', 'zh-TW': '暮光灰紫' },
+    primary: '#8A79B9',
+    primaryDark: '#6E5699',
+    primaryRgb: '138 121 185',
+    primaryDarkRgb: '110 86 153',
+    income: '#4DAA8A',
+    expense: '#D16D86',
+    bgLight: '#F6F4F9',
+    bgDark: '#1D1924',
+    cardDark: '#272230'
+  },
+  oat: {
+    id: 'oat',
+    name: { en: 'Warm Oat Latte', 'zh-TW': '燕麥奶杏' },
+    primary: '#B58D67',
+    primaryDark: '#99704C',
+    primaryRgb: '181 141 103',
+    primaryDarkRgb: '153 112 76',
+    income: '#4F9D7E',
+    expense: '#CF6D63',
+    bgLight: '#FAF7F2',
+    bgDark: '#221E1A',
+    cardDark: '#2C2622'
+  },
+  olive: {
+    id: 'olive',
+    name: { en: 'Vintage Olive', 'zh-TW': '復古橄欖' },
+    primary: '#5C8374',
+    primaryDark: '#436357',
+    primaryRgb: '92 131 116',
+    primaryDarkRgb: '67 99 87',
+    income: '#3AA37B',
+    expense: '#DC756D',
+    bgLight: '#F2F6F4',
+    bgDark: '#151E1A',
+    cardDark: '#1E2823'
   }
 };
 
