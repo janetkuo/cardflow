@@ -112,6 +112,19 @@ const I18N = {
     usedUnit: 'used',
     perYearUnit: '/yr',
     itemsUnit: 'items',
+    annualBreakdownBadge: 'Breakdown ↗',
+    annualModalTitle: 'Annual Value Structure & Breakdown',
+    annualModalSub: 'Total annualized statement credits across currently owned cards (Monthly×12 + Qtr×4 + Semi×2 + Annual×1).',
+    annualModalTotalDesc: 'Total Annual Statement Credits',
+    annualModalCloseBtn: 'Got it / Close',
+    annualModalNoCardsDesc: 'No owned cards currently configured. Select your cards to calculate your personalized annual value.',
+    periodQuarterly: 'Quarterly',
+    barTitleMonthly: 'Monthly Perks',
+    barTitleSemi: 'Semi-Annual & Quarterly Perks',
+    barTitleAnnual: 'Annual Perks',
+    shareUnit: 'share',
+    formulaLabel: 'Formula',
+    viewThisPeriodPerks: 'View this period in feed ➔',
     
     // Donut
     breakdownTitle: 'Credit Breakdown by Category',
@@ -322,6 +335,19 @@ const I18N = {
     usedUnit: '項已折抵',
     perYearUnit: '/年',
     itemsUnit: '項折抵',
+    annualBreakdownBadge: '明細 ↗',
+    annualModalTitle: '年度解鎖價值結構分析',
+    annualModalSub: '所有已持有卡片之每年可折抵額度總和（每月×12 + 每季×4 + 半年×2 + 年度×1）。',
+    annualModalTotalDesc: '已持有卡片全年權益折抵總和',
+    annualModalCloseBtn: '我知道了 / 關閉',
+    annualModalNoCardsDesc: '尚未設定持有卡片，請先點選「快速勾選持卡」即可自動計算您的年度專屬回饋價值。',
+    periodQuarterly: '每季',
+    barTitleMonthly: '每月折抵',
+    barTitleSemi: '半年與每季折抵',
+    barTitleAnnual: '年度折抵',
+    shareUnit: '佔比',
+    formulaLabel: '換算公式',
+    viewThisPeriodPerks: '查看此週期折抵 ➔',
     
     // Donut
     breakdownTitle: '折抵額度類別分佈',
@@ -1289,6 +1315,186 @@ function closeManageCardsModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+function openAnnualBreakdownModal() {
+  const modal = document.getElementById('annual-breakdown-modal');
+  if (modal) {
+    renderAnnualBreakdownModal();
+    modal.classList.remove('hidden');
+  }
+}
+
+function closeAnnualBreakdownModal() {
+  const modal = document.getElementById('annual-breakdown-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function switchPeriodFromModal(p) {
+  closeAnnualBreakdownModal();
+  setPeriodFilter(p);
+  const feed = document.getElementById('credits-feed-container');
+  if (feed) {
+    feed.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderAnnualBreakdownModal() {
+  const container = document.getElementById('annual-breakdown-content');
+  const totalAmountEl = document.getElementById('annual-modal-total-amount');
+  const cardsCountEl = document.getElementById('annual-modal-cards-count');
+  if (!container) return;
+
+  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+
+  if (cardsCountEl) {
+    cardsCountEl.innerText = `${ownedCount} ${t('cardsCountBadgeSuffix')}`;
+  }
+
+  // Calculate stats for all 4 periods
+  const monthlyCredits = ownedCredits.filter(c => c.period === 'monthly');
+  const qtrCredits = ownedCredits.filter(c => c.period === 'quarterly');
+  const semiCredits = ownedCredits.filter(c => c.period === 'semiannual');
+  const annualCredits = ownedCredits.filter(c => c.period === 'annual');
+
+  const monthlyFace = monthlyCredits.reduce((acc, c) => acc + c.amount, 0);
+  const monthlyAnnual = monthlyFace * 12;
+
+  const qtrFace = qtrCredits.reduce((acc, c) => acc + c.amount, 0);
+  const qtrAnnual = qtrFace * 4;
+
+  const semiFace = semiCredits.reduce((acc, c) => acc + c.amount, 0);
+  const semiAnnual = semiFace * 2;
+
+  const annualFace = annualCredits.reduce((acc, c) => acc + c.amount, 0);
+  const annualAnnual = annualFace;
+
+  const totalAnnual = monthlyAnnual + qtrAnnual + semiAnnual + annualAnnual;
+
+  if (totalAmountEl) {
+    totalAmountEl.innerText = Math.round(totalAnnual).toLocaleString();
+  }
+
+  if (ownedCount === 0 || ownedCredits.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="text-3xl">🎴</div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          ${t('annualModalNoCardsDesc')}
+        </p>
+        <button onclick="closeAnnualBreakdownModal(); openManageCardsModal();" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+          ➕ ${t('btnSelectCards')}
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const fmt = (n) => n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`;
+  const pct = (part) => totalAnnual > 0 ? ((part / totalAnnual) * 100).toFixed(1) : '0';
+
+  const sections = [
+    {
+      id: 'monthly',
+      title: t('periodMonthly'),
+      icon: '📅',
+      colorBadge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60',
+      formulaText: currentLang === 'zh-TW' ? `${fmt(monthlyFace)}/月 × 12 個月` : `${fmt(monthlyFace)}/mo × 12 mos`,
+      annualVal: monthlyAnnual,
+      share: pct(monthlyAnnual),
+      items: monthlyCredits,
+      filterTarget: 'monthly'
+    },
+    {
+      id: 'quarterly',
+      title: t('periodQuarterly'),
+      icon: '⏳',
+      colorBadge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60',
+      formulaText: currentLang === 'zh-TW' ? `${fmt(qtrFace)}/季 × 4 季` : `${fmt(qtrFace)}/qtr × 4 qtrs`,
+      annualVal: qtrAnnual,
+      share: pct(qtrAnnual),
+      items: qtrCredits,
+      filterTarget: 'semiannual'
+    },
+    {
+      id: 'semiannual',
+      title: currentLang === 'zh-TW' ? '半年期折抵' : 'Semi-Annual',
+      icon: '🌓',
+      colorBadge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60',
+      formulaText: currentLang === 'zh-TW' ? `${fmt(semiFace)}/半年 × 2 次` : `${fmt(semiFace)}/cycle × 2 cycles`,
+      annualVal: semiAnnual,
+      share: pct(semiAnnual),
+      items: semiCredits,
+      filterTarget: 'semiannual'
+    },
+    {
+      id: 'annual',
+      title: t('periodAnnual'),
+      icon: '🎁',
+      colorBadge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60',
+      formulaText: currentLang === 'zh-TW' ? `${fmt(annualFace)}/年 × 1 次` : `${fmt(annualFace)}/yr × 1 cycle`,
+      annualVal: annualAnnual,
+      share: pct(annualAnnual),
+      items: annualCredits,
+      filterTarget: 'annual'
+    }
+  ];
+
+  container.innerHTML = sections.map(sec => {
+    const itemsHtml = sec.items.length > 0
+      ? sec.items.map(it => {
+          const tText = typeof it.title === 'object' ? (it.title[currentLang] || it.title['zh-TW']) : it.title;
+          const cText = typeof it.card === 'object' ? (it.card[currentLang] || it.card['zh-TW']) : it.card;
+          return `
+            <div class="flex items-center justify-between text-[11px] py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-0">
+              <span class="truncate text-slate-700 dark:text-slate-300 font-medium mr-2">
+                ${tText} <span class="text-slate-400 text-[10px]">(${cText})</span>
+              </span>
+              <span class="shrink-0 font-bold text-slate-800 dark:text-slate-200">
+                +${fmt(it.amount)}
+              </span>
+            </div>
+          `;
+        }).join('')
+      : `<div class="text-[11px] text-slate-400 py-1 italic">${currentLang === 'zh-TW' ? '目前無此週期之權益' : 'No perks active in this period'}</div>`;
+
+    return `
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-base">${sec.icon}</span>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${sec.title}</span>
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${sec.colorBadge}">
+              ${sec.share}% ${t('shareUnit')}
+            </span>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+              +$${Math.round(sec.annualVal).toLocaleString()} ${t('perYearUnit')}
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          <span>${t('formulaLabel')}: ${sec.formulaText}</span>
+          <span class="font-bold text-slate-700 dark:text-slate-300">${sec.items.length} ${t('itemsUnit')}</span>
+        </div>
+
+        <div class="space-y-0.5 pt-0.5">
+          ${itemsHtml}
+        </div>
+
+        ${sec.items.length > 0 ? `
+          <div class="pt-1 text-right">
+            <button onclick="switchPeriodFromModal('${sec.filterTarget}')" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition inline-flex items-center gap-1 cursor-pointer">
+              <span>${t('viewThisPeriodPerks')}</span>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
 function renderManageCardsChecklist() {
   const container = document.getElementById('manage-cards-checklist');
   const summaryEl = document.getElementById('manage-cards-count-summary');
@@ -1507,7 +1713,12 @@ function applyLanguage(lang) {
     'card-date-hint-desc': 'cardDateHintDesc',
     'clear-card-date-btn': 'btnClear',
     'cancel-card-date-btn': 'btnCancel',
-    'save-card-date-btn': 'btnSave'
+    'save-card-date-btn': 'btnSave',
+    'annual-breakdown-badge': 'annualBreakdownBadge',
+    'annual-modal-title': 'annualModalTitle',
+    'annual-modal-sub': 'annualModalSub',
+    'annual-modal-total-desc': 'annualModalTotalDesc',
+    'confirm-annual-modal-btn': 'annualModalCloseBtn'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -1533,6 +1744,18 @@ function getMonthKey() {
 
 // --- 9. RENDER DUE CREDITS ---
 let currentPeriodFilter = 'all';
+
+function setPeriodFilter(p) {
+  currentPeriodFilter = p;
+  document.querySelectorAll('.period-filter-btn').forEach(b => {
+    b.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0 cursor-pointer';
+  });
+  const btn = document.getElementById(`period-${p}-btn`);
+  if (btn) {
+    btn.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs shrink-0 cursor-pointer';
+  }
+  renderCredits();
+}
 
 function renderCredits() {
   const container = document.getElementById('credits-feed-container');
@@ -1677,21 +1900,58 @@ function renderCredits() {
   const unitLabel = document.getElementById('monthly-unit-label');
   if (unitLabel) unitLabel.innerText = t('usedUnit');
 
-  // Dynamic annual total value from all owned credits
-  let totalAnnualPerks = 0;
-  ownedCredits.forEach(item => {
-    let factor = 1;
-    if (item.period === 'monthly') factor = 12;
-    else if (item.period === 'quarterly') factor = 4;
-    else if (item.period === 'semiannual') factor = 2;
-    totalAnnualPerks += item.amount * factor;
-  });
+  // Dynamic annual total value & breakdowns from all owned credits
+  const monthlyCredits = ownedCredits.filter(c => c.period === 'monthly');
+  const qtrCredits = ownedCredits.filter(c => c.period === 'quarterly');
+  const semiCredits = ownedCredits.filter(c => c.period === 'semiannual');
+  const annualCredits = ownedCredits.filter(c => c.period === 'annual');
+
+  const monthlyFaceSum = monthlyCredits.reduce((acc, c) => acc + c.amount, 0);
+  const monthlyAnnualSum = monthlyFaceSum * 12;
+
+  const qtrFaceSum = qtrCredits.reduce((acc, c) => acc + c.amount, 0);
+  const qtrAnnualSum = qtrFaceSum * 4;
+
+  const semiFaceSum = semiCredits.reduce((acc, c) => acc + c.amount, 0);
+  const semiAnnualSum = semiFaceSum * 2;
+
+  const periodicAnnualSum = semiAnnualSum + qtrAnnualSum;
+
+  const annualFaceSum = annualCredits.reduce((acc, c) => acc + c.amount, 0);
+  const annualTotalSum = annualFaceSum;
+
+  const totalAnnualPerks = monthlyAnnualSum + periodicAnnualSum + annualTotalSum;
 
   const annualAmount = document.getElementById('annual-value-amount');
   if (annualAmount) annualAmount.innerText = Math.round(totalAnnualPerks).toLocaleString();
 
   const annualUnit = document.getElementById('annual-unit-label');
   if (annualUnit) annualUnit.innerText = t('perYearUnit');
+
+  // Mini segmented bar calculation on the hero card chip
+  const segMonthly = document.getElementById('bar-segment-monthly');
+  const segSemi = document.getElementById('bar-segment-semi');
+  const segAnnual = document.getElementById('bar-segment-annual');
+
+  if (segMonthly && segSemi && segAnnual) {
+    if (totalAnnualPerks > 0) {
+      const mPct = (monthlyAnnualSum / totalAnnualPerks) * 100;
+      const sPct = (periodicAnnualSum / totalAnnualPerks) * 100;
+      const aPct = (annualTotalSum / totalAnnualPerks) * 100;
+
+      segMonthly.style.width = `${mPct}%`;
+      segSemi.style.width = `${sPct}%`;
+      segAnnual.style.width = `${aPct}%`;
+
+      segMonthly.title = `${t('barTitleMonthly')}: $${Math.round(monthlyAnnualSum).toLocaleString()} (${mPct.toFixed(0)}%)`;
+      segSemi.title = `${t('barTitleSemi')}: $${Math.round(periodicAnnualSum).toLocaleString()} (${sPct.toFixed(0)}%)`;
+      segAnnual.title = `${t('barTitleAnnual')}: $${Math.round(annualTotalSum).toLocaleString()} (${aPct.toFixed(0)}%)`;
+    } else {
+      segMonthly.style.width = '0%';
+      segSemi.style.width = '0%';
+      segAnnual.style.width = '0%';
+    }
+  }
 
   const badgeEl = document.getElementById('balance-badge');
   if (badgeEl) {
@@ -1707,39 +1967,65 @@ function renderCredits() {
     }
   }
 
-  const countLabel = document.getElementById('credits-count-label');
-  if (countLabel) countLabel.innerText = `${items.length} ${t('itemsUnit')}`;
-
   const donutBadge = document.getElementById('donut-cards-count-badge');
   if (donutBadge) {
     donutBadge.innerText = `${ownedCount} / ${PRESET_CARDS.length} ${t('cardsCountBadgeSuffix')}`;
   }
 
   // Dynamic period filter button amounts based on owned credits
-  const monthlyCredits = ownedCredits.filter(c => c.period === 'monthly');
-  const annualCredits = ownedCredits.filter(c => c.period === 'annual');
+  const allFormatted = totalAnnualPerks > 0 ? `$${Math.round(totalAnnualPerks).toLocaleString()}` : '$0';
+  const monthlyFaceFormatted = monthlyFaceSum > 0 ? (monthlyFaceSum % 1 === 0 ? `$${monthlyFaceSum}` : `$${monthlyFaceSum.toFixed(2)}`) : '$0';
+  const monthlyAnnualFormatted = monthlyAnnualSum > 0 ? `$${Math.round(monthlyAnnualSum).toLocaleString()}` : '$0';
+  const periodicAnnualFormatted = periodicAnnualSum > 0 ? `$${Math.round(periodicAnnualSum).toLocaleString()}` : '$0';
+  const annualFormatted = annualTotalSum > 0 ? `$${Math.round(annualTotalSum).toLocaleString()}` : '$0';
 
-  const monthlySum = monthlyCredits.reduce((acc, c) => acc + c.amount, 0);
-  const annualSum = annualCredits.reduce((acc, c) => acc + c.amount, 0);
-
-  const monthlyFormatted = monthlySum > 0 ? (monthlySum % 1 === 0 ? `$${monthlySum}` : `$${monthlySum.toFixed(2)}`) : '$0';
-  const annualFormatted = annualSum > 0 ? (annualSum % 1 === 0 ? `$${annualSum.toLocaleString()}` : `$${annualSum.toFixed(2)}`) : '$0';
+  const allBtn = document.getElementById('period-all-btn');
+  if (allBtn) {
+    allBtn.innerText = `${t('periodAll')} (${allFormatted}${totalAnnualPerks > 0 ? t('perYearUnit') : ''})`;
+  }
 
   const monthlyBtn = document.getElementById('period-monthly-btn');
   if (monthlyBtn) {
-    monthlyBtn.innerText = `${t('periodMonthly')} (${monthlyFormatted})`;
+    if (monthlyFaceSum > 0) {
+      monthlyBtn.innerText = currentLang === 'zh-TW'
+        ? `${t('periodMonthly')} (${monthlyFaceFormatted}/月 · 年${monthlyAnnualFormatted})`
+        : `${t('periodMonthly')} (${monthlyFaceFormatted}/mo · ${monthlyAnnualFormatted}/yr)`;
+    } else {
+      monthlyBtn.innerText = `${t('periodMonthly')} ($0)`;
+    }
   }
-  const annualBtn = document.getElementById('period-annual-btn');
-  if (annualBtn) {
-    annualBtn.innerText = `${t('periodAnnual')} (${annualFormatted})`;
-  }
-  const allBtn = document.getElementById('period-all-btn');
-  if (allBtn) {
-    allBtn.innerText = t('periodAll');
-  }
+
   const semiBtn = document.getElementById('period-semiannual-btn');
   if (semiBtn) {
-    semiBtn.innerText = t('periodSemiAnnual');
+    if (periodicAnnualSum > 0) {
+      semiBtn.innerText = currentLang === 'zh-TW'
+        ? `${t('periodSemiAnnual')} (年${periodicAnnualFormatted})`
+        : `${t('periodSemiAnnual')} (${periodicAnnualFormatted}/yr)`;
+    } else {
+      semiBtn.innerText = `${t('periodSemiAnnual')} ($0)`;
+    }
+  }
+
+  const annualBtn = document.getElementById('period-annual-btn');
+  if (annualBtn) {
+    if (annualTotalSum > 0) {
+      annualBtn.innerText = `${t('periodAnnual')} (${annualFormatted}${t('perYearUnit')})`;
+    } else {
+      annualBtn.innerText = `${t('periodAnnual')} ($0)`;
+    }
+  }
+
+  const countLabel = document.getElementById('credits-count-label');
+  if (countLabel) {
+    if (currentPeriodFilter === 'monthly') {
+      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${monthlyFaceFormatted}${currentLang === 'zh-TW' ? '/月 (年折抵 ' : '/mo ('}${monthlyAnnualFormatted}${currentLang === 'zh-TW' ? ')' : '/yr)'}`;
+    } else if (currentPeriodFilter === 'semiannual') {
+      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '年折抵 ' : 'Yearly '}${periodicAnnualFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
+    } else if (currentPeriodFilter === 'annual') {
+      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '年折抵 ' : 'Yearly '}${annualFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
+    } else {
+      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '全年解鎖 ' : 'Annual '}${allFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
+    }
   }
 }
 
@@ -3369,6 +3655,21 @@ function setupModals() {
     };
   }
 
+  // Annual Value Breakdown Modal Bindings
+  const annualModal = document.getElementById('annual-breakdown-modal');
+  const openAnnualBtn = document.getElementById('open-annual-breakdown-btn');
+  const closeAnnualBtn = document.getElementById('close-annual-modal-btn');
+  const confirmAnnualBtn = document.getElementById('confirm-annual-modal-btn');
+
+  if (openAnnualBtn) openAnnualBtn.onclick = openAnnualBreakdownModal;
+  if (closeAnnualBtn) closeAnnualBtn.onclick = closeAnnualBreakdownModal;
+  if (confirmAnnualBtn) confirmAnnualBtn.onclick = closeAnnualBreakdownModal;
+  if (annualModal) {
+    annualModal.addEventListener('click', (e) => {
+      if (e.target === annualModal) closeAnnualBreakdownModal();
+    });
+  }
+
   // Card Date Modal Bindings
   const cardDateModal = document.getElementById('card-date-modal');
   const closeCardDateBtn = document.getElementById('close-card-date-btn');
@@ -3505,14 +3806,7 @@ function init() {
   ['all', 'monthly', 'semiannual', 'annual'].forEach(p => {
     const btn = document.getElementById(`period-${p}-btn`);
     if (btn) {
-      btn.addEventListener('click', () => {
-        currentPeriodFilter = p;
-        document.querySelectorAll('.period-filter-btn').forEach(b => {
-          b.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0';
-        });
-        btn.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs shrink-0';
-        renderCredits();
-      });
+      btn.addEventListener('click', () => setPeriodFilter(p));
     }
   });
 

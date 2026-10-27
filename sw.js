@@ -1,5 +1,5 @@
 // CardFlow Service Worker - Offline Caching & Instant Network-First Updates
-const CACHE_NAME = 'cardflow-tracker-v7';
+const CACHE_NAME = 'cardflow-tracker-v8';
 const ASSETS = [
   './',
   './index.html',
