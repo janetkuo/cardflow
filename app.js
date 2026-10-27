@@ -2761,22 +2761,28 @@ function selectAdvisorCategory(cat) {
   let headerBannerHtml = '';
   if (ownedCount === 0) {
     headerBannerHtml = `
-      <div class="p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        <div>
-          <div class="text-xs font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-            <span>💡</span>
-            <span>${t('advisorNoCardsBannerTitle')}</span>
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-50/95 via-sky-50/80 to-blue-50/90 dark:from-blue-950/50 dark:via-slate-900/90 dark:to-blue-950/40 border border-blue-200/90 dark:border-blue-700/60 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-start gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/70 border border-blue-200/80 dark:border-blue-700/60 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
+            💡
           </div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-            ${t('advisorNoCardsBannerDesc')}
+          <div class="min-w-0">
+            <div class="text-xs sm:text-[13px] font-extrabold text-blue-950 dark:text-blue-100 flex items-center gap-1.5">
+              <span>${t('advisorNoCardsBannerTitle')}</span>
+            </div>
+            <div class="text-[11px] text-blue-900/80 dark:text-blue-200/85 mt-0.5 leading-relaxed">
+              ${t('advisorNoCardsBannerDesc')}
+            </div>
           </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button onclick="openManageCardsModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
-            ${t('btnSelectCards')}
+        <div class="flex items-center gap-2 shrink-0 self-start sm:self-center pt-0.5 sm:pt-0">
+          <button onclick="openManageCardsModal()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1">
+            <span>✨</span>
+            <span>${t('btnSelectCards')}</span>
           </button>
-          <button onclick="loadDemoStarterPack()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer">
-            ${t('btnLoadDemoPack')}
+          <button onclick="loadDemoStarterPack()" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-750 active:scale-95 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700/80 text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1">
+            <span>⚡</span>
+            <span>${t('btnLoadDemoPack')}</span>
           </button>
         </div>
       </div>
