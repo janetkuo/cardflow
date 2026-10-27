@@ -763,7 +763,7 @@
   </div>
 
   <!-- Modal: Google Drive Setup Help -->
-  <div id="gdrive-help-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+  <div id="gdrive-help-modal" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden" style="z-index: 90;">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <h3 id="gdrive-help-title" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -812,8 +812,8 @@
   </div>
 
   <!-- Modal: Card Dates (Opened Year/Month, Renewal Month) -->
-  <div id="card-date-modal" class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+  <div id="card-date-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
+    <div class="relative z-[101] bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" style="z-index: 101;">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="min-w-0 pr-2">
           <h3 id="card-date-modal-title" class="text-base font-bold text-slate-900 dark:text-white truncate">設定持卡時間 (選填)</h3>
@@ -870,7 +870,7 @@
   </div>
 
   <!-- Toast Notification Message -->
-  <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-70 px-4 py-2 rounded-2xl bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-xs font-bold shadow-xl backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+  <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] px-4 py-2 rounded-2xl bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-xs font-bold shadow-xl backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none" style="z-index: 110;"></div>
 
   <!-- PWA Instant Update Notification Banner -->
   <div id="pwa-update-banner" class="hidden fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">

@@ -1117,6 +1117,7 @@ function openCardDateModal(cardId) {
       yearOptions += `<option value="${y}" ${selected}>${y}${currentLang === 'zh-TW' ? ' 年' : ''}</option>`;
     }
     yearSelect.innerHTML = yearOptions;
+    yearSelect.value = meta.openedYear ? String(meta.openedYear) : '';
   }
 
   const monthSelect = document.getElementById('card-date-month-select');
@@ -1129,6 +1130,7 @@ function openCardDateModal(cardId) {
       monthOptions += `<option value="${m}" ${selected}>${mText}</option>`;
     }
     monthSelect.innerHTML = monthOptions;
+    monthSelect.value = meta.openedMonth ? String(meta.openedMonth) : '';
   }
 
   const renewSelect = document.getElementById('card-date-renew-select');
@@ -1144,6 +1146,7 @@ function openCardDateModal(cardId) {
       renewOptions += `<option value="${m}" ${selected}>${mText}</option>`;
     }
     renewSelect.innerHTML = renewOptions;
+    renewSelect.value = (meta.renewMonth !== undefined && meta.renewMonth !== null) ? String(meta.renewMonth) : '';
   }
 
   modal.classList.remove('hidden');
@@ -1175,6 +1178,9 @@ function saveCardDate() {
     openedMonth,
     renewMonth
   };
+
+  if (!appState.ownedCards) appState.ownedCards = {};
+  appState.ownedCards[activeCardDateId] = true;
 
   saveState();
   closeCardDateModal();
