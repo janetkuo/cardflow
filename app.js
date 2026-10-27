@@ -251,7 +251,7 @@ const I18N = {
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
-    appSubtitle: '美卡與常旅客權益追蹤 (2026/2027 最新修訂)',
+    appSubtitle: '美卡與常旅客權益追蹤',
     screenModeDual: '展開模式 (Unfolded)',
     screenModeSingle: '折疊模式 (Folded)',
     
@@ -1332,9 +1332,6 @@ function applyPalette(palKey) {
   root.style.setProperty('--pf-expense', pal.expense);
   root.style.setProperty('--pf-bg-light', pal.bgLight);
   root.style.setProperty('--pf-bg-dark', pal.bgDark);
-
-  const dot = document.getElementById('palette-quick-dot');
-  if (dot) dot.style.backgroundColor = pal.primary;
 
   renderPalettePicker();
 }
@@ -3195,12 +3192,6 @@ function init() {
 
   document.getElementById('theme-toggle')?.addEventListener('click', () => {
     applyTheme(currentTheme === 'light' ? 'dark' : 'light');
-  });
-
-  document.getElementById('palette-toggle-btn')?.addEventListener('click', () => {
-    const keys = Object.keys(MORANDI_PALETTES);
-    const nextIdx = (keys.indexOf(currentPalette) + 1) % keys.length;
-    applyPalette(keys[nextIdx]);
   });
 
   // Top Notification Banner State & Controls
