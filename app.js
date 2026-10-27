@@ -2887,8 +2887,31 @@ function selectAdvisorCategory(cat) {
 }
 
 // --- 16. SUBVIEW SWITCHING ---
-function switchSubView(viewId) {
-  ['credits', 'cards', 'loyalty', 'advisor'].forEach(id => {
+const VALID_SUBVIEWS = ['credits', 'cards', 'loyalty', 'advisor'];
+const ACTIVE_TAB_KEY = 'cardflow_active_subview_v1';
+
+function getActiveTab() {
+  const hash = (typeof window !== 'undefined' && window.location && window.location.hash)
+    ? window.location.hash.slice(1)
+    : '';
+  if (VALID_SUBVIEWS.includes(hash)) {
+    return hash;
+  }
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const saved = sessionStorage.getItem(ACTIVE_TAB_KEY);
+      if (VALID_SUBVIEWS.includes(saved)) return saved;
+    }
+  } catch (e) {}
+  return 'credits';
+}
+
+function switchSubView(viewId, updateHash = true) {
+  if (!VALID_SUBVIEWS.includes(viewId)) {
+    viewId = 'credits';
+  }
+
+  VALID_SUBVIEWS.forEach(id => {
     const view = document.getElementById(`subview-${id}`);
     const tabBtn = document.getElementById(`nav-btn-${id}`);
     const mobBtn = document.getElementById(`mob-nav-${id}`);
@@ -2912,8 +2935,27 @@ function switchSubView(viewId) {
     }
   });
 
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(ACTIVE_TAB_KEY, viewId);
+    }
+  } catch (e) {}
+
+  if (updateHash && typeof window !== 'undefined' && window.location) {
+    const targetHash = `#${viewId}`;
+    if (window.location.hash !== targetHash) {
+      if (typeof history !== 'undefined' && history.replaceState) {
+        history.replaceState(null, '', targetHash);
+      } else {
+        window.location.hash = targetHash;
+      }
+    }
+  }
+
   // Instantly scroll to top so mobile view immediately reflects the active tab!
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (typeof window !== 'undefined' && window.scrollTo) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 }
 
 // --- 17. FOLDABLE OBSERVER (Pixel 10 Pro Fold) ---
@@ -3483,6 +3525,23 @@ function init() {
   initFoldScreenObserver();
   setupModals();
   applyLanguage(currentLang);
+
+  // Restore active subview from URL hash or session
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('hashchange', () => {
+      const hash = (window.location && window.location.hash) ? window.location.hash.slice(1) : '';
+      if (VALID_SUBVIEWS.includes(hash)) {
+        switchSubView(hash, false);
+      }
+    });
+  }
+
+  const initialHash = (typeof window !== 'undefined' && window.location && window.location.hash)
+    ? window.location.hash.slice(1)
+    : '';
+  const initialTab = getActiveTab();
+  const shouldUpdateHash = !initialHash && initialTab !== 'credits';
+  switchSubView(initialTab, shouldUpdateHash);
 }
 
 document.addEventListener('DOMContentLoaded', init);
