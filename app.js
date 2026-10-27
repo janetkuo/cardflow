@@ -190,7 +190,64 @@ const I18N = {
 
     // PWA Auto Update
     pwaUpdateText: 'New version ready! Tap to update',
-    pwaUpdateBtn: 'Update Now'
+    pwaUpdateBtn: 'Update Now',
+
+    // Onboarding & Default Unowned State
+    balanceNoCards: 'No Cards Active',
+    onboardingTitle: 'Build Your Personal Credit Card Portfolio',
+    onboardingDesc: 'Select the cards you currently hold from our preset vault to unlock automated monthly credits, elite hotel & rental tiers, and free night award tracking.',
+    btnSelectCards: 'Select My Cards',
+    btnLoadDemoPack: 'Load Sample Pack (CSP + CFU + Brilliant)',
+    btnDemoPack: '⚡ Demo Pack',
+    onboardingFeature1: '100% Local Storage',
+    onboardingFeature2: 'Zero Backend Privacy',
+    onboardingFeature3: 'Optional Google Drive Backup',
+    bannerTagEmpty: '💡 Get Started',
+    bannerTextEmpty: 'No cards active yet. Tap "Select My Cards" to start tracking credits, benefits, and renewal deadlines.',
+    bannerTagActive: 'Cards Active',
+    bannerTextActivePrefix: 'Tracking benefits for',
+    bannerTextActiveSuffix: 'cards in your personal wallet. 100% stored on device.',
+    toastDemoLoaded: 'Sample card pack loaded (CSP + CFU + Marriott Brilliant)!',
+
+    // Card Membership Dates & Renewal Settings
+    cardDateModalTitle: 'Set Card Membership Dates (Optional)',
+    cardDateYearLabel: 'Member Since / Opening Year (Optional)',
+    cardDateMonthLabel: 'Opening Month (Optional)',
+    cardDateRenewLabel: 'Annual Fee Renewal Month (Optional)',
+    cardDateYearSelectDefault: 'Not set (Optional)',
+    cardDateMonthSelectDefault: 'Not set (Optional)',
+    cardDateRenewSelectDefault: 'Same as opening month (Default)',
+    cardDateRenewNoAf: 'No Annual Fee ($0 AF)',
+    cardDateHintTitle: 'Smart Benefits & FNC Prediction',
+    cardDateHintDesc: 'By setting the opening year & month, CardFlow automatically predicts Free Night Award (FNC) issuance & expiry dates, cardmember-year credit resets (e.g. CSP $50 hotel, VX $300 portal), and reminds you before annual fees post so you can request retention offers.',
+    btnClear: 'Clear',
+    btnCancel: 'Cancel',
+    btnSave: 'Save Dates',
+    btnSetDates: 'Set Dates (Optional)',
+    btnEditDates: 'Edit Dates',
+    toastDateSaved: 'Card dates saved successfully.',
+    toastDateCleared: 'Card dates cleared.',
+    renewDueThisMonth: 'Annual Fee Due This Month',
+    renewDueNextMonth: 'Annual Fee Due Next Month',
+    retentionReminder: 'Consider asking for retention offer or product change',
+    monthUnit: 'Mo',
+
+    // Free Night Awards (FNC)
+    fncAutoDerived: 'Auto-derived from card',
+    fncNoCertificates: 'No Hotel Free Night Awards Active',
+    fncNoCertificatesSub: 'Add hotel cards (e.g. Marriott Bonvoy Brilliant 85k, IHG Premier 50k) in "My Cards" to automatically track your annual anniversary certificates, or add custom awards manually.',
+
+    // Chase 5/24 Tracker
+    chase524Title: 'Chase 5/24 Rule Status',
+    chase524Desc: 'Tracks personal cards opened within the last 24 months. Chase typically auto-denies applications if you have opened 5 or more personal cards in 24 months.',
+    chase524Safe: 'Safe to Apply',
+    chase524Warning: '5/24 Limit Reached',
+    chase524Unset: 'No card opening dates configured yet. Set opening dates on your personal cards to activate automated Chase 5/24 tracking.',
+    chase524SafeDesc: 'You opened {n} personal cards in the last 24 months. Remaining slots before reaching 5/24: {rem}.',
+    chase524WarningDesc: 'You opened {n} personal cards in the last 24 months (>= 5). Recommend waiting until older cards cross 24 months before applying for Chase cards.',
+    monthsUntilDrop: 'm until drop',
+    anniversaryResetPrefix: 'Resets annually in Month',
+    anniversaryResetSuffix: '(Anniversary)'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -330,7 +387,64 @@ const I18N = {
 
     // PWA Auto Update
     pwaUpdateText: '發現新版本！點擊立即載入最新功能',
-    pwaUpdateBtn: '立即更新'
+    pwaUpdateBtn: '立即更新',
+
+    // Onboarding & Default Unowned State
+    balanceNoCards: '尚無持卡',
+    onboardingTitle: '開始打造您的美卡專屬福利庫',
+    onboardingDesc: '從 12 張頂級美卡庫中勾選您目前持有的卡片，CardFlow 將自動為您計算每月報銷、解鎖常客會籍並追蹤房券效期。',
+    btnSelectCards: '挑選我持有的卡片',
+    btnLoadDemoPack: '載入示範卡包 (CSP + CFU + 萬豪)',
+    btnDemoPack: '⚡ 示範卡包',
+    onboardingFeature1: '100% 本機儲存',
+    onboardingFeature2: '零後端隱私保護',
+    onboardingFeature3: '可選 Google Drive 備份',
+    bannerTagEmpty: '💡 快速上手',
+    bannerTextEmpty: '尚未加入持有卡片。請點選「挑選我持有的卡片」以開始追蹤專屬福利與到期提醒。',
+    bannerTagActive: '張卡片追蹤中',
+    bannerTextActivePrefix: '已為您彙整',
+    bannerTextActiveSuffix: '張持卡之折抵額度與權益。所有資料安全存於本機。',
+    toastDemoLoaded: '已為您載入熱門示範卡包 (CSP + CFU + 萬豪大白金)！',
+
+    // Card Membership Dates & Renewal Settings
+    cardDateModalTitle: '設定持卡時間 (選填)',
+    cardDateYearLabel: '持卡年份 / Opening Year (選填)',
+    cardDateMonthLabel: '開卡月份 / Opening Month (選填)',
+    cardDateRenewLabel: '年費續卡月份 / Renewal Month (選填)',
+    cardDateYearSelectDefault: '未設定 (選填)',
+    cardDateMonthSelectDefault: '未設定 (選填)',
+    cardDateRenewSelectDefault: '自動與開卡月相同 (預設)',
+    cardDateRenewNoAf: '免年費卡 ($0 AF)',
+    cardDateHintTitle: '智慧週期與房券自動推算',
+    cardDateHintDesc: '設定開卡年月後，系統將自動推算酒店免費住宿券 (FNC) 發放與到期日、週年制旅行折抵重置時間（如 CSP $50、VX $300），並在年費出帳前提醒評估化緣 (Retention Offer) 或轉卡。',
+    btnClear: '清除設定',
+    btnCancel: '取消',
+    btnSave: '儲存設定',
+    btnSetDates: '設定開卡年月 (選填)',
+    btnEditDates: '編輯持卡日期',
+    toastDateSaved: '持卡日期已儲存。',
+    toastDateCleared: '已清除持卡日期。',
+    renewDueThisMonth: '年費本月出帳',
+    renewDueNextMonth: '年費下月出帳',
+    retentionReminder: '建議致電客服化緣 (Retention Offer) 或評估轉卡',
+    monthUnit: '月',
+
+    // Free Night Awards (FNC)
+    fncAutoDerived: '依開卡月自動推算',
+    fncNoCertificates: '目前尚無生效之年度免費住宿券',
+    fncNoCertificatesSub: '在「我的卡片」啟用萬豪 Brilliant (85k) 或 IHG Premier (50k) 並填寫開卡年月，系統將自動推算每年房券入帳與到期日；您也可以點擊右上角手動新增房券。',
+
+    // Chase 5/24 Tracker
+    chase524Title: 'Chase 5/24 申請狀態追蹤',
+    chase524Desc: '統計過去 24 個月開立之個人卡數量。Chase 通常會自動拒絕 24 個月內開卡已達 5 張的申請人。',
+    chase524Safe: '安全綠燈',
+    chase524Warning: '已達上限',
+    chase524Unset: '尚未設定個人卡片開卡日期。可在「我的卡片」設定開卡年月，系統將自動計算 5/24 額度！',
+    chase524SafeDesc: '過去 24 個月開立 {n} 張個人卡，距離 5/24 上限尚有 {rem} 張額度，可繼續申辦 Chase 信用卡。',
+    chase524WarningDesc: '過去 24 個月開立 {n} 張個人卡，已觸發 Chase 5/24 限制。建議等候卡片屆滿 24 個月出 5/24 後再申請。',
+    monthsUntilDrop: '個月後出 5/24',
+    anniversaryResetPrefix: '每年',
+    anniversaryResetSuffix: '月週年重置'
   }
 };
 
@@ -338,6 +452,7 @@ const I18N = {
 const PRESET_CARDS = [
   {
     id: 'bonvoy-brilliant',
+    isBusiness: false,
     name: 'Marriott Bonvoy Brilliant™ American Express®',
     issuer: 'Amex',
     nickname: { en: 'Marriott Brilliant', 'zh-TW': '萬豪 Brilliant 大白金' },
@@ -366,6 +481,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'amex-biz-gold',
+    isBusiness: true,
     name: 'American Express® Business Gold',
     issuer: 'Amex',
     nickname: { en: 'Amex Business Gold', 'zh-TW': 'Amex 商業金卡' },
@@ -389,6 +505,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'amex-biz-plat',
+    isBusiness: true,
     name: 'The Business Platinum Card® from American Express',
     issuer: 'Amex',
     nickname: { en: 'Amex Business Platinum (2026 Refreshed)', 'zh-TW': 'Amex 商業大白 (2026 最新改版)' },
@@ -418,6 +535,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'venture-x',
+    isBusiness: false,
     name: 'Capital One Venture X',
     issuer: 'CapitalOne',
     nickname: { en: 'C1 Venture X', 'zh-TW': 'C1 Venture X 旗艦卡' },
@@ -444,6 +562,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'csp',
+    isBusiness: false,
     name: 'Chase Sapphire Preferred (CSP)',
     issuer: 'Chase',
     nickname: { en: 'CSP Sapphire (2026 Upgraded)', 'zh-TW': 'Chase CSP 藍寶石卡 (2026 升級版)' },
@@ -474,6 +593,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'ihg-premier',
+    isBusiness: false,
     name: 'Chase IHG Rewards Premier',
     issuer: 'Chase',
     nickname: { en: 'Chase IHG Premier (2026/2027 Overhaul)', 'zh-TW': 'Chase IHG 洲際聯名卡 (2026/2027 改版)' },
@@ -502,6 +622,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'cfu',
+    isBusiness: false,
     name: 'Chase Freedom Unlimited (CFU)',
     issuer: 'Chase',
     nickname: { en: 'Chase CFU', 'zh-TW': 'Chase Freedom 自由卡' },
@@ -525,6 +646,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'cic',
+    isBusiness: true,
     name: 'Chase Ink Business Cash (CIC)',
     issuer: 'Chase',
     nickname: { en: 'Chase Ink Cash', 'zh-TW': 'Chase Ink Cash 商業墨水現金' },
@@ -547,6 +669,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'bbp',
+    isBusiness: true,
     name: 'Blue Business® Plus Credit Card (BBP)',
     issuer: 'Amex',
     nickname: { en: 'Amex BBP', 'zh-TW': 'Amex BBP 藍商業 Plus' },
@@ -569,6 +692,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'amex-ed',
+    isBusiness: false,
     name: 'Amex EveryDay® Credit Card',
     issuer: 'Amex',
     nickname: { en: 'Amex EveryDay (ED)', 'zh-TW': 'Amex EveryDay 個人卡' },
@@ -592,6 +716,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'bbc',
+    isBusiness: true,
     name: 'Blue Business Cash™ Card (BBC)',
     issuer: 'Amex',
     nickname: { en: 'Amex BBC', 'zh-TW': 'Amex BBC 商業現金卡' },
@@ -613,6 +738,7 @@ const PRESET_CARDS = [
   },
   {
     id: 'ciu',
+    isBusiness: true,
     name: 'Chase Ink Business Unlimited (CIU)',
     issuer: 'Chase',
     nickname: { en: 'Chase Ink Unlimited', 'zh-TW': 'Chase Ink Unlimited 商業墨水' },
@@ -850,26 +976,11 @@ let selectedYear = today.getFullYear();
 let selectedMonth = today.getMonth() + 1; // 1-12
 
 let appState = {
-  ownedCards: {}, // cardId: boolean (default true)
+  ownedCards: {}, // cardId: boolean (default false: cards are unowned until user selects)
+  cardMeta: {},   // cardId: { openedYear: null, openedMonth: null, renewMonth: null }
   creditsClaimed: {},
-  fncs: [
-    {
-      id: 'fnc-1',
-      name: { en: 'Marriott 85k Free Night Award (Demo)', 'zh-TW': '萬豪 85,000 分免費住宿券 (範例)' },
-      issuer: 'Marriott',
-      points: '85,000 pts',
-      expireDate: '2027-12-31',
-      used: false
-    },
-    {
-      id: 'fnc-2',
-      name: { en: 'IHG 50k Free Night Award (Demo)', 'zh-TW': 'IHG 50,000 分年度免費住宿券 (範例)' },
-      issuer: 'IHG',
-      points: '50,000 pts',
-      expireDate: '2027-12-31',
-      used: false
-    }
-  ]
+  fncs: [],
+  fncsClaimed: {}
 };
 
 function loadState() {
@@ -885,6 +996,15 @@ function loadState() {
   if (!appState.ownedCards || typeof appState.ownedCards !== 'object') {
     appState.ownedCards = {};
   }
+  if (!appState.cardMeta || typeof appState.cardMeta !== 'object') {
+    appState.cardMeta = {};
+  }
+  if (!Array.isArray(appState.fncs)) {
+    appState.fncs = [];
+  }
+  if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') {
+    appState.fncsClaimed = {};
+  }
 }
 
 function saveState(skipAutoSync = false) {
@@ -896,14 +1016,13 @@ function saveState(skipAutoSync = false) {
 
 // Card Ownership Helper Functions
 function isCardOwned(cardId) {
-  if (!appState.ownedCards) return true;
-  return appState.ownedCards[cardId] !== false;
+  if (!appState.ownedCards) return false;
+  return !!appState.ownedCards[cardId];
 }
 
 function setCardOwnership(cardId, isOwned) {
   if (!appState.ownedCards) {
     appState.ownedCards = {};
-    PRESET_CARDS.forEach(c => { appState.ownedCards[c.id] = true; });
   }
   appState.ownedCards[cardId] = !!isOwned;
   saveState();
@@ -923,14 +1042,163 @@ function selectAllCards(owned) {
   renderAllViews();
 }
 
+function loadDemoStarterPack() {
+  if (!appState.ownedCards) appState.ownedCards = {};
+  if (!appState.cardMeta) appState.cardMeta = {};
+
+  appState.ownedCards['csp'] = true;
+  appState.ownedCards['cfu'] = true;
+  appState.ownedCards['bonvoy-brilliant'] = true;
+
+  appState.cardMeta['csp'] = { openedYear: 2024, openedMonth: 10, renewMonth: 10 };
+  appState.cardMeta['cfu'] = { openedYear: 2023, openedMonth: 3, renewMonth: 'No AF' };
+  appState.cardMeta['bonvoy-brilliant'] = { openedYear: 2023, openedMonth: 6, renewMonth: 6 };
+
+  saveState();
+  renderAllViews();
+  showToast(t('toastDemoLoaded'));
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast-message');
+  if (!toast) return;
+  toast.innerText = message;
+  toast.classList.remove('opacity-0');
+  if (typeof setTimeout === 'function') {
+    setTimeout(() => {
+      toast.classList.add('opacity-0');
+    }, 2500);
+  }
+}
+
+function updateBannerText() {
+  const tagEl = document.getElementById('demo-banner-tag');
+  const textEl = document.getElementById('demo-banner-text');
+  if (!tagEl || !textEl) return;
+
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+  if (ownedCount === 0) {
+    tagEl.innerText = t('bannerTagEmpty');
+    textEl.innerText = t('bannerTextEmpty');
+  } else {
+    tagEl.innerText = `${ownedCount} ${t('bannerTagActive')}`;
+    textEl.innerText = `${t('bannerTextActivePrefix')} ${ownedCount} ${t('bannerTextActiveSuffix')}`;
+  }
+}
+
+// Card Date Modal Logic
+let activeCardDateId = null;
+
+function openCardDateModal(cardId) {
+  const modal = document.getElementById('card-date-modal');
+  const card = PRESET_CARDS.find(c => c.id === cardId);
+  if (!modal || !card) return;
+
+  activeCardDateId = cardId;
+  const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+  
+  const subEl = document.getElementById('card-date-modal-sub');
+  if (subEl) {
+    subEl.innerText = `${nick} (${card.issuer} · ${card.annualFee === 0 ? t('noAnnualFeeLabel') : '$' + card.annualFee})`;
+  }
+
+  const meta = appState.cardMeta?.[cardId] || {};
+
+  const yearSelect = document.getElementById('card-date-year-select');
+  if (yearSelect) {
+    let yearOptions = `<option value="">${t('cardDateYearSelectDefault')}</option>`;
+    const curYear = new Date().getFullYear();
+    for (let y = curYear + 1; y >= 2015; y--) {
+      const selected = meta.openedYear === y ? 'selected' : '';
+      yearOptions += `<option value="${y}" ${selected}>${y}${currentLang === 'zh-TW' ? ' 年' : ''}</option>`;
+    }
+    yearSelect.innerHTML = yearOptions;
+  }
+
+  const monthSelect = document.getElementById('card-date-month-select');
+  if (monthSelect) {
+    let monthOptions = `<option value="">${t('cardDateMonthSelectDefault')}</option>`;
+    const monthNamesEn = ['Jan (1)', 'Feb (2)', 'Mar (3)', 'Apr (4)', 'May (5)', 'Jun (6)', 'Jul (7)', 'Aug (8)', 'Sep (9)', 'Oct (10)', 'Nov (11)', 'Dec (12)'];
+    for (let m = 1; m <= 12; m++) {
+      const selected = meta.openedMonth === m ? 'selected' : '';
+      const mText = currentLang === 'zh-TW' ? `${m} 月` : monthNamesEn[m - 1];
+      monthOptions += `<option value="${m}" ${selected}>${mText}</option>`;
+    }
+    monthSelect.innerHTML = monthOptions;
+  }
+
+  const renewSelect = document.getElementById('card-date-renew-select');
+  if (renewSelect) {
+    let renewOptions = `<option value="">${t('cardDateRenewSelectDefault')}</option>`;
+    if (card.annualFee === 0) {
+      renewOptions += `<option value="0" ${meta.renewMonth === 0 || meta.renewMonth === 'No AF' ? 'selected' : ''}>${t('cardDateRenewNoAf')}</option>`;
+    }
+    const monthNamesEn = ['Jan (1)', 'Feb (2)', 'Mar (3)', 'Apr (4)', 'May (5)', 'Jun (6)', 'Jul (7)', 'Aug (8)', 'Sep (9)', 'Oct (10)', 'Nov (11)', 'Dec (12)'];
+    for (let m = 1; m <= 12; m++) {
+      const selected = Number(meta.renewMonth) === m ? 'selected' : '';
+      const mText = currentLang === 'zh-TW' ? `${m} 月` : monthNamesEn[m - 1];
+      renewOptions += `<option value="${m}" ${selected}>${mText}</option>`;
+    }
+    renewSelect.innerHTML = renewOptions;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeCardDateModal() {
+  const modal = document.getElementById('card-date-modal');
+  if (modal) modal.classList.add('hidden');
+  activeCardDateId = null;
+}
+
+function saveCardDate() {
+  if (!activeCardDateId) return;
+  if (!appState.cardMeta) appState.cardMeta = {};
+
+  const yearVal = document.getElementById('card-date-year-select')?.value;
+  const monthVal = document.getElementById('card-date-month-select')?.value;
+  const renewVal = document.getElementById('card-date-renew-select')?.value;
+
+  const openedYear = yearVal ? parseInt(yearVal, 10) : null;
+  const openedMonth = monthVal ? parseInt(monthVal, 10) : null;
+  let renewMonth = null;
+  if (renewVal !== '') {
+    renewMonth = renewVal === '0' ? 'No AF' : parseInt(renewVal, 10);
+  }
+
+  appState.cardMeta[activeCardDateId] = {
+    openedYear,
+    openedMonth,
+    renewMonth
+  };
+
+  saveState();
+  closeCardDateModal();
+  renderAllViews();
+  showToast(t('toastDateSaved'));
+}
+
+function clearCardDate() {
+  if (!activeCardDateId) return;
+  if (appState.cardMeta && appState.cardMeta[activeCardDateId]) {
+    delete appState.cardMeta[activeCardDateId];
+    saveState();
+  }
+  closeCardDateModal();
+  renderAllViews();
+  showToast(t('toastDateCleared'));
+}
+
 function renderAllViews() {
   renderCredits();
   renderCards();
   renderFncs();
   renderDonutChart();
   renderLoyaltyStatusCards();
+  renderChase524();
   selectAdvisorCategory(currentAdvisorCat);
   renderManageCardsChecklist();
+  updateBannerText();
 }
 
 function openManageCardsModal() {
@@ -963,6 +1231,21 @@ function renderManageCardsChecklist() {
                      card.issuer === 'Chase' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200' :
                      'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200';
 
+    const meta = appState.cardMeta?.[card.id];
+    let datePill = '';
+    if (owned) {
+      const dateText = (meta && meta.openedYear && meta.openedMonth)
+        ? `${meta.openedYear}/${meta.openedMonth}`
+        : (meta && meta.openedMonth ? `${meta.openedMonth}${t('monthUnit')}` : `+ ${t('btnSetDates')}`);
+      datePill = `
+        <button onclick="event.stopPropagation(); openCardDateModal('${card.id}')"
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-400 shadow-2xs transition shrink-0"
+                title="${t('btnSetDates')}">
+          📅 ${dateText}
+        </button>
+      `;
+    }
+
     return `
       <div onclick="toggleCardOwnership('${card.id}')"
            class="p-2.5 sm:p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${owned ? 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/60 shadow-xs' : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-100'}">
@@ -980,7 +1263,8 @@ function renderManageCardsChecklist() {
             <div class="text-[11px] text-slate-400 truncate mt-0.5">${card.name}</div>
           </div>
         </div>
-        <div class="text-right shrink-0">
+        <div class="text-right shrink-0 flex items-center gap-2">
+          ${datePill}
           <span class="text-xs font-black ${card.annualFee === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}">
             ${card.annualFee === 0 ? t('noAnnualFeeLabel') : '$' + card.annualFee}
           </span>
@@ -1145,7 +1429,19 @@ function applyLanguage(lang) {
     'gdrive-help-title': 'gdriveHelpTitle',
     'confirm-gdrive-help-btn': 'confirmGdriveHelpBtn',
     'pwa-update-text': 'pwaUpdateText',
-    'pwa-update-btn': 'pwaUpdateBtn'
+    'pwa-update-btn': 'pwaUpdateBtn',
+    'manage-cards-demo-btn': 'btnDemoPack',
+    'chase-524-title': 'chase524Title',
+    'chase-524-desc': 'chase524Desc',
+    'card-date-modal-title': 'cardDateModalTitle',
+    'card-date-year-label': 'cardDateYearLabel',
+    'card-date-month-label': 'cardDateMonthLabel',
+    'card-date-renew-label': 'cardDateRenewLabel',
+    'card-date-hint-title': 'cardDateHintTitle',
+    'card-date-hint-desc': 'cardDateHintDesc',
+    'clear-card-date-btn': 'btnClear',
+    'cancel-card-date-btn': 'btnCancel',
+    'save-card-date-btn': 'btnSave'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -1216,7 +1512,42 @@ function renderCredits() {
     }
   });
 
-  if (items.length === 0) {
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+
+  if (ownedCount === 0) {
+    container.innerHTML = `
+      <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-emerald-50/40 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4 shadow-xs">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-3xl shadow-inner">
+          💳
+        </div>
+        <div class="max-w-md mx-auto space-y-1.5">
+          <h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
+            ${t('onboardingTitle')}
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            ${t('onboardingDesc')}
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <button onclick="openManageCardsModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 active:scale-95 transition flex items-center gap-1.5 cursor-pointer">
+            <span>➕</span>
+            <span>${t('btnSelectCards')}</span>
+          </button>
+          <button onclick="loadDemoStarterPack()" class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold active:scale-95 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>⚡</span>
+            <span>${t('btnLoadDemoPack')}</span>
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 pt-2 flex items-center justify-center gap-3 flex-wrap">
+          <span>🔒 ${t('onboardingFeature1')}</span>
+          <span>·</span>
+          <span>${t('onboardingFeature2')}</span>
+          <span>·</span>
+          <span>${t('onboardingFeature3')}</span>
+        </div>
+      </div>
+    `;
+  } else if (items.length === 0) {
     container.innerHTML = `
       <div class="p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
         <div class="text-3xl mb-2">💳</div>
@@ -1244,6 +1575,12 @@ function renderCredits() {
       const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
       const tipText = typeof item.tip === 'object' ? (item.tip[currentLang] || item.tip['zh-TW']) : item.tip;
 
+      const cardMeta = appState.cardMeta?.[item.cardId];
+      let cycleNoteHtml = '';
+      if (item.period === 'annual' && cardMeta && cardMeta.openedMonth) {
+        cycleNoteHtml = `<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">📅 ${t('anniversaryResetPrefix')} ${cardMeta.openedMonth} ${t('anniversaryResetSuffix')}</span>`;
+      }
+
       const cardEl = document.createElement('div');
       cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${isClaimed ? 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800'}`;
       
@@ -1256,6 +1593,7 @@ function renderCredits() {
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">${titleText}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
+              ${cycleNoteHtml}
             </div>
             <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
           </div>
@@ -1300,15 +1638,15 @@ function renderCredits() {
 
   const badgeEl = document.getElementById('balance-badge');
   if (badgeEl) {
-    if (totalMonthlyItems === 0) {
-      badgeEl.innerText = t('balanceHealthy');
-      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-slate-500/30 text-slate-200 text-[11px] font-bold backdrop-blur-sm';
-    } else if (monthlyUnclaimed === 0) {
+    if (ownedCount === 0) {
+      badgeEl.innerText = t('balanceNoCards');
+      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm';
+    } else if (totalMonthlyItems === 0 || monthlyUnclaimed === 0) {
       badgeEl.innerText = t('balanceHealthy');
       badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[11px] font-bold backdrop-blur-sm';
     } else {
       badgeEl.innerText = t('balanceAction');
-      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm';
+      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-[11px] font-bold backdrop-blur-sm';
     }
   }
 
@@ -1398,7 +1736,38 @@ function renderCards() {
     el.className = `p-4 sm:p-5 rounded-3xl transition flex flex-col justify-between ${isOwned ? 'bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'bg-slate-50/70 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 opacity-65 hover:opacity-100'}`;
 
     const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
-    const renewMonth = card.renewMonth ? (typeof card.renewMonth === 'object' ? (card.renewMonth[currentLang] || card.renewMonth['zh-TW']) : card.renewMonth) : null;
+    const meta = appState.cardMeta?.[card.id];
+    let renewMonth = null;
+    if (meta && meta.renewMonth !== undefined && meta.renewMonth !== null) {
+      renewMonth = meta.renewMonth === 'No AF' || meta.renewMonth === 0 ? t('noAnnualFeeLabel') : `${meta.renewMonth} ${t('monthUnit')}`;
+    } else if (meta && meta.openedMonth) {
+      renewMonth = card.annualFee === 0 ? t('noAnnualFeeLabel') : `${meta.openedMonth} ${t('monthUnit')}`;
+    } else if (card.renewMonth) {
+      renewMonth = typeof card.renewMonth === 'object' ? (card.renewMonth[currentLang] || card.renewMonth['zh-TW']) : card.renewMonth;
+    }
+    const openedYearVal = meta?.openedYear || card.openedYear || null;
+
+    let renewalAlertHtml = '';
+    const curM = today.getMonth() + 1;
+    const numRenewM = (meta && meta.renewMonth && meta.renewMonth !== 'No AF') ? Number(meta.renewMonth) : (meta?.openedMonth ? Number(meta.openedMonth) : null);
+    if (isOwned && card.annualFee > 0 && numRenewM) {
+      if (numRenewM === curM) {
+        renewalAlertHtml = `
+          <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 text-[10.5px] text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+            <span>⏳</span>
+            <span><strong>${t('renewDueThisMonth')}:</strong> $${card.annualFee} · ${t('retentionReminder')}</span>
+          </div>
+        `;
+      } else if (numRenewM === (curM % 12) + 1) {
+        renewalAlertHtml = `
+          <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 text-[10.5px] text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+            <span>⏳</span>
+            <span><strong>${t('renewDueNextMonth')}:</strong> $${card.annualFee}</span>
+          </div>
+        `;
+      }
+    }
+
     const signupBonus = card.signupBonus ? (typeof card.signupBonus === 'object' ? (card.signupBonus[currentLang] || card.signupBonus['zh-TW']) : card.signupBonus) : null;
     const useForText = card.useFor ? (typeof card.useFor === 'object' ? (card.useFor[currentLang] || card.useFor['zh-TW']) : card.useFor) : null;
 
@@ -1467,18 +1836,29 @@ function renderCards() {
         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug">${card.name}</h4>
         <div class="text-[11px] text-slate-400 mt-0.5">${nick}</div>
 
-        <div class="my-2.5 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div>
-            <span class="text-[11px] text-slate-400">${t('annualFeeLabel')}: </span>
-            <span class="text-xs font-black ${card.annualFee === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">
-              ${card.annualFee === 0 ? t('noAnnualFeeLabel') : '$' + card.annualFee}
-            </span>
+        <div class="my-2.5 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-slate-400">${t('annualFeeLabel')}: </span>
+              <span class="text-xs font-black ${card.annualFee === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">
+                ${card.annualFee === 0 ? t('noAnnualFeeLabel') : '$' + card.annualFee}
+              </span>
+            </div>
+            ${isOwned ? `
+              <button onclick="event.stopPropagation(); openCardDateModal('${card.id}')"
+                      class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 hover:border-indigo-400 shadow-2xs transition flex items-center gap-1">
+                <span>⚙️</span>
+                <span>${(renewMonth || openedYearVal) ? t('btnEditDates') : t('btnSetDates')}</span>
+              </button>
+            ` : ''}
           </div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
             ${renewMonth ? `<span>📅 ${t('renewMonthLabel')}: <strong class="text-slate-700 dark:text-slate-200">${renewMonth}</strong></span>` : ''}
-            ${card.openedYear ? `<span class="text-slate-300 dark:text-slate-600">|</span><span>${t('openedYearLabel')} <strong class="text-slate-700 dark:text-slate-200">${card.openedYear}</strong></span>` : ''}
+            ${openedYearVal ? `<span class="text-slate-300 dark:text-slate-600">|</span><span>${t('openedYearLabel')} <strong class="text-slate-700 dark:text-slate-200">${openedYearVal}</strong></span>` : ''}
           </div>
         </div>
+
+        ${renewalAlertHtml}
 
         ${bonusHtml}
 
@@ -1505,24 +1885,108 @@ function renderFncs() {
   if (!container) return;
   container.innerHTML = '';
 
-  appState.fncs.forEach(fnc => {
+  const ownedBrilliant = isCardOwned('bonvoy-brilliant');
+  const ownedIhg = isCardOwned('ihg-premier');
+
+  // Build combined list of FNCs:
+  // 1. Auto-derived from owned hotel cards
+  const autoFncs = [];
+  if (ownedBrilliant) {
+    const meta = appState.cardMeta?.['bonvoy-brilliant'] || {};
+    const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
+    const annMonthStr = String(renewMonth).padStart(2, '0');
+    const grantYear = selectedYear;
+    const expireYear = grantYear + 1;
+    const expireDate = `${expireYear}-${annMonthStr}-28`;
+    const autoKey = `auto_fnc_brilliant_${grantYear}`;
+    const used = !!appState.fncsClaimed?.[autoKey];
+
+    autoFncs.push({
+      id: autoKey,
+      isAuto: true,
+      cardId: 'bonvoy-brilliant',
+      name: {
+        en: 'Marriott 85k Free Night Award (Annual Renewal)',
+        'zh-TW': '萬豪 85,000 分年度免費住宿券 (自動推算)'
+      },
+      issuer: 'Marriott',
+      points: '85,000 pts',
+      grantNote: {
+        en: `Issued ~Month ${renewMonth} · Valid 1 yr`,
+        'zh-TW': `約每年 ${renewMonth} 月出帳入帳 · 效期 1 年`
+      },
+      expireDate: expireDate,
+      used: used
+    });
+  }
+
+  if (ownedIhg) {
+    const meta = appState.cardMeta?.['ihg-premier'] || {};
+    const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
+    const annMonthStr = String(renewMonth).padStart(2, '0');
+    const grantYear = selectedYear;
+    const expireYear = grantYear + 1;
+    const expireDate = `${expireYear}-${annMonthStr}-28`;
+    const autoKey = `auto_fnc_ihg_${grantYear}`;
+    const used = !!appState.fncsClaimed?.[autoKey];
+
+    autoFncs.push({
+      id: autoKey,
+      isAuto: true,
+      cardId: 'ihg-premier',
+      name: {
+        en: 'IHG 50k Free Night Award (Annual Renewal)',
+        'zh-TW': 'IHG 50,000 分年度免費住宿券 (自動推算)'
+      },
+      issuer: 'IHG',
+      points: '50,000 pts',
+      grantNote: {
+        en: `Issued ~Month ${renewMonth} · Valid 1 yr`,
+        'zh-TW': `約每年 ${renewMonth} 月出帳入帳 · 效期 1 年`
+      },
+      expireDate: expireDate,
+      used: used
+    });
+  }
+
+  const allFncs = [...autoFncs, ...(appState.fncs || [])];
+
+  if (allFncs.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 col-span-full">
+        <div class="text-2xl mb-1.5">🎟️</div>
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-300">${t('fncNoCertificates')}</div>
+        <div class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
+          ${t('fncNoCertificatesSub')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  allFncs.forEach(fnc => {
     const expDate = new Date(fnc.expireDate);
     const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
     const isUrgent = diffDays <= 60 && !fnc.used;
 
     const nameText = typeof fnc.name === 'object' ? (fnc.name[currentLang] || fnc.name['zh-TW']) : fnc.name;
+    const grantText = fnc.grantNote ? (typeof fnc.grantNote === 'object' ? (fnc.grantNote[currentLang] || fnc.grantNote['zh-TW']) : fnc.grantNote) : null;
 
     const el = document.createElement('div');
     el.className = `p-3.5 rounded-2xl border transition ${fnc.used ? 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : isUrgent ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60' : 'bg-slate-50/70 dark:bg-slate-850/60 border-slate-200 dark:border-slate-800'}`;
     
     el.innerHTML = `
       <div class="flex items-center justify-between mb-1.5">
-        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${fnc.issuer === 'Marriott' ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'}">
-          ${fnc.issuer}
-        </span>
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${fnc.issuer === 'Marriott' ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'}">
+            ${fnc.issuer}
+          </span>
+          ${fnc.isAuto ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">✨ ${t('fncAutoDerived')}</span>` : ''}
+        </div>
         <span class="text-xs font-black text-amber-600 dark:text-amber-400">${fnc.points}</span>
       </div>
       <div class="text-xs font-bold text-slate-800 dark:text-slate-100 ${fnc.used ? 'line-through text-slate-400' : ''}">${nameText}</div>
+      ${grantText ? `<div class="text-[10px] text-slate-400 mt-0.5">${grantText}</div>` : ''}
       <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
         <div>
           <span>${fnc.expireDate}</span>
@@ -1538,12 +2002,17 @@ function renderFncs() {
 }
 
 function toggleFncStatus(id) {
-  const target = appState.fncs.find(f => f.id === id);
-  if (target) {
-    target.used = !target.used;
-    saveState();
-    renderFncs();
+  if (id.startsWith('auto_')) {
+    if (!appState.fncsClaimed) appState.fncsClaimed = {};
+    appState.fncsClaimed[id] = !appState.fncsClaimed[id];
+  } else {
+    const target = appState.fncs.find(f => f.id === id);
+    if (target) {
+      target.used = !target.used;
+    }
   }
+  saveState();
+  renderFncs();
 }
 
 // --- 12. RENDER LOYALTY STATUSES (LEFT PANE) ---
@@ -2089,6 +2558,74 @@ const ADVISOR_RULES = {
   }
 };
 
+function renderChase524() {
+  const box = document.getElementById('chase-524-box');
+  const badge = document.getElementById('chase-524-badge');
+  const detail = document.getElementById('chase-524-detail');
+  if (!box || !badge || !detail) return;
+
+  const personalCardIds = ['bonvoy-brilliant', 'venture-x', 'csp', 'ihg-premier', 'cfu', 'amex-ed'];
+  const ownedPersonalCards = personalCardIds.filter(id => isCardOwned(id));
+
+  let cardsWithDates = 0;
+  let in24Count = 0;
+  const recentCards = [];
+
+  const curYear = today.getFullYear();
+  const curMonth = today.getMonth() + 1;
+
+  ownedPersonalCards.forEach(id => {
+    const meta = appState.cardMeta?.[id];
+    if (meta && meta.openedYear && meta.openedMonth) {
+      cardsWithDates++;
+      const monthsElapsed = (curYear - meta.openedYear) * 12 + (curMonth - meta.openedMonth);
+      if (monthsElapsed >= 0 && monthsElapsed < 24) {
+        in24Count++;
+        const cardObj = PRESET_CARDS.find(c => c.id === id);
+        const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : id;
+        recentCards.push({
+          name: nick,
+          date: `${meta.openedYear}/${meta.openedMonth}`,
+          monthsLeft: 24 - monthsElapsed
+        });
+      }
+    }
+  });
+
+  if (cardsWithDates === 0) {
+    badge.innerText = `? / 24`;
+    badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+    detail.innerHTML = `
+      <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+        <span>💡 ${t('chase524Unset')}</span>
+        <button onclick="switchSubView('cards')" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline shrink-0 ml-2">
+          ${t('tabCards').split(' ')[0]} →
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const isSafe = in24Count < 5;
+  badge.innerText = `${in24Count} / 24 (${isSafe ? t('chase524Safe') : t('chase524Warning')})`;
+  badge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${isSafe ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40'}`;
+
+  const cardsHtml = recentCards.map(c => `
+    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+      <strong>${c.name}</strong> (${c.date}) · ${c.monthsLeft} ${t('monthsUntilDrop')}
+    </span>
+  `).join(' ');
+
+  detail.innerHTML = `
+    <div class="space-y-1.5 pt-1">
+      <div class="text-[11px] text-slate-600 dark:text-slate-300">
+        ${isSafe ? t('chase524SafeDesc').replace('{n}', in24Count).replace('{rem}', 5 - in24Count) : t('chase524WarningDesc').replace('{n}', in24Count)}
+      </div>
+      ${recentCards.length > 0 ? `<div class="flex flex-wrap gap-1.5 pt-1">${cardsHtml}</div>` : ''}
+    </div>
+  `;
+}
+
 function selectAdvisorCategory(cat) {
   currentAdvisorCat = cat;
   document.querySelectorAll('.adv-cat-btn').forEach(btn => {
@@ -2513,28 +3050,13 @@ function setupModals() {
         localStorage.removeItem(STATE_KEY);
         appState = {
           ownedCards: {},
+          cardMeta: {},
           creditsClaimed: {},
-          fncs: [
-            {
-              id: 'fnc-1',
-              name: { en: 'Marriott 85k Free Night Award (Demo)', 'zh-TW': '萬豪 85,000 分免費住宿券 (範例)' },
-              issuer: 'Marriott',
-              points: '85,000 pts',
-              expireDate: '2027-12-31',
-              used: false
-            },
-            {
-              id: 'fnc-2',
-              name: { en: 'IHG 50k Free Night Award (Demo)', 'zh-TW': 'IHG 50,000 分年度免費住宿券 (範例)' },
-              issuer: 'IHG',
-              points: '50,000 pts',
-              expireDate: '2027-12-31',
-              used: false
-            }
-          ]
+          fncs: [],
+          fncsClaimed: {}
         };
         saveState();
-        applyLanguage(currentLang);
+        renderAllViews();
         settingsModal.classList.add('hidden');
       }
     };
@@ -2546,6 +3068,7 @@ function setupModals() {
   const saveManageCardsBtn = document.getElementById('save-manage-cards-btn');
   const selectAllCardsBtn = document.getElementById('select-all-cards-btn');
   const deselectAllCardsBtn = document.getElementById('deselect-all-cards-btn');
+  const manageCardsDemoBtn = document.getElementById('manage-cards-demo-btn');
   const donutBadge = document.getElementById('donut-cards-count-badge');
 
   if (openManageCardsBtn) openManageCardsBtn.onclick = openManageCardsModal;
@@ -2554,6 +3077,29 @@ function setupModals() {
   if (saveManageCardsBtn) saveManageCardsBtn.onclick = closeManageCardsModal;
   if (selectAllCardsBtn) selectAllCardsBtn.onclick = () => selectAllCards(true);
   if (deselectAllCardsBtn) deselectAllCardsBtn.onclick = () => selectAllCards(false);
+  if (manageCardsDemoBtn) {
+    manageCardsDemoBtn.onclick = () => {
+      loadDemoStarterPack();
+      closeManageCardsModal();
+    };
+  }
+
+  // Card Date Modal Bindings
+  const cardDateModal = document.getElementById('card-date-modal');
+  const closeCardDateBtn = document.getElementById('close-card-date-btn');
+  const cancelCardDateBtn = document.getElementById('cancel-card-date-btn');
+  const clearCardDateBtn = document.getElementById('clear-card-date-btn');
+  const saveCardDateBtn = document.getElementById('save-card-date-btn');
+
+  if (closeCardDateBtn) closeCardDateBtn.onclick = closeCardDateModal;
+  if (cancelCardDateBtn) cancelCardDateBtn.onclick = closeCardDateModal;
+  if (clearCardDateBtn) clearCardDateBtn.onclick = clearCardDate;
+  if (saveCardDateBtn) saveCardDateBtn.onclick = saveCardDate;
+  if (cardDateModal) {
+    cardDateModal.addEventListener('click', (e) => {
+      if (e.target === cardDateModal) closeCardDateModal();
+    });
+  }
 
   // Card ownership filter buttons
   ['all', 'owned', 'unowned'].forEach(mode => {

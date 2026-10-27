@@ -468,6 +468,25 @@
         </div>
       </div>
 
+      <!-- Chase 5/24 Tracker Box -->
+      <div id="chase-524-box" class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 id="chase-524-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>📊</span>
+            <span>Chase 5/24 申請狀態追蹤</span>
+          </h3>
+          <span id="chase-524-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+            0 / 24
+          </span>
+        </div>
+        <p id="chase-524-desc" class="text-xs text-slate-500 dark:text-slate-400">
+          統計過去 24 個月開立之個人卡數量。Chase 通常會自動拒絕 24 個月內開卡已達 5 張的申請人。
+        </p>
+        <div id="chase-524-detail" class="text-xs text-slate-600 dark:text-slate-300">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
       <!-- Interactive SVG Donut Chart Card (Placed in Advisor & Analytics) -->
       <div class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
@@ -723,6 +742,9 @@
           <button id="deselect-all-cards-btn" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 font-semibold">
             ✕ 全部取消
           </button>
+          <button id="manage-cards-demo-btn" class="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 hover:bg-amber-100 font-semibold border border-amber-200 dark:border-amber-800/40">
+            ⚡ 示範卡包
+          </button>
         </div>
         <span id="manage-cards-count-summary" class="font-bold text-indigo-600 dark:text-indigo-400">12 / 12 張已持有</span>
       </div>
@@ -788,6 +810,67 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal: Card Dates (Opened Year/Month, Renewal Month) -->
+  <div id="card-date-modal" class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="min-w-0 pr-2">
+          <h3 id="card-date-modal-title" class="text-base font-bold text-slate-900 dark:text-white truncate">設定持卡時間 (選填)</h3>
+          <p id="card-date-modal-sub" class="text-xs text-slate-400 truncate mt-0.5"></p>
+        </div>
+        <button id="close-card-date-btn" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5">
+        <div>
+          <label id="card-date-year-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">持卡年份 / Opening Year (選填)</label>
+          <select id="card-date-year-select" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </select>
+        </div>
+
+        <div>
+          <label id="card-date-month-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">開卡月份 / Opening Month (選填)</label>
+          <select id="card-date-month-select" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </select>
+        </div>
+
+        <div>
+          <label id="card-date-renew-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">年費續卡月份 / Renewal Month (選填)</label>
+          <select id="card-date-renew-select" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </select>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
+          <div class="font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+            <span>💡</span><span id="card-date-hint-title">智慧週期與房券自動推算</span>
+          </div>
+          <p id="card-date-hint-desc" class="leading-relaxed text-[10.5px]">
+            設定開卡年月後，系統將自動推算酒店免費住宿券 (FNC) 發放與到期日、週年制旅行折抵重置時間（如 CSP $50、VX $300），並在年費出帳前提醒評估化緣 (Retention Offer)。
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+        <button id="clear-card-date-btn" type="button" class="px-3 py-1.5 text-xs font-bold text-rose-500 hover:text-rose-600 transition">
+          清除設定
+        </button>
+        <div class="flex items-center gap-2">
+          <button id="cancel-card-date-btn" type="button" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            取消
+          </button>
+          <button id="save-card-date-btn" type="button" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition">
+            儲存設定
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Message -->
+  <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-70 px-4 py-2 rounded-2xl bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-xs font-bold shadow-xl backdrop-blur-md transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
   <!-- PWA Instant Update Notification Banner -->
   <div id="pwa-update-banner" class="hidden fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] sm:w-auto px-4 py-3 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center justify-between gap-3 transition-all duration-300">
