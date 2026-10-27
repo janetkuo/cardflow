@@ -143,8 +143,8 @@ def check_i18n_symmetry():
     en_block = app_js[pos_en:pos_zh]
     zh_block = app_js[pos_zh:pos_end]
 
-    en_keys = set(re.findall(r"(\w+):\s*['\"`]", en_block))
-    zh_keys = set(re.findall(r"(\w+):\s*['\"`]", zh_block))
+    en_keys = set(re.findall(r"^\s*(\w+):\s*['\"`]", en_block, re.MULTILINE))
+    zh_keys = set(re.findall(r"^\s*(\w+):\s*['\"`]", zh_block, re.MULTILINE))
 
     missing_in_zh = en_keys - zh_keys
     missing_in_en = zh_keys - en_keys

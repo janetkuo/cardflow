@@ -185,9 +185,9 @@
   <div id="demo-mode-banner" class="bg-slate-900/95 dark:bg-slate-850/95 text-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-700/60 shadow-xs transition-all duration-200">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 text-[11px] sm:text-xs">
       <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-        <span id="demo-banner-tag" class="px-1.5 py-0.5 rounded-full bg-white/20 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase shrink-0">12 張神卡配置</span>
+        <span id="demo-banner-tag" class="px-1.5 py-0.5 rounded-full bg-white/20 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase shrink-0">未設定持卡</span>
         <span id="demo-banner-text" class="font-medium text-white/90 truncate sm:whitespace-normal">
-          💳 已為你預先配置 12 張頂級美卡、常客會籍與週期性折抵額度。所有資料安全存於本地裝置。
+          💳 目前尚未選取任何持有卡片。可點擊右側「自選持卡」加入您擁有的卡片或載入示範卡包。
         </span>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
@@ -243,12 +243,12 @@
 
           <div class="flex items-baseline justify-between gap-2 flex-wrap">
             <div class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm flex items-baseline gap-1">
-              <span>$</span><span id="monthly-remaining-val">77.95</span>
+              <span>$</span><span id="monthly-remaining-val">0.00</span>
               <span class="text-xs font-semibold text-white/80 ml-2" id="monthly-due-label">本月尚未折抵</span>
             </div>
             <button id="donut-cards-count-badge" class="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full border border-white/30 backdrop-blur-sm transition flex items-center gap-1" title="點擊自選持卡 / Select Cards">
               <span>🎴</span>
-              <span>12 張已持有</span>
+              <span>0 / 12 張已持有</span>
             </button>
           </div>
 
@@ -261,7 +261,7 @@
                 <span id="monthly-progress-title">本月折抵進度</span>
               </div>
               <div class="text-base sm:text-lg font-extrabold text-white mt-1 drop-shadow-sm">
-                <span id="monthly-claimed-ratio">0 / 4</span> <span class="text-xs font-medium text-white/80" id="monthly-unit-label">項已折抵</span>
+                <span id="monthly-claimed-ratio">0 / 0</span> <span class="text-xs font-medium text-white/80" id="monthly-unit-label">項已折抵</span>
               </div>
             </div>
 
@@ -272,7 +272,7 @@
                 <span id="annual-value-title">年度解鎖價值</span>
               </div>
               <div class="text-base sm:text-lg font-extrabold text-white mt-1 drop-shadow-sm">
-                +$<span id="annual-value-amount">1,389</span><span class="text-xs font-medium text-white/80" id="annual-unit-label">/年</span>
+                +$<span id="annual-value-amount">0</span><span class="text-xs font-medium text-white/80" id="annual-unit-label">/年</span>
               </div>
             </div>
           </div>
@@ -286,17 +286,17 @@
             全部
           </button>
           <button id="period-monthly-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
-            每月即期 ($77.95)
+            每月 ($0)
           </button>
           <button id="period-semiannual-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
             半年期與每季
           </button>
           <button id="period-annual-btn" class="period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0">
-            年度續卡 ($1,139)
+            年度 ($0)
           </button>
         </div>
         <div class="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">
-          <span id="credits-count-label">9 項折抵</span>
+          <span id="credits-count-label">0 項折抵</span>
         </div>
       </div>
 
@@ -417,7 +417,7 @@
             <span>🎯</span>
             <span>「這筆消費刷哪張？」最佳決策推薦</span>
           </h3>
-          <p class="text-[11px] text-slate-400 mt-0.5" id="advisor-subheading">選擇消費類別，系統將自動比對 12 張卡的最高點數倍率與保險權益。</p>
+          <p class="text-[11px] text-slate-400 mt-0.5" id="advisor-subheading">選擇消費類別，系統將自動比對全卡庫最佳點數倍率與保險權益（尚未設定持有卡片）。</p>
         </div>
 
         <!-- Category Selector Pills -->
@@ -497,7 +497,7 @@
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
             <span id="donut-center-title" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">年度總權益</span>
-            <span id="donut-center-val" class="text-xl font-extrabold text-slate-800 dark:text-white">$3,100+</span>
+            <span id="donut-center-val" class="text-xl font-extrabold text-slate-800 dark:text-white">$0</span>
             <span id="donut-center-sub" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">折抵價值</span>
           </div>
         </div>
@@ -740,7 +740,7 @@
             ⚡ 示範卡包
           </button>
         </div>
-        <span id="manage-cards-count-summary" class="font-bold text-indigo-600 dark:text-indigo-400">12 / 12 張已持有</span>
+        <span id="manage-cards-count-summary" class="font-bold text-indigo-600 dark:text-indigo-400">0 / 12 張已持有</span>
       </div>
 
       <!-- Scrollable Checklist -->
