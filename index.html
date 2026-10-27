@@ -212,7 +212,7 @@
       </button>
       <button id="nav-btn-cards" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 whitespace-nowrap">
         <span>🎴</span>
-        <span id="tab-label-cards">我的卡片 (12)</span>
+        <span id="tab-label-cards">我的卡片 (0)</span>
       </button>
       <button id="nav-btn-loyalty" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 whitespace-nowrap">
         <span>🏨</span>
@@ -310,41 +310,45 @@
     <div id="subview-cards" class="hidden space-y-4">
       <!-- Filter & Search Bar -->
       <div class="space-y-2.5 bg-white dark:bg-slate-900/90 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
-            <button id="issuer-all-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shrink-0">
+        <!-- Primary Ownership Segmented Control & Manage Action -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+          <!-- 3-Segmented Pill Control (100% visible on mobile, zero scroll needed) -->
+          <div class="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl text-center text-xs font-bold flex-1 shadow-inner">
+            <button id="card-filter-owned-btn" class="card-ownership-filter-btn py-1.5 px-2 rounded-lg transition bg-indigo-600 text-white shadow-xs cursor-pointer">
+              已持有 (0)
+            </button>
+            <button id="card-filter-all-btn" class="card-ownership-filter-btn py-1.5 px-2 rounded-lg transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer">
               全部 (12)
             </button>
-            <button id="issuer-amex-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+            <button id="card-filter-unowned-btn" class="card-ownership-filter-btn py-1.5 px-2 rounded-lg transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+              未持有 (12)
+            </button>
+          </div>
+
+          <!-- Open Manage Cards Modal Button -->
+          <button id="open-manage-cards-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer transition shadow-2xs">
+            <span>⚙️</span>
+            <span id="manage-cards-btn-label">快速勾選持卡</span>
+          </button>
+        </div>
+
+        <!-- Secondary Row: Issuer Filter Pills & Search Input -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar py-0.5">
+            <button id="issuer-all-btn" class="issuer-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0">
+              全部 (12)
+            </button>
+            <button id="issuer-amex-btn" class="issuer-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
               Amex (6)
             </button>
-            <button id="issuer-chase-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+            <button id="issuer-chase-btn" class="issuer-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
               Chase (5)
             </button>
-            <button id="issuer-c1-btn" class="issuer-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+            <button id="issuer-c1-btn" class="issuer-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
               Capital One (1)
             </button>
           </div>
           <input type="text" id="cards-search-input" placeholder="搜尋卡片名稱、回饋倍率、權益..." class="px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
-        </div>
-
-        <!-- Ownership Sub-Filter Bar & Batch Manage Button -->
-        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
-            <button id="card-filter-all-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0">
-              全部卡片
-            </button>
-            <button id="card-filter-owned-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 shrink-0">
-              ✓ 僅顯示已持有
-            </button>
-            <button id="card-filter-unowned-btn" class="card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 shrink-0">
-              ✕ 僅顯示未持有
-            </button>
-          </div>
-          <button id="open-manage-cards-btn" class="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-            <span>⚙️</span>
-            <span id="manage-cards-btn-label">快速勾選持卡</span>
-          </button>
         </div>
       </div>
 

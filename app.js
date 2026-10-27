@@ -125,7 +125,7 @@ const I18N = {
     
     // Tabs
     tabCredits: 'Credits Due',
-    tabCards: 'My Cards (12)',
+    tabCards: 'My Cards',
     tabLoyalty: 'Loyalty & FNC',
     tabAdvisor: 'Best Card & Stats',
     
@@ -193,9 +193,12 @@ const I18N = {
     // Card Ownership & Batch Selection
     cardOwned: 'Owned',
     cardNotOwned: 'Not Owned',
-    filterAllCards: 'All Cards',
-    filterOwned: '✓ Owned Only',
-    filterUnowned: '✕ Unowned Only',
+    filterAllCards: 'All',
+    filterOwned: 'Owned',
+    filterUnowned: 'Unowned',
+    noOwnedCardsTitle: 'No Active Cards in Wallet',
+    noOwnedCardsDesc: 'Tap "Manage Cards" to pick the cards in your wallet, or switch to "All" to browse the 12 preset library.',
+    btnBrowseAllCards: 'Browse All 12 Cards →',
     manageCardsBtnLabel: 'Manage Cards',
     manageCardsModalTitle: 'Select Owned Cards',
     manageCardsModalSub: 'Check the cards in your wallet. Benefits and chart will recalculate dynamically.',
@@ -332,7 +335,7 @@ const I18N = {
     
     // Tabs
     tabCredits: '待用權益',
-    tabCards: '我的卡片 (12)',
+    tabCards: '我的卡片',
     tabLoyalty: '會籍與房券',
     tabAdvisor: '刷卡指南 & 統計',
     
@@ -400,9 +403,12 @@ const I18N = {
     // Card Ownership & Batch Selection
     cardOwned: '已持有',
     cardNotOwned: '未持有',
-    filterAllCards: '全部卡片',
-    filterOwned: '✓ 僅顯示已持有',
-    filterUnowned: '✕ 僅顯示未持有',
+    filterAllCards: '全部',
+    filterOwned: '已持有',
+    filterUnowned: '未持有',
+    noOwnedCardsTitle: '目前尚未新增任何已持有卡片',
+    noOwnedCardsDesc: '點擊下方「快速勾選持卡」自選您的皮夾卡片，或切換至「全部」瀏覽 12 張美卡庫。',
+    btnBrowseAllCards: '瀏覽全部卡庫 (12) →',
     manageCardsBtnLabel: '快速勾選持卡',
     manageCardsModalTitle: '自選持有的信用卡清單',
     manageCardsModalSub: '勾選您目前擁有的卡片，折抵進度與圓餅圖將自動即時重算。',
@@ -1756,7 +1762,12 @@ function resetCurrentMonth() {
 
 // --- 10. RENDER CARDS GRID ---
 let currentIssuerFilter = 'all';
-let currentOwnershipFilter = 'all'; // 'all', 'owned', 'unowned'
+let currentOwnershipFilter = 'owned'; // 'owned' by default for intuitive wallet view, or 'all', 'unowned'
+
+function setOwnershipFilter(mode) {
+  currentOwnershipFilter = mode;
+  renderCards();
+}
 
 function renderCards() {
   const container = document.getElementById('cards-list-container');
@@ -1771,22 +1782,26 @@ function renderCards() {
   const ownedBtn = document.getElementById('card-filter-owned-btn');
   const unownedBtn = document.getElementById('card-filter-unowned-btn');
 
-  if (allBtn) {
-    allBtn.innerText = `${t('filterAllCards')} (${PRESET_CARDS.length})`;
-    allBtn.className = `card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${currentOwnershipFilter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`;
-  }
   if (ownedBtn) {
     ownedBtn.innerText = `${t('filterOwned')} (${ownedCount})`;
-    ownedBtn.className = `card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${currentOwnershipFilter === 'owned' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`;
+    ownedBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'owned' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
+  }
+  if (allBtn) {
+    allBtn.innerText = `${t('filterAllCards')} (${PRESET_CARDS.length})`;
+    allBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
   }
   if (unownedBtn) {
     unownedBtn.innerText = `${t('filterUnowned')} (${unownedCount})`;
-    unownedBtn.className = `card-ownership-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${currentOwnershipFilter === 'unowned' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`;
+    unownedBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'unowned' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
   }
 
   const tabLabelCards = document.getElementById('tab-label-cards');
   if (tabLabelCards) {
-    tabLabelCards.innerText = `${t('tabCards').split(' ')[0]} (${ownedCount}/${PRESET_CARDS.length})`;
+    tabLabelCards.innerText = `${t('tabCards')} (${ownedCount})`;
+  }
+  const mobLabelCards = document.getElementById('mob-label-cards');
+  if (mobLabelCards) {
+    mobLabelCards.innerText = t('tabCards');
   }
 
   const searchVal = (document.getElementById('cards-search-input')?.value || '').toLowerCase().trim();
@@ -1812,6 +1827,47 @@ function renderCards() {
     }
     return true;
   });
+
+  if (filtered.length === 0) {
+    if (currentOwnershipFilter === 'owned' && ownedCount === 0) {
+      container.innerHTML = `
+        <div class="col-span-1 sm:col-span-2 p-8 rounded-3xl bg-slate-50/80 dark:bg-slate-900/60 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-3xl">
+            🎴
+          </div>
+          <div class="max-w-md mx-auto space-y-1.5">
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">
+              ${t('noOwnedCardsTitle')}
+            </h3>
+            <p class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+              ${t('noOwnedCardsDesc')}
+            </p>
+          </div>
+          <div class="flex items-center justify-center gap-2.5 pt-1 flex-wrap">
+            <button onclick="openManageCardsModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5">
+              <span>➕</span>
+              <span>${t('manageCardsBtnLabel')}</span>
+            </button>
+            <button onclick="loadDemoStarterPack()" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+              <span>⚡</span>
+              <span>${t('btnLoadDemoPack')}</span>
+            </button>
+            <button onclick="setOwnershipFilter('all')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition cursor-pointer">
+              ${t('btnBrowseAllCards')}
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="col-span-1 sm:col-span-2 p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+          <div class="text-3xl mb-2">🔍</div>
+          <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${currentLang === 'zh-TW' ? '找不到符合條件的卡片' : 'No matching cards found'}</div>
+        </div>
+      `;
+    }
+    return;
+  }
 
   filtered.forEach(card => {
     const isOwned = isCardOwned(card.id);
