@@ -165,7 +165,7 @@ const I18N = {
     backupDesc: 'CardFlow is 100% private and client-side. Export your data as a JSON file to transfer between devices.',
     exportJson: 'Export JSON',
     importJson: 'Import JSON',
-    resetFactory: '⚠️ Reset All to 12 Cards Default',
+    resetFactory: '⚠️ Clear All Data & Reset to Defaults',
     
     // Credits Item Status
     claimedThisMonth: 'Claimed this month',
@@ -375,7 +375,7 @@ const I18N = {
     backupDesc: 'CardFlow 具備 100% 隱私性與本機端儲存。匯出 JSON 備份檔即可隨時轉移至其他裝置。',
     exportJson: '匯出 JSON 備份',
     importJson: '匯入 JSON 還原',
-    resetFactory: '⚠️ 還原為 12 張卡片預設值',
+    resetFactory: '⚠️ 清除所有資料並重設為初始狀態',
     
     // Credits Item Status
     claimedThisMonth: '本月已折抵',
@@ -3321,7 +3321,10 @@ function setupModals() {
   const resetBtn = document.getElementById('reset-factory-btn');
   if (resetBtn) {
     resetBtn.onclick = () => {
-      if (confirm(currentLang === 'zh-TW' ? '確定要清除所有自訂記錄並還原預設嗎？' : 'Reset all data to default?')) {
+      const confirmMsg = currentLang === 'zh-TW'
+        ? '確定要清除所有本機資料（已選卡片、折抵進度與房券），重設為初始狀態嗎？此動作無法復原。'
+        : 'Are you sure you want to clear all data (cards, claimed credits, and awards) and reset to initial state? This cannot be undone.';
+      if (confirm(confirmMsg)) {
         localStorage.removeItem(STATE_KEY);
         appState = {
           ownedCards: {},
@@ -3333,6 +3336,7 @@ function setupModals() {
         saveState();
         renderAllViews();
         settingsModal.classList.add('hidden');
+        showToast(currentLang === 'zh-TW' ? '已成功清除資料並恢復初始狀態' : 'All data reset to initial state');
       }
     };
   }
