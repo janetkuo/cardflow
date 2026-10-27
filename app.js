@@ -1008,6 +1008,10 @@ function loadState() {
 }
 
 function saveState(skipAutoSync = false) {
+  if (!appState.ownedCards || typeof appState.ownedCards !== 'object') appState.ownedCards = {};
+  if (!appState.cardMeta || typeof appState.cardMeta !== 'object') appState.cardMeta = {};
+  if (!Array.isArray(appState.fncs)) appState.fncs = [];
+  if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') appState.fncsClaimed = {};
   localStorage.setItem(STATE_KEY, JSON.stringify(appState));
   if (!skipAutoSync) {
     handleDriveAutoSync();
