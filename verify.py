@@ -248,7 +248,13 @@ def check_privacy_guardrails():
 def run_jsc_in_app_env(eval_body):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     js_code = f"""
-    const localStorage = {{ getItem: () => null, setItem: () => {{}}, removeItem: () => {{}} }};
+    const storage = {{}};
+    const localStorage = {{
+      getItem: (k) => storage[k] !== undefined ? storage[k] : null,
+      setItem: (k, v) => {{ storage[k] = String(v); }},
+      removeItem: (k) => {{ delete storage[k]; }},
+      clear: () => {{ Object.keys(storage).forEach(k => delete storage[k]); }}
+    }};
     const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
     const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}} }} }};
     const document = {{
@@ -474,11 +480,174 @@ def check_business_logic_simulation():
         errors.push("renderOverlapOptimizer() crashed: " + e.message);
       }
 
+      // --- Sub-check E: Backup & Restore Serialization / Round-trip Invariant ---
+      // 1. Construct comprehensive mock user state covering all 7 data dimensions
+      const mockOriginalState = {
+        ownedCards: {
+          'csp': true,
+          'cfu': true,
+          'bonvoy-brilliant': true,
+          'venture-x': true,
+          'biz-gold': true
+        },
+        cardMeta: {
+          'csp': { openedYear: 2024, openedMonth: 10, renewMonth: 10 },
+          'venture-x': { openedYear: 2023, openedMonth: 5, renewMonth: 5 },
+          'bonvoy-brilliant': { openedYear: 2022, openedMonth: 11, renewMonth: 11 }
+        },
+        creditsClaimed: {
+          'csp-hotel-100_2026-10': true,
+          'brilliant-dining-25_2026-10': 25,
+          'venture-x-travel-300_2026-05': true
+        },
+        mutedCredits: {
+          'biz-gold-walmart': true
+        },
+        skippedCredits: {
+          'amex-plat-saks-50_2026-10': true
+        },
+        fncs: [
+          {
+            id: 'fnc-1234567890',
+            name: 'Marriott 85k Certificate',
+            issuer: 'Marriott',
+            points: '85,000',
+            expireDate: '2027-04-15',
+            used: false
+          },
+          {
+            id: 'fnc-9876543210',
+            name: 'IHG Anniversary Night',
+            issuer: 'IHG',
+            points: '40,000',
+            expireDate: '2026-12-31',
+            used: true
+          }
+        ],
+        fncsClaimed: {
+          'fnc-9876543210': true
+        }
+      };
+
+      // 2. Load mock state and execute saveState() & JSON serialization (simulating Export JSON / Drive Backup)
+      appState = JSON.parse(JSON.stringify(mockOriginalState));
+      saveState(true);
+
+      const backupJsonStr = JSON.stringify(appState, null, 2);
+      if (!backupJsonStr || backupJsonStr.length < 50) {
+        errors.push("Backup serialization produced empty or invalid JSON string");
+      }
+
+      // 3. Clear in-memory state completely (simulate fresh device or reset)
+      appState = {
+        ownedCards: {},
+        cardMeta: {},
+        creditsClaimed: {},
+        mutedCredits: {},
+        skippedCredits: {},
+        fncs: [],
+        fncsClaimed: {}
+      };
+
+      if (isCardOwned('csp') || appState.fncs.length > 0) {
+        errors.push("Failed to clear in-memory state before restore test");
+      }
+
+      // 4. Simulate restore (as performed by JSON import & Google Drive restore)
+      try {
+        const parsedBackup = JSON.parse(backupJsonStr);
+        appState = parsedBackup;
+        saveState(true);
+      } catch (e) {
+        errors.push("Failed to parse or restore backup JSON: " + e.message);
+      }
+
+      // 5. Deep equality verification of all 7 data dimensions
+      function deepEqual(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b);
+      }
+
+      if (!deepEqual(appState.ownedCards, mockOriginalState.ownedCards)) {
+        errors.push("Restored ownedCards mismatch: " + JSON.stringify(appState.ownedCards));
+      }
+      if (!deepEqual(appState.cardMeta, mockOriginalState.cardMeta)) {
+        errors.push("Restored cardMeta mismatch: " + JSON.stringify(appState.cardMeta));
+      }
+      if (!deepEqual(appState.creditsClaimed, mockOriginalState.creditsClaimed)) {
+        errors.push("Restored creditsClaimed mismatch: " + JSON.stringify(appState.creditsClaimed));
+      }
+      if (!deepEqual(appState.mutedCredits, mockOriginalState.mutedCredits)) {
+        errors.push("Restored mutedCredits mismatch: " + JSON.stringify(appState.mutedCredits));
+      }
+      if (!deepEqual(appState.skippedCredits, mockOriginalState.skippedCredits)) {
+        errors.push("Restored skippedCredits mismatch: " + JSON.stringify(appState.skippedCredits));
+      }
+      if (!deepEqual(appState.fncs, mockOriginalState.fncs)) {
+        errors.push("Restored fncs mismatch: " + JSON.stringify(appState.fncs));
+      }
+      if (!deepEqual(appState.fncsClaimed, mockOriginalState.fncsClaimed)) {
+        errors.push("Restored fncsClaimed mismatch: " + JSON.stringify(appState.fncsClaimed));
+      }
+
+      // 6. Verify post-restore business logic execution
+      if (!isCreditMuted('biz-gold-walmart')) {
+        errors.push("Restored muted credit failed isCreditMuted check");
+      }
+      if (!isCreditSkipped('amex-plat-saks-50_2026-10')) {
+        errors.push("Restored skipped credit failed isCreditSkipped check");
+      }
+      if (!isCardOwned('csp') || !isCardOwned('venture-x')) {
+        errors.push("Restored card ownership check failed for csp / venture-x");
+      }
+
+      // Verify cycle cadence badge resolution with restored cardMeta
+      const cspCredit = PRESET_CREDITS.find(c => c.cardId === 'csp' && c.period === 'annual');
+      if (cspCredit) {
+        const cycleInfo = getCreditCycleInfo(cspCredit, 2026, 10);
+        if (!cycleInfo.isAnniversary) {
+          errors.push("getCreditCycleInfo failed to recognize anniversary cycle for restored CSP");
+        }
+      }
+
+      // 7. Verify UI rendering runs cleanly with restored state
+      try {
+        renderAllViews();
+      } catch (e) {
+        errors.push("renderAllViews() crashed with restored state: " + e.message);
+      }
+
+      // 8. Verify Backward Compatibility (Legacy backup without cardMeta, mutedCredits, etc.)
+      const legacyBackup = {
+        ownedCards: { 'csp': true },
+        creditsClaimed: { 'csp_hotel': true }
+      };
+      localStorage.setItem('cardflow_state_v1', JSON.stringify(legacyBackup));
+      appState = {};
+      loadState();
+      saveState(true);
+
+      if (!appState.cardMeta || typeof appState.cardMeta !== 'object') {
+        errors.push("Legacy backup fallback failed to initialize cardMeta");
+      }
+      if (!appState.mutedCredits || typeof appState.mutedCredits !== 'object') {
+        errors.push("Legacy backup fallback failed to initialize mutedCredits");
+      }
+      if (!appState.skippedCredits || typeof appState.skippedCredits !== 'object') {
+        errors.push("Legacy backup fallback failed to initialize skippedCredits");
+      }
+      if (!Array.isArray(appState.fncs)) {
+        errors.push("Legacy backup fallback failed to initialize fncs array");
+      }
+      if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') {
+        errors.push("Legacy backup fallback failed to initialize fncsClaimed");
+      }
+
       return JSON.stringify({
         errors: errors,
         expectedSum: expectedSum,
         loungeCardsCount: loungeCards.length,
-        cdwCardsCount: cdwCards.length
+        cdwCardsCount: cdwCards.length,
+        backupRestoredKeysCount: Object.keys(mockOriginalState).length
       });
     })()
     """
@@ -498,7 +667,7 @@ def check_business_logic_simulation():
             print(f"❌ {e}")
         return False
 
-    print(f"   ✅ Value conservation (${res['expectedSum']:.2f}/yr) preserved, Mute/Skip isolation verified, 12-mo simulation passed.")
+    print(f"   ✅ Value conservation (${res['expectedSum']:.2f}/yr), Mute/Skip isolation, 12-mo simulation & Backup/Restore round-trip (7/7 dims) passed.")
     return True
 
 def main():
