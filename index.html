@@ -337,6 +337,21 @@
       <div id="credits-feed-container" class="space-y-2.5">
         <!-- Dynamically populated by JS -->
       </div>
+
+      <!-- Collapsible Muted Perks Section -->
+      <div id="muted-credits-section" class="hidden mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
+        <button id="toggle-muted-section-btn" type="button" class="w-full flex items-center justify-between py-2.5 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer">
+          <span class="flex items-center gap-2">
+            <span>🔕</span>
+            <span id="muted-section-title">已停用福利 (Muted Perks)</span>
+            <span id="muted-section-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">0</span>
+          </span>
+          <span id="muted-section-chevron" class="text-slate-400 transition-transform duration-200 text-[11px]">▼</span>
+        </button>
+        <div id="muted-credits-list" class="hidden space-y-2 pt-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
     </div>
 
     <!-- ================= SUBVIEW 2: CARDS LIST ================= -->
@@ -496,6 +511,25 @@
         <!-- Dynamic Recommendation Box -->
         <div id="advisor-result-box" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
           <!-- Dynamically rendered -->
+        </div>
+      </div>
+
+      <!-- Overlap & Protection Optimizer Box -->
+      <div id="overlap-optimizer-box" class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 id="overlap-optimizer-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <span>🛡️</span>
+            <span>重複權益與保障扣繳最佳決策</span>
+          </h3>
+          <span id="overlap-status-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40">
+            4 大高階保障
+          </span>
+        </div>
+        <p id="overlap-optimizer-desc" class="text-xs text-slate-500 dark:text-slate-400">
+          比對您錢包中重疊的高階權益（快速通關、機場貴賓室、手機保險與租車一級險），提供防重複浪費與最佳扣繳建議。
+        </p>
+        <div id="overlap-optimizer-list" class="space-y-2.5 pt-1">
+          <!-- Populated by JS -->
         </div>
       </div>
 
@@ -890,6 +924,59 @@
       <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
         <button id="confirm-gdrive-help-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">
           我知道了
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Perk Actions (Skip This Month / Permanent Mute) -->
+  <div id="perk-action-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
+    <div class="relative z-[101] bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4" style="z-index: 101;">
+      <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="min-w-0 pr-2">
+          <div id="perk-action-modal-card" class="text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider truncate">Card Name</div>
+          <h3 id="perk-action-modal-title" class="text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">福利名稱</h3>
+        </div>
+        <button id="close-perk-action-modal-btn" type="button" class="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <p id="perk-action-modal-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+        選擇此項福利的追蹤方式：
+      </p>
+
+      <div class="space-y-2 pt-1">
+        <!-- Skip Button -->
+        <button id="perk-action-skip-btn" type="button" class="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-600 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 text-left transition flex items-center justify-between group cursor-pointer shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold text-base shrink-0">
+              ⏭️
+            </div>
+            <div>
+              <div id="perk-action-skip-title" class="text-xs font-bold text-slate-800 dark:text-slate-200">僅略過本期</div>
+              <div id="perk-action-skip-sub" class="text-[10.5px] text-slate-400 mt-0.5">本期不提醒且不計入待領取，下個週期自動恢復追蹤</div>
+            </div>
+          </div>
+        </button>
+
+        <!-- Permanent Mute Button -->
+        <button id="perk-action-mute-btn" type="button" class="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-rose-400 dark:hover:border-rose-600 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-rose-50/40 dark:hover:bg-rose-950/20 text-left transition flex items-center justify-between group cursor-pointer shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 flex items-center justify-center font-bold text-base shrink-0">
+              🚫
+            </div>
+            <div>
+              <div id="perk-action-mute-title" class="text-xs font-bold text-slate-800 dark:text-slate-200">永久停用此福利 (Mute)</div>
+              <div id="perk-action-mute-sub" class="text-[10.5px] text-slate-400 mt-0.5">用不到此消費，未來不再打擾，隨時可在底部還原</div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <div class="pt-2">
+        <button id="cancel-perk-action-btn" type="button" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 transition cursor-pointer">
+          取消
         </button>
       </div>
     </div>

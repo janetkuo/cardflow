@@ -331,7 +331,37 @@ const I18N = {
     advisorNoCardsBannerTitle: 'No Owned Cards Configured',
     advisorNoCardsBannerDesc: 'Select the cards in your wallet to unlock personalized swipe recommendations, or browse the complete 12-card library below.',
     advisorAllLibraryGuide: 'Full Card Library Benchmark',
-    chase524NoPersonalCards: 'No personal cards added yet. Manage cards above to start tracking your Chase 5/24 status.'
+    chase524NoPersonalCards: 'No personal cards added yet. Manage cards above to start tracking your Chase 5/24 status.',
+
+    // Perk Mute & Skip Actions
+    managePerkActionTitle: 'Manage Perk (Skip or Mute)',
+    perkActionModalDesc: 'Choose how you want to track this perk:',
+    perkActionSkipThisCycle: 'Skip this cycle',
+    perkActionUnskipThisCycle: 'Restore this cycle',
+    perkActionSkipDesc: 'Mutes reminder for this period. Reappears next cycle automatically.',
+    perkActionMutePermanent: 'Permanently Mute Perk',
+    perkActionMuteDesc: 'For perks you never use. Won\'t appear in future feeds. Can restore anytime.',
+    cancelBtn: 'Cancel',
+    skippedThisCycle: 'Skipped',
+    statusSkipped: 'Skipped this cycle',
+    mutedSectionTitle: 'Muted Perks',
+    mutedTag: 'Muted',
+    restoreTrackingBtn: 'Restore',
+    toastPerkSkipped: 'Perk skipped for this cycle (reappears next cycle)',
+    toastPerkUnskipped: 'Perk restored for this cycle',
+    toastPerkMuted: 'Perk permanently muted (can restore at bottom)',
+    toastPerkUnmuted: 'Perk restored to active tracking!',
+
+    // Overlap Optimizer
+    overlapOptimizerTitle: 'Overlap & Protection Auto-Optimizer',
+    overlapOptimizerDesc: 'Compares duplicate premium perks across your wallet (Global Entry, lounges, cell phone insurance, primary CDW) to prevent waste and pick the optimal card.',
+    overlapBadgePrefix: 'Overlap:',
+    overlapBadgeSuffix: 'cards',
+    overlapBadgeFamilyTip: 'Can use for family',
+    overlapBadgeTopChoice: 'Top Choice',
+    overlapBadgeBackup: 'Backup',
+    overlapStatusDetected: '{n} Overlaps Detected',
+    overlapStatusOptimal: 'Balanced Portfolio'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -573,9 +603,90 @@ const I18N = {
     advisorNoCardsBannerTitle: '目前尚未選取持有的卡片',
     advisorNoCardsBannerDesc: '自選您擁有的信用卡即可獲得專屬的皮夾刷卡決策建議；下方目前展示全卡庫 12 張卡之完整配置指南。',
     advisorAllLibraryGuide: '全卡庫完整配置指南',
-    chase524NoPersonalCards: '目前尚未加入任何個人卡。點擊上方「快速勾選持卡」加入個人卡，即可開始追蹤 Chase 5/24。'
+    chase524NoPersonalCards: '目前尚未加入任何個人卡。點擊上方「快速勾選持卡」加入個人卡，即可開始追蹤 Chase 5/24。',
+
+    // Perk Mute & Skip Actions
+    managePerkActionTitle: '管理此福利 (略過或停用)',
+    perkActionModalDesc: '選擇此項福利的追蹤方式：',
+    perkActionSkipThisCycle: '僅略過本期',
+    perkActionUnskipThisCycle: '取消略過本期',
+    perkActionSkipDesc: '本期不提醒且不計入待領取，下個週期自動恢復追蹤',
+    perkActionMutePermanent: '永久停用此福利 (Mute)',
+    perkActionMuteDesc: '用不到此消費，未來不再打擾，隨時可在底部還原',
+    cancelBtn: '取消',
+    skippedThisCycle: '本期已略過',
+    statusSkipped: '本期略過',
+    mutedSectionTitle: '已停用福利',
+    mutedTag: '已停用',
+    restoreTrackingBtn: '恢復追蹤',
+    toastPerkSkipped: '已略過此福利（下個週期將自動恢復）',
+    toastPerkUnskipped: '已取消略過，恢復正常追蹤',
+    toastPerkMuted: '福利已永久停用，未來不再打擾（可至頁面底部還原）',
+    toastPerkUnmuted: '已恢復此福利的正常追蹤！',
+
+    // Overlap Optimizer
+    overlapOptimizerTitle: '重複權益與保障扣繳最佳決策',
+    overlapOptimizerDesc: '比對您錢包中重疊的高階權益（快速通關、機場貴賓室、手機保險與租車一級險），提供防重複浪費與最佳扣繳建議。',
+    overlapBadgePrefix: '重複：',
+    overlapBadgeSuffix: '張卡涵蓋',
+    overlapBadgeFamilyTip: '可轉贈親友',
+    overlapBadgeTopChoice: '推薦首選',
+    overlapBadgeBackup: '備用覆蓋',
+    overlapStatusDetected: '發現 {n} 項重複權益',
+    overlapStatusOptimal: '權益配置均衡'
   }
 };
+
+// --- 2.5 DUPLICATE PERK GROUPS (OVERLAP & PROTECTION OPTIMIZER) ---
+const DUPLICATE_PERK_GROUPS = {
+  'global-entry': {
+    id: 'global-entry',
+    name: { en: 'Global Entry / TSA PreCheck Credit ($120)', 'zh-TW': 'Global Entry / TSA 快速安檢折抵 ($120)' },
+    icon: '🛂',
+    tip: {
+      en: 'Each traveler only needs 1 membership every 4-5 years. Extra statement credits can pay for a spouse, child, or friend, and still trigger 100% reimbursement!',
+      'zh-TW': '每人每 4~5 年僅需一份會籍。多出的額度可直接幫配偶、子女或親友刷卡付申請費，同樣能獲得帳單全額折抵！'
+    }
+  },
+  'lounge-access': {
+    id: 'lounge-access',
+    name: { en: 'Airport Lounge Access & Priority Pass', 'zh-TW': '機場貴賓室與 Priority Pass' },
+    icon: '🛋️',
+    tip: {
+      en: 'Multiple cards provide lounge access. Compare guest policies before trips: Venture X unlocks C1 Lounges; Amex Biz Plat unlocks Centurion Lounges.',
+      'zh-TW': '多張卡享有機場貴賓室權益。出行前留意各家特長：Venture X 可進 C1 專屬貴賓室；Amex 商業大白可進 Centurion 貴賓室。'
+    }
+  },
+  'primary-cdw': {
+    id: 'primary-cdw',
+    name: { en: 'Primary Auto Rental CDW Insurance', 'zh-TW': '租車 Primary CDW 一級車碰險' },
+    icon: '🚗',
+    tip: {
+      en: 'Primary CDW covers vehicle damage without claiming against your personal auto insurance policy (preventing rate hikes). Always swipe a Primary CDW card when renting!',
+      'zh-TW': 'Primary CDW（一級險）出險直接由信用卡賠付，完全不需報個人汽車保險、避免次年保費暴漲。租車時請務必刷 Primary CDW 卡！'
+    }
+  },
+  'cell-protection': {
+    id: 'cell-protection',
+    name: { en: 'Cell Phone Protection Insurance', 'zh-TW': '手機損壞與失竊保險' },
+    icon: '📱',
+    tip: {
+      en: 'Set mobile bill autopay to the card with the highest coverage or added perks (e.g., Amex Biz Plat offers $10/mo discount + $800 repair protection).',
+      'zh-TW': '建議將每月手機電話費自動扣繳設在最優卡（如 Amex 商業大白兼享每月 $10 折抵與高達 $800 手機維修保障）。'
+    }
+  }
+};
+
+function getOwnedCardsInPerkGroup(groupId) {
+  const result = [];
+  PRESET_CARDS.forEach(c => {
+    if (!isCardOwned(c.id)) return;
+    if (c.perks && c.perks.some(p => p.group === groupId)) {
+      result.push(c);
+    }
+  });
+  return result;
+}
 
 // --- 3. 12 CARDS PRESET DATA (2026/2027 LATEST & PERSONAL TRACKER) ---
 const PRESET_CARDS = [
@@ -605,7 +716,9 @@ const PRESET_CARDS = [
       { title: { en: 'Annual 85k Free Night Award', 'zh-TW': '年度 85,000 分免費住宿券 (FNC)' }, note: { en: 'Can be topped off with up to 15,000 points', 'zh-TW': '可再自補最高 15,000 點，兌換高達 10 萬點奢華飯店' } },
       { title: { en: 'Marriott Platinum Elite Status', 'zh-TW': '自動享有萬豪白金會籍 (Platinum)' }, note: { en: 'Complimentary breakfast, lounge access & 4pm checkout', 'zh-TW': '保證雙人免費早餐、行政酒廊禮遇、下午 4 點延遲退房' } },
       { title: { en: '25 Elite Night Credits', 'zh-TW': '每年贈送 25 晚尊貴會籍房晚 (ENC)' }, note: { en: 'Direct boost towards Titanium/Ambassador', 'zh-TW': '極大幅降低衝擊鈦金／大使會籍的門檻' } },
-      { title: { en: '$100 Luxury Property Credit', 'zh-TW': '$100 麗思卡爾頓與瑞吉消費額度' }, note: { en: '$100 property credit on 2+ consecutive nights at Ritz-Carlton or St. Regis', 'zh-TW': '連續入住 2 晚以上 The Ritz-Carlton 或 St. Regis 享 $100 館內消費折抵' } }
+      { title: { en: '$100 Luxury Property Credit', 'zh-TW': '$100 麗思卡爾頓與瑞吉消費額度' }, note: { en: '$100 property credit on 2+ consecutive nights at Ritz-Carlton or St. Regis', 'zh-TW': '連續入住 2 晚以上 The Ritz-Carlton 或 St. Regis 享 $100 館內消費折抵' } },
+      { group: 'lounge-access', title: { en: 'Priority Pass Select Lounge Access', 'zh-TW': 'Priority Pass 機場貴賓室會籍' }, note: { en: 'Unlimited access to 1,300+ lounges worldwide', 'zh-TW': '全球超過 1,300 間機場貴賓室不限次數免費使用' } },
+      { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck Credit', 'zh-TW': '$120 Global Entry / TSA 申請費折抵' }, note: { en: 'Reimbursed every 4 years', 'zh-TW': '每 4 年提供 $120 美元快速通關申請費全額折抵' } }
     ]
   },
   {
@@ -659,7 +772,10 @@ const PRESET_CARDS = [
       { title: { en: '$120 Annual Wireless Credit ($10/mo)', 'zh-TW': '每月 $10 電信通訊話費折抵' }, note: { en: 'Direct mobile phone statement credits ($120/yr)', 'zh-TW': '繳納美國主要電信話費，全年累計折抵 $120' } },
       { title: { en: '$189 CLEAR Plus Credit', 'zh-TW': 'CLEAR® Plus 機場快速安檢身分驗證' }, note: { en: 'Fast-track airport security lines', 'zh-TW': '全額補助年費，免排隊光速通過美國主要機場安檢查驗' } },
       { title: { en: '35% Pay with Points Flight Rebate', 'zh-TW': '點數開機票 35% 返還特權' }, note: { en: 'Selected airline or first/business class (min 5k pts)', 'zh-TW': '經由 AmexTravel 購票享 35% 點數回贈 (1pt 價值高達 1.54 美分)' } },
-      { title: { en: 'Hilton Gold, Marriott Gold & Leaders Club', 'zh-TW': '自動享有希爾頓金卡、萬豪金卡與 Leaders Club' }, note: { en: 'Complimentary breakfast/F&B credits, room upgrades', 'zh-TW': '享有免費早餐／餐飲折抵金與獨立奢華飯店升等特權' } }
+      { title: { en: 'Hilton Gold, Marriott Gold & Leaders Club', 'zh-TW': '自動享有希爾頓金卡、萬豪金卡與 Leaders Club' }, note: { en: 'Complimentary breakfast/F&B credits, room upgrades', 'zh-TW': '享有免費早餐／餐飲折抵金與獨立奢華飯店升等特權' } },
+      { group: 'lounge-access', best: true, title: { en: 'American Express Global Lounge Collection', 'zh-TW': 'Amex 全球貴賓室網絡 (Centurion + PP)' }, note: { en: 'Centurion Lounges, Priority Pass Select, Delta SkyClub', 'zh-TW': '包含頂級 Centurion 貴賓室、Priority Pass 與搭乘達美時免費進 SkyClub' } },
+      { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck Credit', 'zh-TW': '$120 Global Entry / TSA 申請費折抵' }, note: { en: 'Every 4 years statement credit ($120)', 'zh-TW': '每 4 年提供高達 $120 帳單折抵，全額補助申請費' } },
+      { group: 'cell-protection', best: true, title: { en: '$800 Cell Phone Protection ($50 Deductible)', 'zh-TW': '$800 手機損壞保險 (自負額 $50)' }, note: { en: 'Up to $800 per claim when paying wireless bill with card', 'zh-TW': '用此卡繳納話費享最高 $800 維修賠付，疊加每月 $10 折抵最推薦！' } }
     ]
   },
   {
@@ -685,8 +801,11 @@ const PRESET_CARDS = [
     perks: [
       { title: { en: '$300 Annual C1 Travel Credit', 'zh-TW': '每年 $300 Capital One Travel 旅遊折抵' }, note: { en: 'Seamless discount on flights, hotels & cars', 'zh-TW': '直接折抵機票、飯店或租車費用，輕鬆抵銷大部分年費' } },
       { title: { en: '10,000 Anniversary Miles ($100+)', 'zh-TW': '每年續卡贈送 10,000 哩程' }, note: { en: 'Awarded every year starting at renewal', 'zh-TW': '價值至少 $100 美元，開卡第二年起每年自動入帳' } },
-      { title: { en: 'Cardholder Lounge Access (2026 Policy)', 'zh-TW': '主卡人貴賓室權益 (2026 最新規定)' }, note: { en: 'C1 Lounges & Priority Pass for primary; guest access now $45/visit unless spend $75k+', 'zh-TW': '主卡人仍享無限次免費進入；2026年起攜伴調整為每位 $45 (年刷滿 7.5 萬免收)' } },
-      { title: { en: 'Hertz President’s Circle Status', 'zh-TW': 'Hertz President’s Circle 頂級租車會籍' }, note: { en: 'Vehicle upgrades & guaranteed choices', 'zh-TW': '可直接至專屬車位自選升等豪華車款' } }
+      { group: 'lounge-access', title: { en: 'Cardholder Lounge Access (2026 Policy)', 'zh-TW': '主卡人貴賓室權益 (2026 最新規定)' }, note: { en: 'C1 Lounges & Priority Pass for primary; guest access now $45/visit unless spend $75k+', 'zh-TW': '主卡人仍享無限次免費進入；2026年起攜伴調整為每位 $45 (年刷滿 7.5 萬免收)' } },
+      { title: { en: 'Hertz President’s Circle Status', 'zh-TW': 'Hertz President’s Circle 頂級租車會籍' }, note: { en: 'Vehicle upgrades & guaranteed choices', 'zh-TW': '可直接至專屬車位自選升等豪華車款' } },
+      { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck Credit', 'zh-TW': '$120 Global Entry / TSA 申請費折抵' }, note: { en: 'Reimbursed up to $120 every 4 years', 'zh-TW': '每 4 年提供最高 $120 申請費折抵，全額抵免' } },
+      { group: 'primary-cdw', best: true, title: { en: 'Primary Car Rental Collision Damage Waiver', 'zh-TW': '租車 Primary CDW 車碰一級險' }, note: { en: 'Top-tier coverage without filing against personal auto insurance', 'zh-TW': '全美與全球租車最省心，出險直接由 Visa Infinite 賠付' } },
+      { group: 'cell-protection', title: { en: '$800 Cell Phone Protection', 'zh-TW': '$800 手機損壞與失竊保險' }, note: { en: 'Up to $800 per claim, $50 deductible when paying bill', 'zh-TW': '繳納電信話費即可享每年最高兩次、每次 $800 理賠' } }
     ]
   },
   {
@@ -715,9 +834,9 @@ const PRESET_CARDS = [
     perks: [
       { title: { en: 'Monthly $10 DoorDash Non-Restaurant Credit', 'zh-TW': '每月 $10 DoorDash 生鮮便利超商折抵' }, note: { en: '$10/mo grocery/convenience promo code through Dec 31, 2029 ($120/yr value)', 'zh-TW': '每月提供 $10 折抵券用於便利商店、生鮮雜貨，效期至 2029/12/31（每年省 $120）' } },
       { title: { en: 'UPGRADED: $100 Annual Hotel Credit', 'zh-TW': '翻倍升級: $100 Chase Travel 飯店折抵' }, note: { en: 'Doubled from $50 to $100 per cardmember year', 'zh-TW': '飯店折抵由原先 $50 翻倍至 $100，直接抵銷整張卡片年費' } },
-      { title: { en: 'NEW: $120 Global Entry / TSA PreCheck Credit', 'zh-TW': '新增: $120 機場快速通關申請費折抵' }, note: { en: 'Up to $120 credit every 4 years for Global Entry/NEXUS', 'zh-TW': '每 4 年提供高達 $120 美元，全額補助 Global Entry 或 TSA 費用' } },
+      { group: 'global-entry', title: { en: 'NEW: $120 Global Entry / TSA PreCheck Credit', 'zh-TW': '新增: $120 機場快速通關申請費折抵' }, note: { en: 'Up to $120 credit every 4 years for Global Entry/NEXUS', 'zh-TW': '每 4 年提供高達 $120 美元，全額補助 Global Entry 或 TSA 費用' } },
       { title: { en: 'Transfer Partner Hub', 'zh-TW': '解鎖航空與飯店轉點樞紐' }, note: { en: 'Transfer to United, Aeroplan, Flying Blue, and Hyatt (4:3)', 'zh-TW': '可將 Ink Cash、CFU 的點數集中轉點，發揮最大商務艙價值' } },
-      { title: { en: 'Primary Car Rental CDW', 'zh-TW': '租車頂級 Primary 車碰險' }, note: { en: 'Top-tier comprehensive collision damage waiver', 'zh-TW': '出險免先動用個人汽車保險，在美租車最省心首選' } }
+      { group: 'primary-cdw', best: true, title: { en: 'Primary Car Rental CDW', 'zh-TW': '租車頂級 Primary 車碰險' }, note: { en: 'Top-tier comprehensive collision damage waiver', 'zh-TW': '出險免先動用個人汽車保險，在美租車最省心首選' } }
     ]
   },
   {
@@ -746,7 +865,9 @@ const PRESET_CARDS = [
       { title: { en: 'NEW: $100 Annual Airline Statement Credit', 'zh-TW': '新增: $100 航空公司購票折抵' }, note: { en: '$100 back on $250+ qualifying direct airline bookings', 'zh-TW': '購買單筆 $250 以上機票，享 $100 帳單直接折抵' } },
       { title: { en: '4th Night Free on Award Stays', 'zh-TW': '點數換房住四晚免一晚 (住四免一)' }, note: { en: 'Redeem 3 nights, 4th night costs 0 points', 'zh-TW': '兌換連續 4 晚僅需支付 3 晚點數，長期度假極划算' } },
       { title: { en: '$50 United TravelBank Cash ($25 H1, $25 H2)', 'zh-TW': '每年 $50 聯合航空 TravelBank 購票金' }, note: { en: 'Direct discount on United flights', 'zh-TW': '每年 1 月與 7 月各入帳 $25，買美聯航機票現抵' } },
-      { title: { en: 'Elite Status (Platinum through 2027)', 'zh-TW': '精英會籍 (持卡人享白金待遇至 2027 底)' }, note: { en: 'Existing holders grandfathered in Platinum through 2027', 'zh-TW': '現有持卡人至 2027 年底前維持白金權益（房型升等與加成）' } }
+      { title: { en: 'Elite Status (Platinum through 2027)', 'zh-TW': '精英會籍 (持卡人享白金待遇至 2027 底)' }, note: { en: 'Existing holders grandfathered in Platinum through 2027', 'zh-TW': '現有持卡人至 2027 年底前維持白金權益（房型升等與加成）' } },
+      { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck / NEXUS Credit', 'zh-TW': '$120 Global Entry / TSA / NEXUS 申請費折抵' }, note: { en: 'Reimbursed every 4 years', 'zh-TW': '每 4 年提供 $120 美元申請費折抵' } },
+      { group: 'cell-protection', title: { en: '$800 Cell Phone Protection', 'zh-TW': '$800 手機損壞保險' }, note: { en: 'Up to $800 coverage with $50 deductible', 'zh-TW': '支付手機帳單享最高 $800 損壞賠付' } }
     ]
   },
   {
@@ -1108,6 +1229,8 @@ let appState = {
   ownedCards: {}, // cardId: boolean (default false: cards are unowned until user selects)
   cardMeta: {},   // cardId: { openedYear: null, openedMonth: null, renewMonth: null }
   creditsClaimed: {},
+  mutedCredits: {},   // creditId: boolean (permanent mute)
+  skippedCredits: {}, // stateKey: boolean (skipped for this specific period)
   fncs: [],
   fncsClaimed: {}
 };
@@ -1128,6 +1251,12 @@ function loadState() {
   if (!appState.cardMeta || typeof appState.cardMeta !== 'object') {
     appState.cardMeta = {};
   }
+  if (!appState.mutedCredits || typeof appState.mutedCredits !== 'object') {
+    appState.mutedCredits = {};
+  }
+  if (!appState.skippedCredits || typeof appState.skippedCredits !== 'object') {
+    appState.skippedCredits = {};
+  }
   if (!Array.isArray(appState.fncs)) {
     appState.fncs = [];
   }
@@ -1139,12 +1268,23 @@ function loadState() {
 function saveState(skipAutoSync = false) {
   if (!appState.ownedCards || typeof appState.ownedCards !== 'object') appState.ownedCards = {};
   if (!appState.cardMeta || typeof appState.cardMeta !== 'object') appState.cardMeta = {};
+  if (!appState.mutedCredits || typeof appState.mutedCredits !== 'object') appState.mutedCredits = {};
+  if (!appState.skippedCredits || typeof appState.skippedCredits !== 'object') appState.skippedCredits = {};
   if (!Array.isArray(appState.fncs)) appState.fncs = [];
   if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') appState.fncsClaimed = {};
   localStorage.setItem(STATE_KEY, JSON.stringify(appState));
   if (!skipAutoSync) {
     handleDriveAutoSync();
   }
+}
+
+// Credit Muting & Skipping Helpers
+function isCreditMuted(creditId) {
+  return !!(appState.mutedCredits && appState.mutedCredits[creditId]);
+}
+
+function isCreditSkipped(stateKey) {
+  return !!(appState.skippedCredits && appState.skippedCredits[stateKey]);
 }
 
 // Card Ownership Helper Functions
@@ -1335,6 +1475,7 @@ function renderAllViews() {
   renderDonutChart();
   renderLoyaltyStatusCards();
   renderChase524();
+  renderOverlapOptimizer();
   selectAdvisorCategory(currentAdvisorCat);
   renderManageCardsChecklist();
   updateBannerText();
@@ -1381,7 +1522,7 @@ function renderAnnualBreakdownModal() {
   const cardsCountEl = document.getElementById('annual-modal-cards-count');
   if (!container) return;
 
-  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId) && !isCreditMuted(item.id));
   const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
 
   if (cardsCountEl) {
@@ -1834,7 +1975,12 @@ function applyLanguage(lang) {
     'annual-modal-title': 'annualModalTitle',
     'annual-modal-sub': 'annualModalSub',
     'annual-modal-total-desc': 'annualModalTotalDesc',
-    'confirm-annual-modal-btn': 'annualModalCloseBtn'
+    'confirm-annual-modal-btn': 'annualModalCloseBtn',
+    'perk-action-modal-desc': 'perkActionModalDesc',
+    'cancel-perk-action-btn': 'cancelBtn',
+    'muted-section-title': 'mutedSectionTitle',
+    'overlap-optimizer-title': 'overlapOptimizerTitle',
+    'overlap-optimizer-desc': 'overlapOptimizerDesc'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -1940,7 +2086,9 @@ function renderCredits() {
   const mKey = getMonthKey();
 
   // Filter credits to owned cards only
-  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const allOwnedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const ownedCredits = allOwnedCredits.filter(item => !isCreditMuted(item.id));
+  const mutedOwnedCredits = allOwnedCredits.filter(item => isCreditMuted(item.id));
   const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
 
   let monthlyUnclaimed = 0;
@@ -1951,7 +2099,7 @@ function renderCredits() {
   let totalClaimedAnnualValue = 0;
   let totalExpiredAnnualValue = 0;
 
-  // Pre-calculate urgency info for all owned credits
+  // Pre-calculate urgency info for all active owned credits
   const creditMetaList = ownedCredits.map(item => {
     const urgency = getCreditUrgencyInfo(item, curYear, curMonth);
     return { item, urgency };
@@ -1967,8 +2115,11 @@ function renderCredits() {
       totalAnnualPerks += c.amount * 12;
       totalMonthlyItems++;
       const currentMonthClaimed = !!appState.creditsClaimed[`${c.id}_${mKey}`];
+      const currentMonthSkipped = isCreditSkipped(`${c.id}_${mKey}`);
       if (currentMonthClaimed) {
         monthlyClaimedCount++;
+      } else if (currentMonthSkipped) {
+        // Skipped for current month, do not count as pending debt
       } else {
         monthlyUnclaimed += c.amount;
       }
@@ -1997,9 +2148,12 @@ function renderCredits() {
       }
       if (curMonth % 3 === 0) {
         const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${curQuarter}`];
+        const isSk = isCreditSkipped(`${c.id}_${curYear}_Q${curQuarter}`);
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
+        } else if (isSk) {
+          // Skipped for current quarter
         } else {
           monthlyUnclaimed += c.amount;
         }
@@ -2016,9 +2170,12 @@ function renderCredits() {
       });
       if (curMonth % 6 === 0) {
         const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_H${curHalf}`];
+        const isSk = isCreditSkipped(`${c.id}_${curYear}_H${curHalf}`);
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
+        } else if (isSk) {
+          // Skipped for current half
         } else {
           monthlyUnclaimed += c.amount;
         }
@@ -2026,6 +2183,7 @@ function renderCredits() {
     } else {
       totalAnnualPerks += c.amount;
       const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
+      const isSk = isCreditSkipped(`${c.id}_${curYear}`);
       if (isCl) {
         totalClaimedAnnualValue += c.amount;
       }
@@ -2034,6 +2192,8 @@ function renderCredits() {
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
+        } else if (isSk) {
+          // Skipped for current year
         } else {
           monthlyUnclaimed += c.amount;
         }
@@ -2104,11 +2264,17 @@ function renderCredits() {
       stateKey = `${item.id}_${curYear}`;
     }
     const isClaimed = !!appState.creditsClaimed[stateKey];
-    return { item, urgency, stateKey, isClaimed };
+    const isSkipped = isCreditSkipped(stateKey);
+    return { item, urgency, stateKey, isClaimed, isSkipped };
   });
 
-  // Sort items: Unclaimed first, then by urgencyOrder, then by amount desc
+  // Sort items: Unclaimed active first, then by urgencyOrder, then by amount desc
   preparedItems.sort((a, b) => {
+    const aActive = !a.isClaimed && !a.isSkipped;
+    const bActive = !b.isClaimed && !b.isSkipped;
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
     if (a.isClaimed !== b.isClaimed) {
       return a.isClaimed ? 1 : -1;
     }
@@ -2161,7 +2327,7 @@ function renderCredits() {
       </div>
     `;
   } else {
-    preparedItems.forEach(({ item, urgency, stateKey, isClaimed }) => {
+    preparedItems.forEach(({ item, urgency, stateKey, isClaimed, isSkipped }) => {
       const titleText = typeof item.title === 'object' ? (item.title[currentLang] || item.title['zh-TW']) : item.title;
       const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
       const tipText = typeof item.tip === 'object' ? (item.tip[currentLang] || item.tip['zh-TW']) : item.tip;
@@ -2173,7 +2339,7 @@ function renderCredits() {
       }
 
       let urgencyBadgeHtml = '';
-      if (urgency.isExpiringSoon) {
+      if (urgency.isExpiringSoon && !isSkipped) {
         urgencyBadgeHtml = `
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center gap-1 shrink-0 ${isClaimed ? 'opacity-70' : 'animate-pulse shadow-2xs'}">
             <span>⏰</span>
@@ -2182,32 +2348,73 @@ function renderCredits() {
         `;
       }
 
+      let skippedBadgeHtml = '';
+      if (isSkipped) {
+        skippedBadgeHtml = `
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">
+            ⏭️ ${t('skippedThisCycle')}
+          </span>
+        `;
+      }
+
       const cardEl = document.createElement('div');
-      cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${isClaimed ? 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800'}`;
+      let cardBgClass = 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800';
+      if (isClaimed) {
+        cardBgClass = 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60';
+      } else if (isSkipped) {
+        cardBgClass = 'bg-slate-50/50 dark:bg-slate-900/40 border-dashed border-slate-200 dark:border-slate-800 opacity-70';
+      }
+      cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${cardBgClass}`;
 
       let statusSubText = isClaimed ? t('claimedThisMonth') : t('readyToClaim');
-      if (!isClaimed && urgency.isExpiringSoon) {
+      if (isSkipped) {
+        statusSubText = t('statusSkipped');
+      } else if (!isClaimed && urgency.isExpiringSoon) {
         statusSubText = currentLang === 'zh-TW' ? '本月截止' : 'Expires this mo';
+      }
+
+      let checkBtnHtml = '';
+      if (isClaimed) {
+        checkBtnHtml = `
+          <button onclick="toggleCreditClaim('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer bg-indigo-600 border-indigo-600 text-white">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </button>
+        `;
+      } else if (isSkipped) {
+        checkBtnHtml = `
+          <button onclick="toggleCreditSkip('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400" title="${t('perkActionUnskipThisCycle')}">
+            <span class="text-xs">⏭</span>
+          </button>
+        `;
+      } else {
+        checkBtnHtml = `
+          <button onclick="toggleCreditClaim('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500">
+          </button>
+        `;
       }
 
       cardEl.innerHTML = `
         <div class="flex items-center gap-3 min-w-0">
-          <button onclick="toggleCreditClaim('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer ${isClaimed ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500'}">
-            ${isClaimed ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
-          </button>
+          ${checkBtnHtml}
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">${titleText}</span>
+              <span class="text-xs sm:text-sm font-bold ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : isSkipped ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${titleText}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
               ${urgencyBadgeHtml}
+              ${skippedBadgeHtml}
               ${cycleNoteHtml}
             </div>
             <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
           </div>
         </div>
-        <div class="text-right shrink-0">
-          <div class="text-xs sm:text-sm font-extrabold ${isClaimed ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">+$${item.amount.toFixed(2)}</div>
-          <div class="text-[10px] ${urgency.isExpiringSoon && !isClaimed ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400'} mt-0.5">${statusSubText}</div>
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="text-right">
+            <div class="text-xs sm:text-sm font-extrabold ${isClaimed || isSkipped ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">+$${item.amount.toFixed(2)}</div>
+            <div class="text-[10px] ${urgency.isExpiringSoon && !isClaimed && !isSkipped ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400'} mt-0.5">${statusSubText}</div>
+          </div>
+          <button onclick="openPerkActionModal('${item.id}', '${stateKey}')" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer" title="${t('managePerkActionTitle')}">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="10" cy="16" r="2"/></svg>
+          </button>
         </div>
       `;
       container.appendChild(cardEl);
@@ -2313,10 +2520,153 @@ function renderCredits() {
   if (countLabel) {
     countLabel.innerText = `${preparedItems.length} ${t('itemsUnit')}`;
   }
+
+  // Render collapsible muted section at bottom of credits feed
+  renderMutedCreditsSection(mutedOwnedCredits);
+}
+
+// --- Muted Credits Section & Perk Action Modal Handlers ---
+let isMutedSectionExpanded = false;
+
+function renderMutedCreditsSection(mutedCredits) {
+  const section = document.getElementById('muted-credits-section');
+  const countBadge = document.getElementById('muted-section-count-badge');
+  const list = document.getElementById('muted-credits-list');
+  if (!section || !list) return;
+
+  if (!mutedCredits || mutedCredits.length === 0) {
+    section.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+
+  section.classList.remove('hidden');
+  if (countBadge) countBadge.innerText = mutedCredits.length;
+
+  list.innerHTML = mutedCredits.map(item => {
+    const titleText = typeof item.title === 'object' ? (item.title[currentLang] || item.title['zh-TW']) : item.title;
+    const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
+    const periodLabel = item.period === 'monthly' ? t('periodTabMonth') :
+                        item.period === 'quarterly' ? t('periodQuarterly') :
+                        item.period === 'semiannual' ? t('periodSemiAnnual') : t('periodTabYear');
+
+    return `
+      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 line-through">${titleText}</span>
+            <span class="px-2 py-0.5 rounded-full text-[9.5px] font-semibold bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400">${cardText}</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40">🔕 ${t('mutedTag')}</span>
+          </div>
+          <div class="text-[10.5px] text-slate-400 mt-0.5">+$${item.amount.toFixed(2)} (${periodLabel})</div>
+        </div>
+        <button onclick="unmuteCredit('${item.id}')" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-650 border border-slate-200 dark:border-slate-600 text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-2xs transition shrink-0 cursor-pointer flex items-center gap-1">
+          <span>↩️</span>
+          <span>${t('restoreTrackingBtn')}</span>
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleMutedCreditsSection() {
+  const list = document.getElementById('muted-credits-list');
+  const chevron = document.getElementById('muted-section-chevron');
+  if (!list) return;
+  isMutedSectionExpanded = !isMutedSectionExpanded;
+  if (isMutedSectionExpanded) {
+    list.classList.remove('hidden');
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  } else {
+    list.classList.add('hidden');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  }
+}
+
+let activePerkActionCreditId = null;
+let activePerkActionStateKey = null;
+
+function openPerkActionModal(creditId, stateKey) {
+  const modal = document.getElementById('perk-action-modal');
+  const credit = PRESET_CREDITS.find(c => c.id === creditId);
+  if (!modal || !credit) return;
+
+  activePerkActionCreditId = creditId;
+  activePerkActionStateKey = stateKey;
+
+  const cardNameEl = document.getElementById('perk-action-modal-card');
+  const titleEl = document.getElementById('perk-action-modal-title');
+  const skipTitleEl = document.getElementById('perk-action-skip-title');
+  const skipSubEl = document.getElementById('perk-action-skip-sub');
+  const muteTitleEl = document.getElementById('perk-action-mute-title');
+  const muteSubEl = document.getElementById('perk-action-mute-sub');
+
+  const cardText = typeof credit.card === 'object' ? (credit.card[currentLang] || credit.card['zh-TW']) : credit.card;
+  const titleText = typeof credit.title === 'object' ? (credit.title[currentLang] || credit.title['zh-TW']) : credit.title;
+
+  if (cardNameEl) cardNameEl.innerText = cardText;
+  if (titleEl) titleEl.innerText = titleText;
+
+  const isSkipped = isCreditSkipped(stateKey);
+  if (skipTitleEl) {
+    skipTitleEl.innerText = isSkipped ? t('perkActionUnskipThisCycle') : t('perkActionSkipThisCycle');
+  }
+  if (skipSubEl) {
+    skipSubEl.innerText = isSkipped ? t('toastPerkUnskipped') : t('perkActionSkipDesc');
+  }
+  if (muteTitleEl) muteTitleEl.innerText = t('perkActionMutePermanent');
+  if (muteSubEl) muteSubEl.innerText = t('perkActionMuteDesc');
+
+  modal.classList.remove('hidden');
+}
+
+function closePerkActionModal() {
+  const modal = document.getElementById('perk-action-modal');
+  if (modal) modal.classList.add('hidden');
+  activePerkActionCreditId = null;
+  activePerkActionStateKey = null;
+}
+
+function toggleCreditSkip(stateKey) {
+  if (!appState.skippedCredits) appState.skippedCredits = {};
+  const willBeSkipped = !appState.skippedCredits[stateKey];
+  appState.skippedCredits[stateKey] = willBeSkipped;
+
+  if (willBeSkipped && appState.creditsClaimed && appState.creditsClaimed[stateKey]) {
+    delete appState.creditsClaimed[stateKey];
+  }
+
+  saveState();
+  renderCredits();
+  showToast(willBeSkipped ? t('toastPerkSkipped') : t('toastPerkUnskipped'));
+}
+
+function muteCredit(creditId) {
+  if (!appState.mutedCredits) appState.mutedCredits = {};
+  appState.mutedCredits[creditId] = true;
+  saveState();
+  renderCredits();
+  renderDonutChart();
+  showToast(t('toastPerkMuted'));
+}
+
+function unmuteCredit(creditId) {
+  if (appState.mutedCredits && appState.mutedCredits[creditId]) {
+    delete appState.mutedCredits[creditId];
+  }
+  saveState();
+  renderCredits();
+  renderDonutChart();
+  showToast(t('toastPerkUnmuted'));
 }
 
 function toggleCreditClaim(key) {
-  appState.creditsClaimed[key] = !appState.creditsClaimed[key];
+  if (appState.skippedCredits && appState.skippedCredits[key]) {
+    delete appState.skippedCredits[key];
+    appState.creditsClaimed[key] = true;
+  } else {
+    appState.creditsClaimed[key] = !appState.creditsClaimed[key];
+  }
   saveState();
   renderCredits();
 }
@@ -2327,6 +2677,11 @@ function resetCurrentMonth() {
     Object.keys(appState.creditsClaimed).forEach(k => {
       if (k.includes(mKey)) delete appState.creditsClaimed[k];
     });
+    if (appState.skippedCredits) {
+      Object.keys(appState.skippedCredits).forEach(k => {
+        if (k.includes(mKey)) delete appState.skippedCredits[k];
+      });
+    }
     saveState();
     renderCredits();
   }
@@ -2495,10 +2850,41 @@ function renderCards() {
     let perkList = card.perks.map(p => {
       const title = typeof p.title === 'object' ? (p.title[currentLang] || p.title['zh-TW']) : p.title;
       const note = typeof p.note === 'object' ? (p.note[currentLang] || p.note['zh-TW']) : p.note;
+
+      let overlapBadgeHtml = '';
+      if (p.group && isOwned) {
+        const ownedInGroup = getOwnedCardsInPerkGroup(p.group);
+        if (ownedInGroup.length >= 2) {
+          const groupMeta = DUPLICATE_PERK_GROUPS[p.group];
+          const badgePrefix = t('overlapBadgePrefix');
+          const badgeSuffix = t('overlapBadgeSuffix');
+
+          let tipText = '';
+          if (p.group === 'global-entry') {
+            tipText = t('overlapBadgeFamilyTip');
+          } else if (p.best) {
+            tipText = `👑 ${t('overlapBadgeTopChoice')}`;
+          } else {
+            tipText = t('overlapBadgeBackup');
+          }
+
+          const tipTitle = groupMeta ? (groupMeta.tip[currentLang] || groupMeta.tip['zh-TW']) : '';
+
+          overlapBadgeHtml = `
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 shrink-0" title="${tipTitle}">
+              <span>⚠️</span>
+              <span>${badgePrefix} ${ownedInGroup.length} ${badgeSuffix}</span>
+              ${tipText ? `<span class="opacity-80">· ${tipText}</span>` : ''}
+            </span>
+          `;
+        }
+      }
+
       return `
-        <li class="text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-1">
-          <span class="text-indigo-500 font-bold">·</span>
+        <li class="text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-1.5 flex-wrap">
+          <span class="text-indigo-500 font-bold shrink-0">·</span>
           <span><strong>${title}</strong>: ${note}</span>
+          ${overlapBadgeHtml}
         </li>
       `;
     }).join('');
@@ -3300,6 +3686,99 @@ function renderChase524() {
   `;
 }
 
+function renderOverlapOptimizer() {
+  const container = document.getElementById('overlap-optimizer-list');
+  const badgeEl = document.getElementById('overlap-status-badge');
+  if (!container) return;
+
+  const groups = Object.values(DUPLICATE_PERK_GROUPS);
+  let totalOverlaps = 0;
+
+  const html = groups.map(group => {
+    const ownedCards = getOwnedCardsInPerkGroup(group.id);
+    const hasOverlap = ownedCards.length >= 2;
+    if (hasOverlap) totalOverlaps++;
+
+    const groupTitle = typeof group.name === 'object' ? (group.name[currentLang] || group.name['zh-TW']) : group.name;
+    const groupTip = typeof group.tip === 'object' ? (group.tip[currentLang] || group.tip['zh-TW']) : group.tip;
+
+    let statusPill = '';
+    let cardsSummaryHtml = '';
+
+    if (ownedCards.length === 0) {
+      statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500">${currentLang === 'zh-TW' ? '未持有' : 'Unowned'}</span>`;
+      
+      const libraryCards = PRESET_CARDS.filter(c => c.perks && c.perks.some(p => p.group === group.id));
+      const libNames = libraryCards.map(c => {
+        const nick = typeof c.nickname === 'object' ? (c.nickname[currentLang] || c.nickname['zh-TW']) : c.nickname;
+        return nick;
+      }).join('、');
+
+      cardsSummaryHtml = `
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+          ${currentLang === 'zh-TW' ? `全卡庫提供卡片：${libNames}` : `Library benchmark: ${libNames}`}
+        </div>
+      `;
+    } else {
+      if (hasOverlap) {
+        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">⚠️ ${t('overlapBadgePrefix')} ${ownedCards.length} ${t('overlapBadgeSuffix')}</span>`;
+      } else {
+        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60">✨ ${currentLang === 'zh-TW' ? '1張卡涵蓋' : '1 Card Owned'}</span>`;
+      }
+
+      const cardBadges = ownedCards.map(c => {
+        const nick = typeof c.nickname === 'object' ? (c.nickname[currentLang] || c.nickname['zh-TW']) : c.nickname;
+        const perkObj = c.perks.find(p => p.group === group.id);
+        const isBest = perkObj && perkObj.best;
+        const badgeClass = isBest
+          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 font-bold'
+          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
+
+        return `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] border ${badgeClass}">
+            ${isBest ? '👑 ' : ''}${nick}
+          </span>
+        `;
+      }).join(' ');
+
+      cardsSummaryHtml = `
+        <div class="flex items-center gap-1.5 flex-wrap mt-1">
+          ${cardBadges}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-base shrink-0">${group.icon}</span>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${groupTitle}</span>
+          </div>
+          ${statusPill}
+        </div>
+        ${cardsSummaryHtml}
+        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 text-[10.5px] text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
+          <span class="font-bold text-indigo-600 dark:text-indigo-400">💡 ${currentLang === 'zh-TW' ? '最佳策略：' : 'Optimal Action: '}</span>
+          ${groupTip}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+
+  if (badgeEl) {
+    if (totalOverlaps > 0) {
+      badgeEl.innerText = t('overlapStatusDetected').replace('{n}', totalOverlaps);
+      badgeEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60';
+    } else {
+      badgeEl.innerText = t('overlapStatusOptimal');
+      badgeEl.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40';
+    }
+  }
+}
+
 function selectAdvisorCategory(cat) {
   currentAdvisorCat = cat;
   document.querySelectorAll('.adv-cat-btn').forEach(btn => {
@@ -3528,6 +4007,13 @@ function switchSubView(viewId, updateHash = true) {
         window.location.hash = targetHash;
       }
     }
+  }
+
+  if (viewId === 'advisor') {
+    renderOverlapOptimizer();
+    renderChase524();
+  } else if (viewId === 'cards') {
+    renderCards();
   }
 
   // Instantly scroll to top so mobile view immediately reflects the active tab!
@@ -3908,6 +4394,8 @@ function setupModals() {
           ownedCards: {},
           cardMeta: {},
           creditsClaimed: {},
+          mutedCredits: {},
+          skippedCredits: {},
           fncs: [],
           fncsClaimed: {}
         };
@@ -3971,6 +4459,43 @@ function setupModals() {
     cardDateModal.addEventListener('click', (e) => {
       if (e.target === cardDateModal) closeCardDateModal();
     });
+  }
+
+  // Perk Action Modal Bindings
+  const perkActionModal = document.getElementById('perk-action-modal');
+  const closePerkActionBtn = document.getElementById('close-perk-action-modal-btn');
+  const cancelPerkActionBtn = document.getElementById('cancel-perk-action-btn');
+  const perkActionSkipBtn = document.getElementById('perk-action-skip-btn');
+  const perkActionMuteBtn = document.getElementById('perk-action-mute-btn');
+
+  if (closePerkActionBtn) closePerkActionBtn.onclick = closePerkActionModal;
+  if (cancelPerkActionBtn) cancelPerkActionBtn.onclick = closePerkActionModal;
+  if (perkActionSkipBtn) {
+    perkActionSkipBtn.onclick = () => {
+      if (activePerkActionStateKey) {
+        toggleCreditSkip(activePerkActionStateKey);
+        closePerkActionModal();
+      }
+    };
+  }
+  if (perkActionMuteBtn) {
+    perkActionMuteBtn.onclick = () => {
+      if (activePerkActionCreditId) {
+        muteCredit(activePerkActionCreditId);
+        closePerkActionModal();
+      }
+    };
+  }
+  if (perkActionModal) {
+    perkActionModal.addEventListener('click', (e) => {
+      if (e.target === perkActionModal) closePerkActionModal();
+    });
+  }
+
+  // Muted Section Toggle Button
+  const toggleMutedBtn = document.getElementById('toggle-muted-section-btn');
+  if (toggleMutedBtn) {
+    toggleMutedBtn.onclick = toggleMutedCreditsSection;
   }
 
   // Card ownership filter buttons
