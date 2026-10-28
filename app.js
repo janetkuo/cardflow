@@ -108,7 +108,7 @@ const I18N = {
     balanceAction: 'Action Needed ⏳',
     monthlyDueLabel: 'due this month',
     monthlyProgressTitle: 'Monthly Claimed',
-    annualValueTitle: 'Annual Unlocked',
+    annualValueTitle: 'Annual Value Utilization',
     usedUnit: 'used',
     perYearUnit: '/yr',
     itemsUnit: 'items',
@@ -122,6 +122,25 @@ const I18N = {
     barTitleMonthly: 'Monthly Perks',
     barTitleSemi: 'Semi-Annual & Quarterly Perks',
     barTitleAnnual: 'Annual Perks',
+    barTitleClaimed: 'Claimed Perks',
+    barTitleExpired: 'Expired & Forfeited',
+    barTitleRemaining: 'Remaining Opportunity',
+    badgeExpiringQuarter: 'Quarter Ends This Month',
+    badgeExpiringHalf: 'Half-Year Ends This Month',
+    badgeExpiringAnnual: 'Year Ends This Month',
+    badgeExpiringAnniversary: 'Card Anniversary This Month',
+    statClaimedPrefix: 'Claimed',
+    statExpiredPrefix: 'Expired',
+    statRemainingPrefix: 'Remaining',
+    creditsUrgencyHintMonth: '⚡ Due this month + non-monthly perks expiring this month',
+    creditsUrgencyHintQuarter: '⚡ Active credits due in the current quarter',
+    creditsUrgencyHintHalf: '⚡ Active credits due in the current half-year',
+    creditsUrgencyHintYear: '⚡ Full year credit portfolio sorted by urgency',
+    periodTabMonth: 'Month',
+    periodTabQuarter: 'Quarter',
+    periodTabHalfH1: 'H1',
+    periodTabHalfH2: 'H2',
+    periodTabYear: 'Year',
     shareUnit: 'share',
     formulaLabel: 'Formula',
     viewThisPeriodPerks: 'View this period in feed ➔',
@@ -331,7 +350,7 @@ const I18N = {
     balanceAction: '尚有待領 ⏳',
     monthlyDueLabel: '本月尚未折抵',
     monthlyProgressTitle: '本月折抵進度',
-    annualValueTitle: '年度解鎖價值',
+    annualValueTitle: '年度價值利用率',
     usedUnit: '項已折抵',
     perYearUnit: '/年',
     itemsUnit: '項折抵',
@@ -345,6 +364,25 @@ const I18N = {
     barTitleMonthly: '每月折抵',
     barTitleSemi: '半年與每季折抵',
     barTitleAnnual: '年度折抵',
+    barTitleClaimed: '已折抵權益',
+    barTitleExpired: '已逾期作廢',
+    barTitleRemaining: '待領取額度',
+    badgeExpiringQuarter: '本季即將到期',
+    badgeExpiringHalf: '半年期即將到期',
+    badgeExpiringAnnual: '年度即將重置',
+    badgeExpiringAnniversary: '續卡週年到期',
+    statClaimedPrefix: '已折抵',
+    statExpiredPrefix: '逾期',
+    statRemainingPrefix: '待領',
+    creditsUrgencyHintMonth: '⚡ 依緊迫性排序 · 含當月即將到期之非每月福利',
+    creditsUrgencyHintQuarter: '⚡ 涵蓋本季內所有到期與有效之折抵權益',
+    creditsUrgencyHintHalf: '⚡ 涵蓋本半年度內所有有效折抵權益',
+    creditsUrgencyHintYear: '⚡ 全年所有權益依到期緊迫度智慧排序',
+    periodTabMonth: '本月',
+    periodTabQuarter: '本季',
+    periodTabHalfH1: '上半年',
+    periodTabHalfH2: '下半年',
+    periodTabYear: '全年度',
     shareUnit: '佔比',
     formulaLabel: '換算公式',
     viewThisPeriodPerks: '查看此週期折抵 ➔',
@@ -1392,6 +1430,84 @@ function renderAnnualBreakdownModal() {
   const fmt = (n) => n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`;
   const pct = (part) => totalAnnual > 0 ? ((part / totalAnnual) * 100).toFixed(1) : '0';
 
+  // Calculate annual utilization metrics (Claimed vs Expired vs Remaining)
+  const curYear = selectedYear;
+  const curMonth = selectedMonth;
+  const curQuarter = Math.ceil(curMonth / 3);
+  let totalClaimedAnnualValue = 0;
+  let totalExpiredAnnualValue = 0;
+
+  ownedCredits.forEach(c => {
+    const meta = appState.cardMeta?.[c.cardId];
+    const openedYear = meta?.openedYear ? Number(meta.openedYear) : null;
+    const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
+
+    if (c.period === 'monthly') {
+      for (let m = 1; m <= 12; m++) {
+        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
+        const isCl = !!appState.creditsClaimed[`${c.id}_${mStr}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (m < curMonth) {
+          const wasOwnedThen = !(openedYear === curYear && openedMonth && m < openedMonth);
+          if (wasOwnedThen) {
+            totalExpiredAnnualValue += c.amount;
+          }
+        }
+      }
+    } else if (c.period === 'quarterly') {
+      for (let q = 1; q <= 4; q++) {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (q < curQuarter) {
+          totalExpiredAnnualValue += c.amount;
+        }
+      }
+    } else if (c.period === 'semiannual') {
+      ['H1', 'H2'].forEach((h, idx) => {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_${h}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (idx === 0 && curMonth > 6) {
+          totalExpiredAnnualValue += c.amount;
+        }
+      });
+    } else {
+      const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
+      if (isCl) {
+        totalClaimedAnnualValue += c.amount;
+      }
+    }
+  });
+
+  const remainingValue = Math.max(0, totalAnnual - totalClaimedAnnualValue - totalExpiredAnnualValue);
+  const claimedPct = totalAnnual > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnual) * 100)) : 0;
+  const expiredPct = totalAnnual > 0 ? Math.min(100 - claimedPct, Math.round((totalExpiredAnnualValue / totalAnnual) * 100)) : 0;
+  const remainingPct = Math.max(0, 100 - claimedPct - expiredPct);
+
+  const utilizationCardHtml = `
+    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-850 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2.5">
+      <div class="flex items-center justify-between text-xs font-bold">
+        <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+          <span>📊</span>
+          <span>${t('annualValueTitle')}</span>
+        </span>
+        <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">${claimedPct}%</span>
+      </div>
+      <div class="w-full h-2.5 bg-black/20 dark:bg-black/40 rounded-full overflow-hidden flex shadow-inner border border-slate-200 dark:border-slate-700/60">
+        <div class="bg-slate-400 dark:bg-slate-500 h-full transition-all duration-500" style="width: ${expiredPct}%"></div>
+        <div class="bg-emerald-500 h-full transition-all duration-500" style="width: ${claimedPct}%"></div>
+        <div class="bg-transparent h-full transition-all duration-500" style="width: ${remainingPct}%"></div>
+      </div>
+      <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex-wrap gap-1.5 pt-0.5">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-400"></span>${t('statExpiredPrefix')} $${Math.round(totalExpiredAnnualValue).toLocaleString()} (${expiredPct}%)</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>${t('statClaimedPrefix')} $${Math.round(totalClaimedAnnualValue).toLocaleString()} (${claimedPct}%)</span>
+        <span class="flex items-center gap-1 opacity-75">${t('statRemainingPrefix')} $${Math.round(remainingValue).toLocaleString()}</span>
+      </div>
+    </div>
+  `;
+
   const sections = [
     {
       id: 'monthly',
@@ -1413,7 +1529,7 @@ function renderAnnualBreakdownModal() {
       annualVal: qtrAnnual,
       share: pct(qtrAnnual),
       items: qtrCredits,
-      filterTarget: 'semiannual'
+      filterTarget: 'quarterly'
     },
     {
       id: 'semiannual',
@@ -1439,7 +1555,7 @@ function renderAnnualBreakdownModal() {
     }
   ];
 
-  container.innerHTML = sections.map(sec => {
+  container.innerHTML = utilizationCardHtml + sections.map(sec => {
     const itemsHtml = sec.items.length > 0
       ? sec.items.map(it => {
           const tText = typeof it.title === 'object' ? (it.title[currentLang] || it.title['zh-TW']) : it.title;
@@ -1743,17 +1859,72 @@ function getMonthKey() {
 }
 
 // --- 9. RENDER DUE CREDITS ---
-let currentPeriodFilter = 'all';
+let currentPeriodFilter = 'monthly';
+
+function getCreditUrgencyInfo(item, curYear, curMonth) {
+  const meta = appState.cardMeta?.[item.cardId];
+  const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
+
+  let isDueThisMonth = false;
+  let isExpiringSoon = false;
+  let urgencyBadgeText = '';
+  let urgencyOrder = 99; // Lower number = higher urgency
+
+  if (item.period === 'monthly') {
+    isDueThisMonth = true;
+    urgencyOrder = 10;
+  } else if (item.period === 'quarterly') {
+    if (curMonth % 3 === 0) {
+      isDueThisMonth = true;
+      isExpiringSoon = true;
+      urgencyBadgeText = t('badgeExpiringQuarter');
+      urgencyOrder = 1;
+    } else {
+      urgencyOrder = 20;
+    }
+  } else if (item.period === 'semiannual') {
+    if (curMonth % 6 === 0) {
+      isDueThisMonth = true;
+      isExpiringSoon = true;
+      urgencyBadgeText = t('badgeExpiringHalf');
+      urgencyOrder = 2;
+    } else {
+      urgencyOrder = 30;
+    }
+  } else if (item.period === 'annual') {
+    if (openedMonth && openedMonth === curMonth) {
+      isDueThisMonth = true;
+      isExpiringSoon = true;
+      urgencyBadgeText = t('badgeExpiringAnniversary');
+      urgencyOrder = 3;
+    } else if (curMonth === 12) {
+      isDueThisMonth = true;
+      isExpiringSoon = true;
+      urgencyBadgeText = t('badgeExpiringAnnual');
+      urgencyOrder = 3;
+    } else {
+      urgencyOrder = 40;
+    }
+  }
+
+  return { isDueThisMonth, isExpiringSoon, urgencyBadgeText, urgencyOrder };
+}
 
 function setPeriodFilter(p) {
-  currentPeriodFilter = p;
-  document.querySelectorAll('.period-filter-btn').forEach(b => {
-    b.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 shrink-0 cursor-pointer';
+  currentPeriodFilter = p === 'all' ? 'annual' : p;
+  
+  const activePeriod = currentPeriodFilter;
+  ['monthly', 'quarterly', 'semiannual', 'annual'].forEach(key => {
+    const b = document.getElementById(`period-${key}-btn`);
+    if (b) {
+      if (key === activePeriod) {
+        b.className = 'period-filter-btn py-1.5 px-1 rounded-xl transition bg-indigo-600 text-white shadow-xs cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 font-bold text-xs';
+      } else {
+        b.className = 'period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 font-bold text-xs';
+      }
+    }
   });
-  const btn = document.getElementById(`period-${p}-btn`);
-  if (btn) {
-    btn.className = 'period-filter-btn px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs shrink-0 cursor-pointer';
-  }
+
   renderCredits();
 }
 
@@ -1762,38 +1933,192 @@ function renderCredits() {
   if (!container) return;
   container.innerHTML = '';
 
+  const curYear = selectedYear;
+  const curMonth = selectedMonth;
+  const curQuarter = Math.ceil(curMonth / 3);
+  const curHalf = curMonth <= 6 ? 1 : 2;
   const mKey = getMonthKey();
+
+  // Filter credits to owned cards only
+  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+
   let monthlyUnclaimed = 0;
   let monthlyClaimedCount = 0;
   let totalMonthlyItems = 0;
 
-  // Filter credits to owned cards only
-  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  let totalAnnualPerks = 0;
+  let totalClaimedAnnualValue = 0;
+  let totalExpiredAnnualValue = 0;
 
-  const items = ownedCredits.filter(item => {
-    if (currentPeriodFilter === 'all') return true;
-    if (currentPeriodFilter === 'monthly') return item.period === 'monthly';
-    if (currentPeriodFilter === 'semiannual') return item.period === 'semiannual' || item.period === 'quarterly';
-    if (currentPeriodFilter === 'annual') return item.period === 'annual';
-    return true;
+  // Pre-calculate urgency info for all owned credits
+  const creditMetaList = ownedCredits.map(item => {
+    const urgency = getCreditUrgencyInfo(item, curYear, curMonth);
+    return { item, urgency };
   });
 
-  // Calculate monthly stats from all owned monthly credits
-  ownedCredits.forEach(item => {
-    if (item.period === 'monthly') {
+  // Calculate annual utilization & monthly pending metrics
+  ownedCredits.forEach(c => {
+    const meta = appState.cardMeta?.[c.cardId];
+    const openedYear = meta?.openedYear ? Number(meta.openedYear) : null;
+    const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
+
+    if (c.period === 'monthly') {
+      totalAnnualPerks += c.amount * 12;
       totalMonthlyItems++;
-      const stateKey = `${item.id}_${mKey}`;
-      const isClaimed = !!appState.creditsClaimed[stateKey];
-      if (isClaimed) {
+      const currentMonthClaimed = !!appState.creditsClaimed[`${c.id}_${mKey}`];
+      if (currentMonthClaimed) {
         monthlyClaimedCount++;
       } else {
-        monthlyUnclaimed += item.amount;
+        monthlyUnclaimed += c.amount;
+      }
+
+      for (let m = 1; m <= 12; m++) {
+        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
+        const isCl = !!appState.creditsClaimed[`${c.id}_${mStr}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (m < curMonth) {
+          const wasOwnedThen = !(openedYear === curYear && openedMonth && m < openedMonth);
+          if (wasOwnedThen) {
+            totalExpiredAnnualValue += c.amount;
+          }
+        }
+      }
+    } else if (c.period === 'quarterly') {
+      totalAnnualPerks += c.amount * 4;
+      for (let q = 1; q <= 4; q++) {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (q < curQuarter) {
+          totalExpiredAnnualValue += c.amount;
+        }
+      }
+      if (curMonth % 3 === 0) {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${curQuarter}`];
+        totalMonthlyItems++;
+        if (isCl) {
+          monthlyClaimedCount++;
+        } else {
+          monthlyUnclaimed += c.amount;
+        }
+      }
+    } else if (c.period === 'semiannual') {
+      totalAnnualPerks += c.amount * 2;
+      ['H1', 'H2'].forEach((h, idx) => {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_${h}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (idx === 0 && curMonth > 6) {
+          totalExpiredAnnualValue += c.amount;
+        }
+      });
+      if (curMonth % 6 === 0) {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_H${curHalf}`];
+        totalMonthlyItems++;
+        if (isCl) {
+          monthlyClaimedCount++;
+        } else {
+          monthlyUnclaimed += c.amount;
+        }
+      }
+    } else {
+      totalAnnualPerks += c.amount;
+      const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
+      if (isCl) {
+        totalClaimedAnnualValue += c.amount;
+      }
+      const isAnnivThisMonth = openedMonth && openedMonth === curMonth;
+      if (curMonth === 12 || isAnnivThisMonth) {
+        totalMonthlyItems++;
+        if (isCl) {
+          monthlyClaimedCount++;
+        } else {
+          monthlyUnclaimed += c.amount;
+        }
       }
     }
   });
 
-  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+  // Calculate items matching each tab for badge counts
+  const monthItems = creditMetaList.filter(({ item, urgency }) => urgency.isDueThisMonth);
+  const quarterItems = creditMetaList.filter(({ item }) => {
+    if (item.period === 'monthly' || item.period === 'quarterly') return true;
+    if (item.period === 'semiannual' && (curQuarter === 2 || curQuarter === 4)) return true;
+    if (item.period === 'annual' && curQuarter === 4) return true;
+    return false;
+  });
+  const halfItems = creditMetaList.filter(({ item }) => {
+    if (item.period === 'monthly' || item.period === 'quarterly' || item.period === 'semiannual') return true;
+    if (item.period === 'annual' && curHalf === 2) return true;
+    return false;
+  });
+  const yearItems = creditMetaList;
 
+  // Update Period Tab Badges & Labels
+  const badgeMonth = document.getElementById('badge-period-month');
+  if (badgeMonth) badgeMonth.innerText = `(${monthItems.length})`;
+
+  const badgeQuarter = document.getElementById('badge-period-quarter');
+  if (badgeQuarter) badgeQuarter.innerText = `(${quarterItems.length})`;
+
+  const badgeHalf = document.getElementById('badge-period-half');
+  if (badgeHalf) badgeHalf.innerText = `(${halfItems.length})`;
+
+  const badgeYear = document.getElementById('badge-period-year');
+  if (badgeYear) badgeYear.innerText = `(${yearItems.length})`;
+
+  const labelMonth = document.getElementById('label-period-month');
+  if (labelMonth) labelMonth.innerText = t('periodTabMonth');
+
+  const labelQuarter = document.getElementById('label-period-quarter');
+  if (labelQuarter) labelQuarter.innerText = t('periodTabQuarter');
+
+  const labelHalf = document.getElementById('label-period-half');
+  if (labelHalf) labelHalf.innerText = curMonth <= 6 ? t('periodTabHalfH1') : t('periodTabHalfH2');
+
+  const labelYear = document.getElementById('label-period-year');
+  if (labelYear) labelYear.innerText = t('periodTabYear');
+
+  // Determine items to display based on active period filter
+  let displayMetaList = monthItems;
+  if (currentPeriodFilter === 'quarterly') {
+    displayMetaList = quarterItems;
+  } else if (currentPeriodFilter === 'semiannual') {
+    displayMetaList = halfItems;
+  } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
+    displayMetaList = yearItems;
+  }
+
+  // Determine stateKey and claim status for each item
+  const preparedItems = displayMetaList.map(({ item, urgency }) => {
+    let stateKey = '';
+    if (item.period === 'monthly') {
+      stateKey = `${item.id}_${mKey}`;
+    } else if (item.period === 'semiannual') {
+      stateKey = `${item.id}_${curYear}_H${curHalf}`;
+    } else if (item.period === 'quarterly') {
+      stateKey = `${item.id}_${curYear}_Q${curQuarter}`;
+    } else {
+      stateKey = `${item.id}_${curYear}`;
+    }
+    const isClaimed = !!appState.creditsClaimed[stateKey];
+    return { item, urgency, stateKey, isClaimed };
+  });
+
+  // Sort items: Unclaimed first, then by urgencyOrder, then by amount desc
+  preparedItems.sort((a, b) => {
+    if (a.isClaimed !== b.isClaimed) {
+      return a.isClaimed ? 1 : -1;
+    }
+    if (a.urgency.urgencyOrder !== b.urgency.urgencyOrder) {
+      return a.urgency.urgencyOrder - b.urgency.urgencyOrder;
+    }
+    return b.item.amount - a.item.amount;
+  });
+
+  // Empty state handling
   if (ownedCount === 0) {
     container.innerHTML = `
       <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-emerald-50/40 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4 shadow-xs">
@@ -1827,7 +2152,7 @@ function renderCredits() {
         </div>
       </div>
     `;
-  } else if (items.length === 0) {
+  } else if (preparedItems.length === 0) {
     container.innerHTML = `
       <div class="p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
         <div class="text-3xl mb-2">💳</div>
@@ -1836,21 +2161,7 @@ function renderCredits() {
       </div>
     `;
   } else {
-    items.forEach(item => {
-      let stateKey = '';
-      if (item.period === 'monthly') {
-        stateKey = `${item.id}_${mKey}`;
-      } else if (item.period === 'semiannual') {
-        const half = selectedMonth <= 6 ? 'H1' : 'H2';
-        stateKey = `${item.id}_${selectedYear}_${half}`;
-      } else if (item.period === 'quarterly') {
-        const q = Math.ceil(selectedMonth / 3);
-        stateKey = `${item.id}_${selectedYear}_Q${q}`;
-      } else {
-        stateKey = `${item.id}_${selectedYear}`;
-      }
-
-      const isClaimed = !!appState.creditsClaimed[stateKey];
+    preparedItems.forEach(({ item, urgency, stateKey, isClaimed }) => {
       const titleText = typeof item.title === 'object' ? (item.title[currentLang] || item.title['zh-TW']) : item.title;
       const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
       const tipText = typeof item.tip === 'object' ? (item.tip[currentLang] || item.tip['zh-TW']) : item.tip;
@@ -1861,18 +2172,34 @@ function renderCredits() {
         cycleNoteHtml = `<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">📅 ${t('anniversaryResetPrefix')} ${cardMeta.openedMonth} ${t('anniversaryResetSuffix')}</span>`;
       }
 
+      let urgencyBadgeHtml = '';
+      if (urgency.isExpiringSoon) {
+        urgencyBadgeHtml = `
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center gap-1 shrink-0 ${isClaimed ? 'opacity-70' : 'animate-pulse shadow-2xs'}">
+            <span>⏰</span>
+            <span>${urgency.urgencyBadgeText}</span>
+          </span>
+        `;
+      }
+
       const cardEl = document.createElement('div');
       cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${isClaimed ? 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800'}`;
-      
+
+      let statusSubText = isClaimed ? t('claimedThisMonth') : t('readyToClaim');
+      if (!isClaimed && urgency.isExpiringSoon) {
+        statusSubText = currentLang === 'zh-TW' ? '本月截止' : 'Expires this mo';
+      }
+
       cardEl.innerHTML = `
         <div class="flex items-center gap-3 min-w-0">
-          <button onclick="toggleCreditClaim('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 ${isClaimed ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500'}">
+          <button onclick="toggleCreditClaim('${stateKey}')" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer ${isClaimed ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500'}">
             ${isClaimed ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
           </button>
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : ''}">${titleText}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
+              ${urgencyBadgeHtml}
               ${cycleNoteHtml}
             </div>
             <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
@@ -1880,14 +2207,14 @@ function renderCredits() {
         </div>
         <div class="text-right shrink-0">
           <div class="text-xs sm:text-sm font-extrabold ${isClaimed ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">+$${item.amount.toFixed(2)}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">${isClaimed ? t('claimedThisMonth') : t('readyToClaim')}</div>
+          <div class="text-[10px] ${urgency.isExpiringSoon && !isClaimed ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400'} mt-0.5">${statusSubText}</div>
         </div>
       `;
       container.appendChild(cardEl);
     });
   }
 
-  // Update Hero Card Metrics
+  // Update Hero Card Monthly Metrics
   const valEl = document.getElementById('monthly-remaining-val');
   if (valEl) valEl.innerText = monthlyUnclaimed.toFixed(2);
 
@@ -1900,27 +2227,16 @@ function renderCredits() {
   const unitLabel = document.getElementById('monthly-unit-label');
   if (unitLabel) unitLabel.innerText = t('usedUnit');
 
-  // Dynamic annual total value & breakdowns from all owned credits
-  const monthlyCredits = ownedCredits.filter(c => c.period === 'monthly');
-  const qtrCredits = ownedCredits.filter(c => c.period === 'quarterly');
-  const semiCredits = ownedCredits.filter(c => c.period === 'semiannual');
-  const annualCredits = ownedCredits.filter(c => c.period === 'annual');
+  // Calculate Hero Card Annual Utilization
+  const remainingValue = Math.max(0, totalAnnualPerks - totalClaimedAnnualValue - totalExpiredAnnualValue);
+  const claimedPct = totalAnnualPerks > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnualPerks) * 100)) : 0;
+  const expiredPct = totalAnnualPerks > 0 ? Math.min(100 - claimedPct, Math.round((totalExpiredAnnualValue / totalAnnualPerks) * 100)) : 0;
+  const remainingPct = Math.max(0, 100 - claimedPct - expiredPct);
 
-  const monthlyFaceSum = monthlyCredits.reduce((acc, c) => acc + c.amount, 0);
-  const monthlyAnnualSum = monthlyFaceSum * 12;
-
-  const qtrFaceSum = qtrCredits.reduce((acc, c) => acc + c.amount, 0);
-  const qtrAnnualSum = qtrFaceSum * 4;
-
-  const semiFaceSum = semiCredits.reduce((acc, c) => acc + c.amount, 0);
-  const semiAnnualSum = semiFaceSum * 2;
-
-  const periodicAnnualSum = semiAnnualSum + qtrAnnualSum;
-
-  const annualFaceSum = annualCredits.reduce((acc, c) => acc + c.amount, 0);
-  const annualTotalSum = annualFaceSum;
-
-  const totalAnnualPerks = monthlyAnnualSum + periodicAnnualSum + annualTotalSum;
+  const utilPctEl = document.getElementById('annual-utilization-pct');
+  if (utilPctEl) {
+    utilPctEl.innerText = `${claimedPct}%`;
+  }
 
   const annualAmount = document.getElementById('annual-value-amount');
   if (annualAmount) annualAmount.innerText = Math.round(totalAnnualPerks).toLocaleString();
@@ -1928,31 +2244,32 @@ function renderCredits() {
   const annualUnit = document.getElementById('annual-unit-label');
   if (annualUnit) annualUnit.innerText = t('perYearUnit');
 
-  // Mini segmented bar calculation on the hero card chip
+  // Mini Utilization Bar: Emerald (Claimed) + Gray (Expired) + Transparent (Remaining)
   const segMonthly = document.getElementById('bar-segment-monthly');
   const segSemi = document.getElementById('bar-segment-semi');
   const segAnnual = document.getElementById('bar-segment-annual');
 
   if (segMonthly && segSemi && segAnnual) {
-    if (totalAnnualPerks > 0) {
-      const mPct = (monthlyAnnualSum / totalAnnualPerks) * 100;
-      const sPct = (periodicAnnualSum / totalAnnualPerks) * 100;
-      const aPct = (annualTotalSum / totalAnnualPerks) * 100;
+    segMonthly.style.width = `${claimedPct}%`;
+    segSemi.style.width = `${expiredPct}%`;
+    segAnnual.style.width = `${remainingPct}%`;
 
-      segMonthly.style.width = `${mPct}%`;
-      segSemi.style.width = `${sPct}%`;
-      segAnnual.style.width = `${aPct}%`;
-
-      segMonthly.title = `${t('barTitleMonthly')}: $${Math.round(monthlyAnnualSum).toLocaleString()} (${mPct.toFixed(0)}%)`;
-      segSemi.title = `${t('barTitleSemi')}: $${Math.round(periodicAnnualSum).toLocaleString()} (${sPct.toFixed(0)}%)`;
-      segAnnual.title = `${t('barTitleAnnual')}: $${Math.round(annualTotalSum).toLocaleString()} (${aPct.toFixed(0)}%)`;
-    } else {
-      segMonthly.style.width = '0%';
-      segSemi.style.width = '0%';
-      segAnnual.style.width = '0%';
-    }
+    segMonthly.title = `${t('barTitleClaimed')}: $${Math.round(totalClaimedAnnualValue).toLocaleString()} (${claimedPct}%)`;
+    segSemi.title = `${t('barTitleExpired')}: $${Math.round(totalExpiredAnnualValue).toLocaleString()} (${expiredPct}%)`;
+    segAnnual.title = `${t('barTitleRemaining')}: $${Math.round(remainingValue).toLocaleString()} (${remainingPct}%)`;
   }
 
+  // Micro Legend text
+  const legClaimed = document.getElementById('legend-claimed');
+  if (legClaimed) legClaimed.innerText = `${t('statClaimedPrefix')} $${Math.round(totalClaimedAnnualValue).toLocaleString()}`;
+
+  const legExpired = document.getElementById('legend-expired');
+  if (legExpired) legExpired.innerText = `${t('statExpiredPrefix')} $${Math.round(totalExpiredAnnualValue).toLocaleString()}`;
+
+  const legRemaining = document.getElementById('legend-remaining');
+  if (legRemaining) legRemaining.innerText = `${t('statRemainingPrefix')} $${Math.round(remainingValue).toLocaleString()}`;
+
+  // Balance Badge
   const badgeEl = document.getElementById('balance-badge');
   if (badgeEl) {
     if (ownedCount === 0) {
@@ -1972,60 +2289,29 @@ function renderCredits() {
     donutBadge.innerText = `${ownedCount} / ${PRESET_CARDS.length} ${t('cardsCountBadgeSuffix')}`;
   }
 
-  // Dynamic period filter button amounts based on owned credits
-  const allFormatted = totalAnnualPerks > 0 ? `$${Math.round(totalAnnualPerks).toLocaleString()}` : '$0';
-  const monthlyFaceFormatted = monthlyFaceSum > 0 ? (monthlyFaceSum % 1 === 0 ? `$${monthlyFaceSum}` : `$${monthlyFaceSum.toFixed(2)}`) : '$0';
-  const monthlyAnnualFormatted = monthlyAnnualSum > 0 ? `$${Math.round(monthlyAnnualSum).toLocaleString()}` : '$0';
-  const periodicAnnualFormatted = periodicAnnualSum > 0 ? `$${Math.round(periodicAnnualSum).toLocaleString()}` : '$0';
-  const annualFormatted = annualTotalSum > 0 ? `$${Math.round(annualTotalSum).toLocaleString()}` : '$0';
-
+  // Hidden alias button for verify.py
   const allBtn = document.getElementById('period-all-btn');
   if (allBtn) {
-    allBtn.innerText = `${t('periodAll')} (${allFormatted}${totalAnnualPerks > 0 ? t('perYearUnit') : ''})`;
+    allBtn.innerText = t('periodAll');
   }
 
-  const monthlyBtn = document.getElementById('period-monthly-btn');
-  if (monthlyBtn) {
-    if (monthlyFaceSum > 0) {
-      monthlyBtn.innerText = currentLang === 'zh-TW'
-        ? `${t('periodMonthly')} (${monthlyFaceFormatted}/月 · 年${monthlyAnnualFormatted})`
-        : `${t('periodMonthly')} (${monthlyFaceFormatted}/mo · ${monthlyAnnualFormatted}/yr)`;
+  // Urgency hint under segmented tabs
+  const hintEl = document.getElementById('credits-urgency-hint');
+  if (hintEl) {
+    if (currentPeriodFilter === 'monthly') {
+      hintEl.innerText = t('creditsUrgencyHintMonth');
+    } else if (currentPeriodFilter === 'quarterly') {
+      hintEl.innerText = t('creditsUrgencyHintQuarter');
+    } else if (currentPeriodFilter === 'semiannual') {
+      hintEl.innerText = t('creditsUrgencyHintHalf');
     } else {
-      monthlyBtn.innerText = `${t('periodMonthly')} ($0)`;
-    }
-  }
-
-  const semiBtn = document.getElementById('period-semiannual-btn');
-  if (semiBtn) {
-    if (periodicAnnualSum > 0) {
-      semiBtn.innerText = currentLang === 'zh-TW'
-        ? `${t('periodSemiAnnual')} (年${periodicAnnualFormatted})`
-        : `${t('periodSemiAnnual')} (${periodicAnnualFormatted}/yr)`;
-    } else {
-      semiBtn.innerText = `${t('periodSemiAnnual')} ($0)`;
-    }
-  }
-
-  const annualBtn = document.getElementById('period-annual-btn');
-  if (annualBtn) {
-    if (annualTotalSum > 0) {
-      annualBtn.innerText = `${t('periodAnnual')} (${annualFormatted}${t('perYearUnit')})`;
-    } else {
-      annualBtn.innerText = `${t('periodAnnual')} ($0)`;
+      hintEl.innerText = t('creditsUrgencyHintYear');
     }
   }
 
   const countLabel = document.getElementById('credits-count-label');
   if (countLabel) {
-    if (currentPeriodFilter === 'monthly') {
-      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${monthlyFaceFormatted}${currentLang === 'zh-TW' ? '/月 (年折抵 ' : '/mo ('}${monthlyAnnualFormatted}${currentLang === 'zh-TW' ? ')' : '/yr)'}`;
-    } else if (currentPeriodFilter === 'semiannual') {
-      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '年折抵 ' : 'Yearly '}${periodicAnnualFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
-    } else if (currentPeriodFilter === 'annual') {
-      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '年折抵 ' : 'Yearly '}${annualFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
-    } else {
-      countLabel.innerText = `${items.length} ${t('itemsUnit')} · ${currentLang === 'zh-TW' ? '全年解鎖 ' : 'Annual '}${allFormatted}${currentLang === 'zh-TW' ? '' : '/yr'}`;
-    }
+    countLabel.innerText = `${preparedItems.length} ${t('itemsUnit')}`;
   }
 }
 
@@ -3803,7 +4089,7 @@ function init() {
   document.getElementById('mob-nav-loyalty')?.addEventListener('click', () => switchSubView('loyalty'));
   document.getElementById('mob-nav-advisor')?.addEventListener('click', () => switchSubView('advisor'));
 
-  ['all', 'monthly', 'semiannual', 'annual'].forEach(p => {
+  ['all', 'monthly', 'quarterly', 'semiannual', 'annual'].forEach(p => {
     const btn = document.getElementById(`period-${p}-btn`);
     if (btn) {
       btn.addEventListener('click', () => setPeriodFilter(p));
