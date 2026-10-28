@@ -184,9 +184,13 @@ const I18N = {
     catHotels: 'Hotels',
     catOffice: 'Office & Telco',
     catGrocery: 'Supermarkets',
-    catGas: 'Gas & EV Charging',
-    catForeign: 'Overseas / No FTF',
+    catGas: 'Gas & Transit',
+    catForeign: 'Overseas (0% FTF)',
     catCatchall: 'Everyday Catch-all (2x)',
+    advLocDomestic: 'US Domestic Spend',
+    advisorModeOverseasBadge: 'Overseas Spend (0% FTF Priority)',
+    advisorModeDomesticBadge: 'US Domestic Spend',
+    advisorOverseasFtfWarning: '⚠️ Warning: Owned cards in this category charge foreign fees (FTF). Avoid swiping abroad!',
     
     // Modals
     modalAddFnc: 'Add Free Night Certificate',
@@ -456,9 +460,13 @@ const I18N = {
     catHotels: '飯店住宿',
     catOffice: '辦公文具與電信',
     catGrocery: '超市生鮮採買',
-    catGas: '加油與電車充電 (3x)',
-    catForeign: '海外實體 / 免手續費',
+    catGas: '加油與交通',
+    catForeign: '海外 / 外幣消費 (0% FTF)',
     catCatchall: '一般日常消費 (萬用 2x)',
+    advLocDomestic: '美國境內消費',
+    advisorModeOverseasBadge: '海外消費 (0% FTF 優先)',
+    advisorModeDomesticBadge: '美國境內消費',
+    advisorOverseasFtfWarning: '⚠️ 警示：您持有的該類別卡片出國皆需收取手續費 (FTF)，海外請避免使用！',
     
     // Modals
     modalAddFnc: '新增免費住宿券 (FNC)',
@@ -1920,6 +1928,7 @@ function applyLanguage(lang) {
     'fnc-section-desc': 'fncSectionDesc',
     'add-fnc-btn-label': 'addFncBtn',
     'advisor-heading': 'advisorHeading',
+    'adv-loc-domestic-label': 'advLocDomestic',
     'cat-label-dining': 'catDining',
     'cat-label-flights': 'catFlights',
     'cat-label-hotels': 'catHotels',
@@ -3399,7 +3408,30 @@ function renderDonutChart() {
 }
 
 // --- 15. CARD ADVISOR RECOMMENDATION LOGIC ---
+const ADVISOR_MODE_KEY = 'cardflow_advisor_mode_v1';
 let currentAdvisorCat = 'dining';
+let currentAdvisorMode = localStorage.getItem(ADVISOR_MODE_KEY) || 'domestic';
+
+function setAdvisorMode(mode) {
+  currentAdvisorMode = mode;
+  try { localStorage.setItem(ADVISOR_MODE_KEY, mode); } catch (_) {}
+  updateAdvisorModeUI();
+  selectAdvisorCategory(currentAdvisorCat);
+}
+
+function updateAdvisorModeUI() {
+  const domBtn = document.getElementById('adv-loc-domestic-btn');
+  const ovesBtn = document.getElementById('adv-loc-overseas-btn');
+  if (domBtn && ovesBtn) {
+    if (currentAdvisorMode === 'overseas') {
+      ovesBtn.className = 'flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer bg-amber-600 text-white shadow-xs font-bold';
+      domBtn.className = 'flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold';
+    } else {
+      domBtn.className = 'flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs font-bold';
+      ovesBtn.className = 'flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold';
+    }
+  }
+}
 
 const ADVISOR_RULES = {
   dining: {
@@ -3416,11 +3448,11 @@ const ADVISOR_RULES = {
         }
       },
       'csp': {
-        mult: '3x UR / 0% FTF',
-        badge: { en: 'Best for Overseas & Delivery', 'zh-TW': '海外用餐與外送首選' },
+        mult: '3x UR',
+        badge: { en: 'Best for Delivery & DashPass', 'zh-TW': '外送與生鮮首選' },
         note: {
-          en: 'Chase Sapphire Preferred: 3x UR worldwide, zero FTF, plus complimentary DashPass & $10/mo DoorDash non-restaurant grocery credit.',
-          'zh-TW': 'Chase Sapphire Preferred: 全球餐廳 3x UR、0% FTF Visa 萬用通道。附贈 DashPass 與每月 $10 DoorDash 生鮮折抵。'
+          en: 'Chase Sapphire Preferred: 3x UR on dining, complimentary DashPass & $10/mo DoorDash grocery credit.',
+          'zh-TW': 'Chase Sapphire Preferred: 餐廳 3x UR，附贈免費 DashPass 會籍與每月 $10 DoorDash 生鮮折抵。'
         }
       },
       'bonvoy-brilliant': {
@@ -3431,12 +3463,85 @@ const ADVISOR_RULES = {
           'zh-TW': 'Marriott Brilliant: 每個月第一筆 $25 用餐請務必刷萬豪 Brilliant 直接現抵，每年穩賺 $300 報銷！'
         }
       }
+    },
+    domestic: {
+      winner: 'Amex Business Gold (4x MR) / CSP (3x UR + $10 DoorDash) / Brilliant (3x + $25/mo)',
+      candidateCards: ['amex-biz-gold', 'csp', 'bonvoy-brilliant'],
+      cards: {
+        'amex-biz-gold': {
+          mult: '4x MR',
+          badge: { en: 'Top Multiplier', 'zh-TW': '最高倍率' },
+          note: {
+            en: 'Amex Business Gold: 4x MR when dining is one of your top 2 billing cycle spend categories (up to $150k/yr).',
+            'zh-TW': 'Amex 商業金卡: 若餐廳為該期帳單前二大花費類別，享 4x MR 點數累積（每年上限 15 萬美元）。'
+          }
+        },
+        'csp': {
+          mult: '3x UR',
+          badge: { en: 'Best for Delivery & DashPass', 'zh-TW': '外送與生鮮首選' },
+          note: {
+            en: 'Chase Sapphire Preferred: 3x UR on dining, complimentary DashPass & $10/mo DoorDash grocery credit.',
+            'zh-TW': 'Chase Sapphire Preferred: 餐廳 3x UR，附贈免費 DashPass 會籍與每月 $10 DoorDash 生鮮折抵。'
+          }
+        },
+        'bonvoy-brilliant': {
+          mult: '3x + $25/mo',
+          badge: { en: 'Monthly Habit', 'zh-TW': '每月必刷' },
+          note: {
+            en: 'Marriott Bonvoy Brilliant: Swipe for your first $25 dining spend each calendar month to capture $300/yr credits.',
+            'zh-TW': 'Marriott Brilliant: 每個月第一筆 $25 用餐請務必刷萬豪 Brilliant 直接現抵，每年穩賺 $300 報銷！'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'CSP (3x UR / 0% FTF / Visa 全球通) / Venture X (2x / 0% FTF) / Brilliant (3x + $25/mo)',
+      candidateCards: ['csp', 'venture-x', 'bonvoy-brilliant', 'amex-biz-gold'],
+      cards: {
+        'csp': {
+          mult: '3x UR · 0% FTF',
+          badge: { en: 'Top Overseas Dining (Visa)', 'zh-TW': '海外用餐唯一首選 (Visa)' },
+          note: {
+            en: 'Chase Sapphire Preferred: 3x UR worldwide on dining, 0% FTF, and Visa acceptance everywhere even when Amex is not accepted.',
+            'zh-TW': 'Chase Sapphire Preferred: 全球餐廳一律 3x UR、0% FTF，Visa 在海外餐廳接受度遠勝 Amex，出國用餐無腦首選！'
+          }
+        },
+        'venture-x': {
+          mult: '2x Miles · 0% FTF',
+          badge: { en: 'Universal Fallback', 'zh-TW': '海外全能備援 (Visa)' },
+          note: {
+            en: 'Capital One Venture X: 2x miles everywhere with 0% FTF. Excellent fallback if you do not carry a dining card.',
+            'zh-TW': 'Capital One Venture X: 0% FTF，任何海外消費 2x 哩程累積。若手邊無專屬餐飲卡時的萬用首選。'
+          }
+        },
+        'bonvoy-brilliant': {
+          mult: '3x + $25/mo · 0% FTF',
+          badge: { en: 'Worldwide Credit', 'zh-TW': '全球餐廳皆可折抵' },
+          note: {
+            en: 'Marriott Bonvoy Brilliant: 0% FTF, 3x points worldwide, and your monthly $25 dining credit works at overseas restaurants too!',
+            'zh-TW': 'Marriott Brilliant: 0% FTF、全球餐廳 3x 萬豪點數，且每月 $25 餐飲額度在國外實體餐廳消費一樣能全額報銷！'
+          }
+        },
+        'amex-biz-gold': {
+          mult: '4x MR · 0% FTF',
+          badge: { en: 'Highest If Amex Accepted', 'zh-TW': '最高倍率 (若店家收 Amex)' },
+          note: {
+            en: 'Amex Business Gold: 4x MR on dining worldwide with 0% FTF, but check if the overseas restaurant accepts American Express.',
+            'zh-TW': 'Amex 商業金卡: 全球餐廳享有 4x MR 與 0% FTF，但海外中小型餐廳 Amex 接受度較低，建議結帳前先確認。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'cic', rate: '3.0% FTF' },
+        { id: 'bbp', rate: '2.7% FTF' }
+      ]
     }
   },
   flights: {
     title: { en: '✈️ Flight Bookings', 'zh-TW': '✈️ 機票預訂' },
     winner: 'The Business Platinum (5x MR) / Capital One Venture X (5x / $300 Credit)',
-    candidateCards: ['amex-biz-plat', 'venture-x'],
+    candidateCards: ['amex-biz-plat', 'venture-x', 'csp'],
     cards: {
       'amex-biz-plat': {
         mult: '5x MR',
@@ -3453,13 +3558,86 @@ const ADVISOR_RULES = {
           en: 'Capital One Venture X: 5x Miles via C1 Travel portal. Use your $300 annual portal credit first!',
           'zh-TW': 'Capital One Venture X: 透過 C1 Travel 訂票享 5x 哩程，優先折抵每年 $300 入口網站機票額度！'
         }
+      },
+      'csp': {
+        mult: '2x Travel',
+        badge: { en: 'Solid Travel Insurance', 'zh-TW': '優質旅遊保障' },
+        note: {
+          en: 'Chase Sapphire Preferred: 2x UR on flights, with primary trip cancellation & baggage delay protection.',
+          'zh-TW': 'Chase Sapphire Preferred: 購買機票享 2x UR，附帶完善的行程取消險與行李延誤保障。'
+        }
       }
+    },
+    domestic: {
+      winner: 'The Business Platinum (5x MR) / Capital One Venture X (5x / $300 Credit)',
+      candidateCards: ['amex-biz-plat', 'venture-x', 'csp'],
+      cards: {
+        'amex-biz-plat': {
+          mult: '5x MR',
+          badge: { en: 'Top Air Protection', 'zh-TW': '頂級延誤保障' },
+          note: {
+            en: 'Amex Business Platinum: 5x MR via AmexTravel with industry-leading 6-hour flight delay insurance and baggage protection.',
+            'zh-TW': 'Amex 商業大白: 透過 AmexTravel 享 5x MR，享有全美最頂級的 6 小時班機延誤險與行李遺失保障。'
+          }
+        },
+        'venture-x': {
+          mult: '5x / $300 Credit',
+          badge: { en: 'Top Portal Cashback', 'zh-TW': '旅遊額度首選' },
+          note: {
+            en: 'Capital One Venture X: 5x Miles via C1 Travel portal. Use your $300 annual portal credit first!',
+            'zh-TW': 'Capital One Venture X: 透過 C1 Travel 訂票享 5x 哩程，優先折抵每年 $300 入口網站機票額度！'
+          }
+        },
+        'csp': {
+          mult: '2x Travel',
+          badge: { en: 'Solid Travel Insurance', 'zh-TW': '優質旅遊保障' },
+          note: {
+            en: 'Chase Sapphire Preferred: 2x UR on flights, with primary trip cancellation & baggage delay protection.',
+            'zh-TW': 'Chase Sapphire Preferred: 購買機票享 2x UR，附帶完善的行程取消險與行李延誤保障。'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'The Business Platinum (5x MR / 0% FTF) / Venture X (5x / 0% FTF) / CSP (2x Travel / 0% FTF)',
+      candidateCards: ['amex-biz-plat', 'venture-x', 'csp'],
+      cards: {
+        'amex-biz-plat': {
+          mult: '5x MR · 0% FTF',
+          badge: { en: 'Top Air Protection', 'zh-TW': '頂級延誤保障 (0% FTF)' },
+          note: {
+            en: 'Amex Business Platinum: 5x MR via AmexTravel with industry-leading 6-hour delay insurance & baggage protection, 0% FTF.',
+            'zh-TW': 'Amex 商業大白: 0% FTF，透過 AmexTravel 享 5x MR，享有全美最頂級的 6 小時班機延誤險與行李遺失保障。'
+          }
+        },
+        'venture-x': {
+          mult: '5x / $300 Credit · 0% FTF',
+          badge: { en: 'Top Portal Cashback', 'zh-TW': '旅遊額度首選 (0% FTF)' },
+          note: {
+            en: 'Capital One Venture X: 5x Miles via C1 Travel portal. Use your $300 annual portal credit first, 0% FTF.',
+            'zh-TW': 'Capital One Venture X: 0% FTF，透過 C1 Travel 訂票享 5x 哩程，優先折抵每年 $300 入口網站機票額度！'
+          }
+        },
+        'csp': {
+          mult: '2x Travel · 0% FTF',
+          badge: { en: 'Foreign Airline Direct', 'zh-TW': '外籍航空官網購票' },
+          note: {
+            en: 'Chase Sapphire Preferred: 2x UR when booking directly with international airlines, 0% FTF + trip cancellation & delay protection.',
+            'zh-TW': 'Chase Sapphire Preferred: 直接向海外航空公司官網購票享 2x UR、0% FTF，並附帶優秀的旅遊取消與延誤險。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'bbp', rate: '2.7% FTF' },
+        { id: 'cic', rate: '3.0% FTF' }
+      ]
     }
   },
   hotels: {
     title: { en: '🏨 Hotel Stays (2026 Updated)', 'zh-TW': '🏨 飯店住宿預訂 (2026 最新攻略)' },
     winner: 'Amex Biz Plat ($600 FHR Credit) / Marriott Brilliant (6x) / IHG Premier (26x)',
-    candidateCards: ['amex-biz-plat', 'bonvoy-brilliant', 'ihg-premier'],
+    candidateCards: ['amex-biz-plat', 'bonvoy-brilliant', 'ihg-premier', 'venture-x'],
     cards: {
       'amex-biz-plat': {
         mult: '$600 FHR Credit',
@@ -3484,7 +3662,96 @@ const ADVISOR_RULES = {
           en: 'Chase IHG Premier: Up to 26x total at IHG hotels, Platinum Elite status, 4th night free award redemption, and $25/qtr dining.',
           'zh-TW': 'Chase IHG Premier: 於 IHG 旗下消費高達 26x 綜合點數，附帶白金會籍、住四免一與每季 $25 折抵。'
         }
+      },
+      'venture-x': {
+        mult: '10x Miles via Portal',
+        badge: { en: 'C1 Travel Portal 10x', 'zh-TW': '入口網站 10x 哩程' },
+        note: {
+          en: 'Capital One Venture X: 10x miles on hotels booked via C1 Travel portal with $300 annual credit and 0% FTF.',
+          'zh-TW': 'Capital One Venture X: 透過 C1 Travel 預訂全球飯店享 10x 哩程，可折抵每年 $300 旅遊額度，0% FTF。'
+        }
       }
+    },
+    domestic: {
+      winner: 'Amex Biz Plat ($600 FHR Credit) / Marriott Brilliant (6x) / IHG Premier (26x)',
+      candidateCards: ['amex-biz-plat', 'bonvoy-brilliant', 'ihg-premier', 'venture-x'],
+      cards: {
+        'amex-biz-plat': {
+          mult: '$600 FHR Credit',
+          badge: { en: '2026 Top Hotel Credit', 'zh-TW': '頂級奢華飯店' },
+          note: {
+            en: 'Amex Business Platinum: $300 per half-year on Fine Hotels + Resorts (FHR) or THC bookings with guaranteed 4pm checkout & breakfast.',
+            'zh-TW': 'Amex 商業大白: 每半年 $300 預訂 FHR 奢華飯店，享有保證下午 4 點延遲退房與雙人免費早餐。'
+          }
+        },
+        'bonvoy-brilliant': {
+          mult: '6x Marriott Points',
+          badge: { en: 'Marriott Elite', 'zh-TW': '萬豪集團首選' },
+          note: {
+            en: 'Marriott Bonvoy Brilliant: 6x points at Marriott hotels. Combined with Platinum Elite yields up to 21x total Marriott points.',
+            'zh-TW': 'Marriott Brilliant: 萬豪集團消費 6x 點數，疊加卡片自帶的白金會籍綜合累積高達 21x 萬豪點數！'
+          }
+        },
+        'ihg-premier': {
+          mult: 'Up to 26x Points',
+          badge: { en: 'IHG Group Top Pick', 'zh-TW': 'IHG 集團首選' },
+          note: {
+            en: 'Chase IHG Premier: Up to 26x total at IHG hotels, Platinum Elite status, 4th night free award redemption, and $25/qtr dining.',
+            'zh-TW': 'Chase IHG Premier: 於 IHG 旗下消費高達 26x 綜合點數，附帶白金會籍、住四免一與每季 $25 折抵。'
+          }
+        },
+        'venture-x': {
+          mult: '10x Miles via Portal',
+          badge: { en: 'C1 Travel Portal 10x', 'zh-TW': '入口網站 10x 哩程' },
+          note: {
+            en: 'Capital One Venture X: 10x miles on hotels booked via C1 Travel portal with $300 annual credit and 0% FTF.',
+            'zh-TW': 'Capital One Venture X: 透過 C1 Travel 預訂全球飯店享 10x 哩程，可折抵每年 $300 旅遊額度，0% FTF。'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'Amex Biz Plat ($600 FHR 全球奢華飯店) / Marriott Brilliant (6x / 0% FTF) / IHG Premier (26x / 0% FTF)',
+      candidateCards: ['amex-biz-plat', 'bonvoy-brilliant', 'ihg-premier', 'venture-x'],
+      cards: {
+        'amex-biz-plat': {
+          mult: '$600 FHR Credit · 0% FTF',
+          badge: { en: 'Global Luxury Resorts', 'zh-TW': '全球 FHR 奢華飯店' },
+          note: {
+            en: 'Amex Business Platinum: $300 per half-year on FHR/THC worldwide with 4pm checkout, breakfast & $100 property credit, 0% FTF.',
+            'zh-TW': 'Amex 商業大白: 0% FTF，每半年 $300 預訂全球 FHR 頂級奢華飯店，享下午 4 點延遲退房、免費早餐與 $100 體驗額度。'
+          }
+        },
+        'bonvoy-brilliant': {
+          mult: '6x Points · 0% FTF',
+          badge: { en: 'Worldwide Marriott Elite', 'zh-TW': '全球萬豪白金尊爵' },
+          note: {
+            en: 'Marriott Bonvoy Brilliant: 6x points at Marriott worldwide, 0% FTF. Automatic Platinum Elite unlocks free breakfast & lounge access across Asia & Europe!',
+            'zh-TW': 'Marriott Brilliant: 全球萬豪集團 6x 點數，0% FTF。自帶白金會籍在亞洲與歐洲飯店享有免費行政酒廊與豐盛早餐！'
+          }
+        },
+        'ihg-premier': {
+          mult: 'Up to 26x · 0% FTF',
+          badge: { en: 'IHG Worldwide Stays', 'zh-TW': '全球洲際 IHG 必刷' },
+          note: {
+            en: 'Chase IHG Premier: Up to 26x total points at IHG hotels worldwide, 0% FTF, Platinum Elite status and 4th night free award stays.',
+            'zh-TW': 'Chase IHG Premier: 全球 IHG 旗下消費高達 26x 綜合點數，0% FTF，附帶白金會籍與點數兌換住四免一。'
+          }
+        },
+        'venture-x': {
+          mult: '10x Portal · 0% FTF',
+          badge: { en: 'C1 Travel Portal 10x', 'zh-TW': '入口網站 10x 哩程' },
+          note: {
+            en: 'Capital One Venture X: 10x miles on hotels booked via C1 Travel portal with $300 annual credit and 0% FTF.',
+            'zh-TW': 'Capital One Venture X: 透過 C1 Travel 預訂全球飯店享 10x 哩程，可折抵每年 $300 旅遊額度，0% FTF。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'cic', rate: '3.0% FTF' },
+        { id: 'bbp', rate: '2.7% FTF' }
+      ]
     }
   },
   office: {
@@ -3500,6 +3767,47 @@ const ADVISOR_RULES = {
           'zh-TW': 'Chase Ink Cash: 於 Staples、Office Depot 辦公文具店與電話網路費享 5x UR（每年上限 2.5 萬美元）。在 Staples 買禮品卡亦享 5x！'
         }
       }
+    },
+    domestic: {
+      winner: 'Chase Ink Business Cash (5% / 5x UR)',
+      candidateCards: ['cic'],
+      cards: {
+        'cic': {
+          mult: '5x UR / 5%',
+          badge: { en: 'The Undisputed 5x King', 'zh-TW': '全美最強辦公神卡' },
+          note: {
+            en: 'Chase Ink Cash: Earns 5x at office supply stores, cell phone, internet & cable (up to $25k/yr). Buy Amazon or restaurant gift cards at Staples for 5x UR!',
+            'zh-TW': 'Chase Ink Cash: 於 Staples、Office Depot 辦公文具店與電話網路費享 5x UR（每年上限 2.5 萬美元）。在 Staples 買禮品卡亦享 5x！'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'Capital One Venture X (2x Miles / 0% FTF) / CSP (0% FTF)',
+      candidateCards: ['venture-x', 'csp'],
+      cards: {
+        'venture-x': {
+          mult: '2x Miles · 0% FTF',
+          badge: { en: 'Safe for Foreign Telco/eSIM', 'zh-TW': '外幣電信/eSIM 首選' },
+          note: {
+            en: 'Capital One Venture X: 2x miles on overseas co-working, local SIM / foreign eSIM providers with 0% FTF.',
+            'zh-TW': 'Capital One Venture X: 購買海外當地電信漫遊、外國 eSIM 或境外辦公空間享 2x 哩程，0% FTF。'
+          }
+        },
+        'csp': {
+          mult: '1x UR · 0% FTF',
+          badge: { en: 'Zero Fee Fallback', 'zh-TW': '免手續費備援' },
+          note: {
+            en: 'Chase Sapphire Preferred: 0% FTF when paying foreign currency office or connectivity bills.',
+            'zh-TW': 'Chase Sapphire Preferred: 0% FTF，刷非美金之電信或辦公帳單安全無手續費。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'cic', rate: '3.0% FTF' },
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'bbp', rate: '2.7% FTF' }
+      ]
     }
   },
   grocery: {
@@ -3523,10 +3831,60 @@ const ADVISOR_RULES = {
           'zh-TW': 'Chase Sapphire Preferred: 線上生鮮採買與外送（如 Instacart 等各類線上生鮮平台）享有 3x UR。'
         }
       }
+    },
+    domestic: {
+      winner: 'Amex EveryDay (up to 2.4x MR) / CSP Online Grocery (3x UR)',
+      candidateCards: ['amex-ed', 'csp'],
+      cards: {
+        'amex-ed': {
+          mult: '2.0x - 2.4x MR',
+          badge: { en: 'Physical Supermarkets', 'zh-TW': '實體超市採買' },
+          note: {
+            en: 'Amex EveryDay: 2x at US supermarkets up to $6k/yr; 20+ transactions in billing period boosts points by 20% to 2.4x MR.',
+            'zh-TW': 'Amex EveryDay: 超市 2x（每年上限 6,000 美元），當期帳單刷滿 20 筆加贈 20%（相當於 2.4x MR）。'
+          }
+        },
+        'csp': {
+          mult: '3x UR',
+          badge: { en: 'Online Groceries', 'zh-TW': '線上生鮮外送' },
+          note: {
+            en: 'Chase Sapphire Preferred: 3x UR on online grocery delivery (Instacart, Kroger, etc., excluding Target & Walmart).',
+            'zh-TW': 'Chase Sapphire Preferred: 線上生鮮採買與外送（如 Instacart 等各類線上生鮮平台）享有 3x UR。'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'Capital One Venture X (2x Miles / 0% FTF / 全球 Visa) / CSP (0% FTF)',
+      candidateCards: ['venture-x', 'csp'],
+      cards: {
+        'venture-x': {
+          mult: '2x Miles · 0% FTF',
+          badge: { en: 'Overseas Supermarket King', 'zh-TW': '海外超市首選 (Visa)' },
+          note: {
+            en: 'Capital One Venture X: Global Visa acceptance, 0% FTF, and unlimited 2x miles at foreign supermarkets & convenience stores.',
+            'zh-TW': 'Capital One Venture X: Visa 全球通用性極高，0% FTF，國外實體超市、唐吉訶德、量販超商一律享有 2x 哩程！'
+          }
+        },
+        'csp': {
+          mult: '1x UR · 0% FTF',
+          badge: { en: 'Zero Fee Backup', 'zh-TW': '免手續費備用' },
+          note: {
+            en: 'Chase Sapphire Preferred: 0% FTF and 1x UR catch-all. Safe fallback with no foreign fees.',
+            'zh-TW': 'Chase Sapphire Preferred: 免海外手續費 (0% FTF) 且 Visa 通用，出國買生鮮安全不被扣手續費。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'amex-ed', rate: '2.7% FTF' },
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'cic', rate: '3.0% FTF' },
+        { id: 'bbp', rate: '2.7% FTF' }
+      ]
     }
   },
   gas: {
-    title: { en: '⛽ Gas & EV Charging (2026 Upgraded)', 'zh-TW': '⛽ 加油與電車充電 (2026 升級)' },
+    title: { en: '⛽ Gas & EV Charging (2026 Upgraded)', 'zh-TW': '⛽ 加油與交通 (2026 升級)' },
     winner: 'Amex Business Gold (4x MR) / Chase Sapphire Preferred (3x UR)',
     candidateCards: ['amex-biz-gold', 'csp'],
     cards: {
@@ -3546,6 +3904,138 @@ const ADVISOR_RULES = {
           'zh-TW': 'Chase Sapphire Preferred: 2026 全面升級新增加油站與電動車 (EV) 充電樁 3x UR 點數回饋！'
         }
       }
+    },
+    domestic: {
+      winner: 'Amex Business Gold (4x MR) / Chase Sapphire Preferred (3x UR)',
+      candidateCards: ['amex-biz-gold', 'csp'],
+      cards: {
+        'amex-biz-gold': {
+          mult: '4x MR',
+          badge: { en: 'Top Multiplier', 'zh-TW': '首選商業卡' },
+          note: {
+            en: 'Amex Business Gold: 4x MR on US gas stations when gas is in your top 2 business spend categories for the billing cycle.',
+            'zh-TW': 'Amex 商業金卡: 若加油為當期前二大花費類別，自動享有 4x MR 點數。'
+          }
+        },
+        'csp': {
+          mult: '3x UR',
+          badge: { en: '2026 Overhaul', 'zh-TW': '2026 新升級' },
+          note: {
+            en: 'Chase Sapphire Preferred: 2026 upgrade permanently added 3x points on gas station purchases and EV charging stations!',
+            'zh-TW': 'Chase Sapphire Preferred: 2026 全面升級新增加油站與電動車 (EV) 充電樁 3x UR 點數回饋！'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'CSP (3x 加油充電 / 2x 海外交通地鐵 JR / Primary CDW 租車險 / 0% FTF) / Venture X (2x / 0% FTF)',
+      candidateCards: ['csp', 'venture-x'],
+      cards: {
+        'csp': {
+          mult: '3x Gas / 2x Transit · 0% FTF',
+          badge: { en: 'Overseas Transit & Car Rental King', 'zh-TW': '海外交通自駕租車之王' },
+          note: {
+            en: 'Chase Sapphire Preferred: 3x on gas/EV charging, 2x on international transit (trains, subways, JR, taxis, Uber), 0% FTF, and Primary Auto CDW rental coverage worldwide.',
+            'zh-TW': 'Chase Sapphire Preferred: 加油充電 3x，海外大眾交通（日本 JR、地鐵、計程車、Uber）2x UR，0% FTF，並提供頂級海外租車 Primary CDW 車碰險！'
+          }
+        },
+        'venture-x': {
+          mult: '2x Miles · 0% FTF',
+          badge: { en: 'Universal 2x + Primary CDW', 'zh-TW': '全能 2x + 租車一級險' },
+          note: {
+            en: 'Capital One Venture X: Unlimited 2x miles on foreign gas stations & transit, 0% FTF, with built-in Primary CDW car rental coverage.',
+            'zh-TW': 'Capital One Venture X: 海外加油與交通一律 2x 哩程，0% FTF，且同樣自帶 Primary CDW 海外租車一級保險。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'amex-biz-gold', rate: '⚠️ 僅限美境內 4x' },
+        { id: 'bbp', rate: '2.7% FTF' },
+        { id: 'cfu', rate: '3.0% FTF' }
+      ]
+    }
+  },
+  catchall: {
+    title: { en: '⚡ Non-Category / Everyday Catch-all', 'zh-TW': '⚡ 一般日常消費 (萬用無腦 2x)' },
+    winner: 'Amex Blue Business Plus (2x MR) / Capital One Venture X (2x Miles)',
+    candidateCards: ['bbp', 'venture-x'],
+    cards: {
+      'bbp': {
+        mult: '2x MR',
+        badge: { en: 'Top Overall Value', 'zh-TW': '全美最強萬用卡' },
+        note: {
+          en: 'Amex Blue Business Plus: 2x MR on first $50,000 spend per calendar year (estimated ~3.2%+ value).',
+          'zh-TW': 'Amex BBP: 每年首 5 萬美元所有非類別消費享 2x MR（估值約 3.2%+）。'
+        }
+      },
+      'venture-x': {
+        mult: '2x Miles',
+        badge: { en: 'No Limit & Visa Everywhere', 'zh-TW': '無上限 Visa 全球通' },
+        note: {
+          en: 'Capital One Venture X: Unlimited 2x miles per dollar everywhere; ideal when Amex is not accepted or spend exceeds $50k.',
+          'zh-TW': 'Capital One Venture X: 超過 5 萬限額或店家不收 Amex 時的首選，無上限 2x 哩程累積。'
+        }
+      }
+    },
+    domestic: {
+      winner: 'Amex Blue Business Plus (2x MR) / Capital One Venture X (2x Miles)',
+      candidateCards: ['bbp', 'venture-x'],
+      cards: {
+        'bbp': {
+          mult: '2x MR',
+          badge: { en: 'Top Overall Value', 'zh-TW': '全美最強萬用卡' },
+          note: {
+            en: 'Amex Blue Business Plus: 2x MR on first $50,000 spend per calendar year (estimated ~3.2%+ value).',
+            'zh-TW': 'Amex BBP: 每年首 5 萬美元所有非類別消費享 2x MR（估值約 3.2%+）。'
+          }
+        },
+        'venture-x': {
+          mult: '2x Miles',
+          badge: { en: 'No Limit & Visa Everywhere', 'zh-TW': '無上限 Visa 全球通' },
+          note: {
+            en: 'Capital One Venture X: Unlimited 2x miles per dollar everywhere; ideal when Amex is not accepted or spend exceeds $50k.',
+            'zh-TW': 'Capital One Venture X: 超過 5 萬限額或店家不收 Amex 時的首選，無上限 2x 哩程累積。'
+          }
+        }
+      }
+    },
+    overseas: {
+      winner: 'Capital One Venture X (2x Miles / 0% FTF / 全球 Visa 通用王)',
+      candidateCards: ['venture-x', 'csp', 'bonvoy-brilliant'],
+      cards: {
+        'venture-x': {
+          mult: '2x Miles · 0% FTF',
+          badge: { en: 'Undisputed Overseas King', 'zh-TW': '全美最強海外萬用神卡' },
+          note: {
+            en: 'Capital One Venture X: Unlimited 2x miles on every purchase worldwide, 0% FTF, and Visa acceptance across 200+ countries.',
+            'zh-TW': 'Capital One Venture X: 全球任何非類別消費無上限 2x 哩程，0% FTF，Visa 在全世界超過 200 國暢行無阻！'
+          }
+        },
+        'csp': {
+          mult: '1x UR · 0% FTF',
+          badge: { en: 'Reliable Visa Everywhere', 'zh-TW': '可靠 Visa 萬用通道' },
+          note: {
+            en: 'Chase Sapphire Preferred: 0% FTF, 1x UR catch-all. Safe fallback for any purchase abroad.',
+            'zh-TW': 'Chase Sapphire Preferred: 0% FTF，海外萬用 1x UR，出國刷卡安全無手續費。'
+          }
+        },
+        'bonvoy-brilliant': {
+          mult: '2x Points · 0% FTF',
+          badge: { en: 'Marriott Points Catch-all', 'zh-TW': '萬豪點數累積' },
+          note: {
+            en: 'Marriott Bonvoy Brilliant: 2x Marriott Bonvoy points on all non-category spend with 0% FTF.',
+            'zh-TW': 'Marriott Brilliant: 所有日常非類別消費享 2x 萬豪點數，0% FTF。'
+          }
+        }
+      },
+      ftfTraps: [
+        { id: 'bbp', rate: '2.7% FTF' },
+        { id: 'bbc', rate: '2.7% FTF' },
+        { id: 'cfu', rate: '3.0% FTF' },
+        { id: 'ciu', rate: '3.0% FTF' },
+        { id: 'cic', rate: '3.0% FTF' },
+        { id: 'amex-ed', rate: '2.7% FTF' }
+      ]
     }
   },
   foreign: {
@@ -3578,29 +4068,6 @@ const ADVISOR_RULES = {
       { id: 'bbc', rate: '2.7% FTF' },
       { id: 'amex-ed', rate: '2.7% FTF' }
     ]
-  },
-  catchall: {
-    title: { en: '⚡ Non-Category / Everyday Catch-all', 'zh-TW': '⚡ 一般日常消費 (萬用無腦 2x)' },
-    winner: 'Amex Blue Business Plus (2x MR) / Capital One Venture X (2x Miles)',
-    candidateCards: ['bbp', 'venture-x'],
-    cards: {
-      'bbp': {
-        mult: '2x MR',
-        badge: { en: 'Top Overall Value', 'zh-TW': '全美最強萬用卡' },
-        note: {
-          en: 'Amex Blue Business Plus: 2x MR on first $50,000 spend per calendar year (estimated ~3.2%+ value).',
-          'zh-TW': 'Amex BBP: 每年首 5 萬美元所有非類別消費享 2x MR（估值約 3.2%+）。'
-        }
-      },
-      'venture-x': {
-        mult: '2x Miles',
-        badge: { en: 'No Limit & Visa Everywhere', 'zh-TW': '無上限 Visa 全球通' },
-        note: {
-          en: 'Capital One Venture X: Unlimited 2x miles per dollar everywhere; ideal when Amex is not accepted or spend exceeds $50k.',
-          'zh-TW': 'Capital One Venture X: 超過 5 萬限額或店家不收 Amex 時的首選，無上限 2x 哩程累積。'
-        }
-      }
-    }
   }
 };
 
@@ -3780,19 +4247,31 @@ function renderOverlapOptimizer() {
 }
 
 function selectAdvisorCategory(cat) {
+  if (cat === 'foreign') {
+    currentAdvisorMode = 'overseas';
+    try { localStorage.setItem(ADVISOR_MODE_KEY, 'overseas'); } catch (_) {}
+    updateAdvisorModeUI();
+    cat = (currentAdvisorCat === 'foreign' || !currentAdvisorCat) ? 'dining' : currentAdvisorCat;
+  }
   currentAdvisorCat = cat;
+
   document.querySelectorAll('.adv-cat-btn').forEach(btn => {
-    btn.className = 'adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100';
+    btn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
   });
 
   const activeBtn = document.getElementById(`adv-${cat}-btn`);
   if (activeBtn) {
-    activeBtn.className = 'adv-cat-btn p-3 rounded-2xl border text-center transition bg-indigo-50 border-indigo-200 dark:bg-indigo-950/60 dark:border-indigo-800/60 shadow-xs';
+    activeBtn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs';
   }
 
-  const data = ADVISOR_RULES[cat];
+  updateAdvisorModeUI();
+
+  const rule = ADVISOR_RULES[cat] || ADVISOR_RULES.dining;
   const box = document.getElementById('advisor-result-box');
-  if (!box || !data) return;
+  if (!box || !rule) return;
+
+  const isOverseas = (currentAdvisorMode === 'overseas');
+  const modeData = (isOverseas && rule.overseas) ? rule.overseas : (rule.domestic || rule);
 
   const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
 
@@ -3806,7 +4285,7 @@ function selectAdvisorCategory(cat) {
     }
   }
 
-  const candidateCards = data.candidateCards || [];
+  const candidateCards = modeData.candidateCards || [];
   const ownedInCat = candidateCards.filter(id => isCardOwned(id));
 
   let headerBannerHtml = '';
@@ -3839,26 +4318,66 @@ function selectAdvisorCategory(cat) {
       </div>
     `;
   } else if (ownedInCat.length > 0) {
-    const topCardId = ownedInCat[0];
-    const topMeta = data.cards[topCardId];
+    let topCardId = ownedInCat[0];
+    if (isOverseas) {
+      const topNoFtf = ownedInCat.find(id => {
+        const c = PRESET_CARDS.find(card => card.id === id);
+        return c && c.noFtf;
+      });
+      if (topNoFtf) topCardId = topNoFtf;
+    }
     const cardObj = PRESET_CARDS.find(c => c.id === topCardId);
+    const topMeta = modeData.cards[topCardId];
     const topNick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : topCardId;
-    headerBannerHtml = `
-      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-800/60 mb-3 space-y-1 shadow-xs">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-            <span class="text-sm">👑</span>
-            <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
-          </span>
-          <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold bg-emerald-600 text-white shadow-xs">
-            ${topMeta.mult}
-          </span>
+
+    const isFtfWarning = isOverseas && cardObj && !cardObj.noFtf;
+
+    if (isFtfWarning) {
+      headerBannerHtml = `
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-rose-50 dark:from-amber-950/40 dark:to-rose-950/30 border border-amber-300 dark:border-amber-700/60 mb-3 space-y-1 shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-xs">
+              ⚠️ ${cardObj.ftfRate} FTF
+            </span>
+          </div>
+          <p class="text-[11px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+            ${t('advisorOverseasFtfWarning')}
+          </p>
         </div>
-        <p class="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
-          ${topMeta.note[currentLang] || topMeta.note['zh-TW']}
-        </p>
-      </div>
-    `;
+      `;
+    } else {
+      const bannerBg = isOverseas
+        ? 'from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-amber-200 dark:border-amber-800/60'
+        : 'from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800/60';
+      const textTheme = isOverseas
+        ? 'text-amber-900 dark:text-amber-200'
+        : 'text-emerald-900 dark:text-emerald-200';
+      const badgeBg = isOverseas ? 'bg-amber-600' : 'bg-emerald-600';
+      const noteTheme = isOverseas
+        ? 'text-amber-800 dark:text-amber-300'
+        : 'text-emerald-800 dark:text-emerald-300';
+
+      headerBannerHtml = `
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r ${bannerBg} border mb-3 space-y-1 shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-extrabold ${textTheme} flex items-center gap-1.5">
+              <span class="text-sm">${isOverseas ? '🌍' : '👑'}</span>
+              <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold ${badgeBg} text-white shadow-xs">
+              ${topMeta ? topMeta.mult : (cardObj && cardObj.noFtf ? '0% FTF' : '')}
+            </span>
+          </div>
+          <p class="text-[11px] ${noteTheme} leading-relaxed">
+            ${topMeta ? (topMeta.note[currentLang] || topMeta.note['zh-TW']) : ''}
+          </p>
+        </div>
+      `;
+    }
   } else {
     headerBannerHtml = `
       <div class="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 mb-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
@@ -3871,7 +4390,8 @@ function selectAdvisorCategory(cat) {
   }
 
   const cardsListHtml = candidateCards.map(cId => {
-    const cMeta = data.cards[cId];
+    const cMeta = modeData.cards[cId];
+    if (!cMeta) return '';
     const isOwned = isCardOwned(cId);
     const cardObj = PRESET_CARDS.find(c => c.id === cId);
     const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : cId;
@@ -3899,8 +4419,8 @@ function selectAdvisorCategory(cat) {
   }).join('');
 
   let ftfTrapHtml = '';
-  if (data.ftfTraps) {
-    const trapCardsHtml = data.ftfTraps.map(trap => {
+  if (modeData.ftfTraps && modeData.ftfTraps.length > 0) {
+    const trapCardsHtml = modeData.ftfTraps.map(trap => {
       const isOwned = isCardOwned(trap.id);
       const cardObj = PRESET_CARDS.find(c => c.id === trap.id);
       const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : trap.id;
@@ -3927,12 +4447,23 @@ function selectAdvisorCategory(cat) {
     `;
   }
 
+  const catTitle = rule.title[currentLang] || rule.title['zh-TW'];
+  const modeBadgeText = isOverseas ? t('advisorModeOverseasBadge') : t('advisorModeDomesticBadge');
+  const modeBadgeClass = isOverseas
+    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700/60'
+    : 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700/60';
+
   box.innerHTML = `
     <div class="border-b border-slate-200 dark:border-slate-700/60 pb-2.5 mb-2.5">
-      <div class="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">${t('advisorHeading')}</div>
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">${data.title[currentLang] || data.title['zh-TW']}</h4>
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">${t('advisorHeading')}</div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${modeBadgeClass}">
+          ${isOverseas ? '🌍' : '🇺🇸'} ${modeBadgeText}
+        </span>
+      </div>
+      <h4 class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">${catTitle}</h4>
       <div class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
-        🏆 ${t('advisorAllLibraryGuide')}: ${data.winner}
+        🏆 ${t('advisorAllLibraryGuide')}: ${modeData.winner}
       </div>
     </div>
     ${headerBannerHtml}

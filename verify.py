@@ -4,16 +4,19 @@ CardFlow Pre-Commit & Quality Verification Suite
 Inspired by PocketFlow verify.py
 Validates JavaScript syntax with JavaScriptCore, checks DOM ID bindings,
 verifies bilingual dictionary symmetry, checks card portfolio integrity,
-and enforces zero-leak privacy guardrails via generic pattern scanning.
+enforces zero-leak privacy guardrails via generic pattern scanning,
+validates data schema & foreign key integrity, and simulates business logic invariants
+along with 12-month time-travel lifecycle testing.
 """
 
+import json
 import re
 import subprocess
 import sys
 import os
 
 def check_js_syntax():
-    print("🔍 [1/5] Validating JavaScript syntax with macOS JavaScriptCore...")
+    print("🔍 [1/7] Validating JavaScript syntax with macOS JavaScriptCore...")
     
     app_test = """
     const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -74,7 +77,7 @@ def check_js_syntax():
     return True
 
 def check_dom_ids():
-    print("🔍 [2/5] Checking DOM ID bindings between app.js and index.html...")
+    print("🔍 [2/7] Checking DOM ID bindings between app.js and index.html...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app_path = os.path.join(base_dir, 'app.js')
     html_path = os.path.join(base_dir, 'index.html')
@@ -125,7 +128,7 @@ def check_dom_ids():
     return True
 
 def check_i18n_symmetry():
-    print("🔍 [3/5] Validating bilingual dictionary symmetry (en vs zh-TW)...")
+    print("🔍 [3/7] Validating bilingual dictionary symmetry (en vs zh-TW)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app_path = os.path.join(base_dir, 'app.js')
 
@@ -160,7 +163,7 @@ def check_i18n_symmetry():
     return True
 
 def check_card_portfolio():
-    print("🔍 [4/5] Verifying card portfolio completeness & business classifications...")
+    print("🔍 [4/7] Verifying card portfolio completeness & business classifications...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app_path = os.path.join(base_dir, 'app.js')
     with open(app_path) as f:
@@ -199,7 +202,7 @@ def check_card_portfolio():
     return True
 
 def check_privacy_guardrails():
-    print("🔍 [5/5] Scanning for privacy guardrail leaks (Generic Patterns)...")
+    print("🔍 [5/7] Scanning for privacy guardrail leaks (Generic Patterns)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     scanned_files = ['app.js', 'index.html', 'sw.js', 'verify.py']
 
@@ -242,6 +245,262 @@ def check_privacy_guardrails():
     print("   ✅ Zero local home paths, zero private emails, and zero preset personal dates detected.")
     return True
 
+def run_jsc_in_app_env(eval_body):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    js_code = f"""
+    const localStorage = {{ getItem: () => null, setItem: () => {{}}, removeItem: () => {{}} }};
+    const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
+    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}} }} }};
+    const document = {{
+      documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }} }},
+      addEventListener: () => {{}},
+      getElementById: () => ({{
+        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }},
+        setAttribute: () => {{}},
+        addEventListener: () => {{}},
+        appendChild: () => {{}},
+        querySelectorAll: () => [],
+        style: {{}},
+        innerHTML: '',
+        innerText: '',
+        value: ''
+      }}),
+      querySelectorAll: () => [],
+      createElement: () => ({{
+        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }},
+        setAttribute: () => {{}},
+        addEventListener: () => {{}},
+        appendChild: () => {{}},
+        querySelectorAll: () => [],
+        style: {{}},
+        innerHTML: '',
+        innerText: '',
+        value: ''
+      }})
+    }};
+    const setTimeout = (fn) => {{}};
+    const appCode = $.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js;
+    eval(appCode + "\\n; " + {json.dumps(eval_body)});
+    """
+    proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', js_code], capture_output=True, text=True, cwd=base_dir)
+    return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+
+def check_data_integrity():
+    print("🔍 [6/7] Validating data schema, foreign keys & perk groups...")
+    eval_code = """
+    (function() {
+      const errors = [];
+      const cardIds = new Set(PRESET_CARDS.map(c => c.id));
+      const creditIds = new Set();
+      const validPeriods = new Set(["monthly", "quarterly", "semiannual", "annual"]);
+      const validCats = new Set(Object.keys(CREDIT_CATEGORY_META));
+      const validPerkGroups = new Set(Object.keys(DUPLICATE_PERK_GROUPS));
+
+      // 1. Cards schema & uniqueness
+      PRESET_CARDS.forEach(c => {
+        if (!c.id || typeof c.id !== 'string') errors.push("Card missing valid string id");
+        if (typeof c.annualFee !== "number" || c.annualFee < 0) errors.push("Card " + c.id + " has invalid annualFee: " + c.annualFee);
+        if (typeof c.isBusiness !== "boolean") errors.push("Card " + c.id + " has non-boolean isBusiness: " + c.isBusiness);
+        if (!c.nickname || !c.nickname.en || !c.nickname["zh-TW"]) errors.push("Card " + c.id + " missing bilingual nickname");
+        if (c.perks && Array.isArray(c.perks)) {
+          c.perks.forEach((p, idx) => {
+            if (!p.title || !p.title.en || !p.title["zh-TW"]) errors.push("Card " + c.id + " perk #" + idx + " missing bilingual title");
+            if (p.group && !validPerkGroups.has(p.group)) {
+              errors.push("Card " + c.id + " perk has unknown group: " + p.group);
+            }
+          });
+        }
+      });
+
+      // 2. Credits schema, foreign key & uniqueness
+      PRESET_CREDITS.forEach(cr => {
+        if (!cr.id || typeof cr.id !== 'string') errors.push("Credit missing valid string id");
+        if (creditIds.has(cr.id)) errors.push("Duplicate credit id: " + cr.id);
+        creditIds.add(cr.id);
+
+        if (!cardIds.has(cr.cardId)) {
+          errors.push("Orphan credit " + cr.id + ": cardId '" + cr.cardId + "' does not exist in PRESET_CARDS");
+        }
+        if (typeof cr.amount !== "number" || cr.amount <= 0 || isNaN(cr.amount)) {
+          errors.push("Credit " + cr.id + " has invalid amount: " + cr.amount);
+        }
+        if (!validPeriods.has(cr.period)) {
+          errors.push("Credit " + cr.id + " has invalid period: " + cr.period);
+        }
+        if (!validCats.has(cr.cat)) {
+          errors.push("Credit " + cr.id + " has unknown category: " + cr.cat);
+        }
+        if (!cr.title || !cr.title.en || !cr.title["zh-TW"]) {
+          errors.push("Credit " + cr.id + " missing bilingual title");
+        }
+        if (!cr.tip || !cr.tip.en || !cr.tip["zh-TW"]) {
+          errors.push("Credit " + cr.id + " missing bilingual tip");
+        }
+      });
+
+      // 3. Duplicate Perk Groups schema
+      Object.keys(DUPLICATE_PERK_GROUPS).forEach(gid => {
+        const g = DUPLICATE_PERK_GROUPS[gid];
+        if (!g.id || g.id !== gid) errors.push("Perk group id mismatch: " + gid);
+        if (!g.name || !g.name.en || !g.name["zh-TW"]) errors.push("Perk group " + gid + " missing bilingual name");
+        if (!g.icon) errors.push("Perk group " + gid + " missing icon");
+        if (!g.tip || !g.tip.en || !g.tip["zh-TW"]) errors.push("Perk group " + gid + " missing bilingual tip");
+      });
+
+      return JSON.stringify({
+        errors: errors,
+        cardsCount: PRESET_CARDS.length,
+        creditsCount: PRESET_CREDITS.length,
+        groupsCount: Object.keys(DUPLICATE_PERK_GROUPS).length
+      });
+    })()
+    """
+    rc, out, err = run_jsc_in_app_env(eval_code)
+    if rc != 0:
+        print(f"❌ Execution Error in check_data_integrity:\\n{err}")
+        return False
+
+    try:
+        res = json.loads(out)
+    except Exception as e:
+        print(f"❌ JSON Parse Error in check_data_integrity output '{out}': {e}")
+        return False
+
+    if res.get("errors"):
+        for e in res["errors"]:
+            print(f"❌ {e}")
+        return False
+
+    print(f"   ✅ All {res['creditsCount']} credits foreign keys verified, {res['cardsCount']} cards & {res['groupsCount']} perk groups schema valid.")
+    return True
+
+def check_business_logic_simulation():
+    print("🔍 [7/7] Simulating business logic invariants & time-travel (12 months)...")
+    eval_code = """
+    (function() {
+      const errors = [];
+
+      // Reset isolated state for testing
+      appState = {
+        ownedCards: {},
+        cardMeta: {},
+        creditsClaimed: {},
+        mutedCredits: {},
+        skippedCredits: {},
+        fncs: [],
+        fncsClaimed: {}
+      };
+
+      // --- Sub-check A: Invariant & Value Conservation ---
+      PRESET_CARDS.forEach(c => { appState.ownedCards[c.id] = true; });
+      let expectedSum = 0;
+      PRESET_CREDITS.forEach(cr => {
+        if (cr.period === "monthly") expectedSum += cr.amount * 12;
+        else if (cr.period === "quarterly") expectedSum += cr.amount * 4;
+        else if (cr.period === "semiannual") expectedSum += cr.amount * 2;
+        else expectedSum += cr.amount;
+      });
+
+      if (expectedSum <= 0 || isNaN(expectedSum)) {
+        errors.push("Total perks annual value invariant broken: " + expectedSum);
+      }
+
+      // --- Sub-check B: Mute & Skip State Isolation ---
+      const testCreditId = PRESET_CREDITS[0].id;
+      const otherCreditId = PRESET_CREDITS[1].id;
+      const testPeriodKey = testCreditId + "_2026-10";
+      const nextPeriodKey = testCreditId + "_2026-11";
+
+      // Test Mute
+      muteCredit(testCreditId);
+      if (!isCreditMuted(testCreditId)) errors.push("muteCredit failed to set muted state");
+      if (isCreditMuted(otherCreditId)) errors.push("muteCredit polluted other credit");
+      unmuteCredit(testCreditId);
+      if (isCreditMuted(testCreditId)) errors.push("unmuteCredit failed to clear muted state");
+
+      // Test Skip (Single-cycle)
+      toggleCreditSkip(testPeriodKey);
+      if (!isCreditSkipped(testPeriodKey)) errors.push("toggleCreditSkip failed to skip");
+      if (isCreditSkipped(nextPeriodKey)) errors.push("Single-cycle skip polluted next period");
+      toggleCreditSkip(testPeriodKey);
+      if (isCreditSkipped(testPeriodKey)) errors.push("toggleCreditSkip undo failed");
+
+      // --- Sub-check C: Time-Travel Simulation across 12 Months ---
+      const monthlyItem = PRESET_CREDITS.find(c => c.period === "monthly");
+      const quarterlyItem = PRESET_CREDITS.find(c => c.period === "quarterly");
+      const semiannualItem = PRESET_CREDITS.find(c => c.period === "semiannual");
+
+      for (let m = 1; m <= 12; m++) {
+        const mUrg = getCreditUrgencyInfo(monthlyItem, 2026, m);
+        if (!mUrg.isDueThisMonth) errors.push("Monthly credit not due in month " + m);
+
+        if (quarterlyItem) {
+          const qUrg = getCreditUrgencyInfo(quarterlyItem, 2026, m);
+          const isQMonth = (m % 3 === 0);
+          if (isQMonth !== qUrg.isExpiringSoon) {
+            errors.push("Quarterly urgency mismatch in month " + m + ": expected " + isQMonth + ", got " + qUrg.isExpiringSoon);
+          }
+        }
+
+        if (semiannualItem) {
+          const sUrg = getCreditUrgencyInfo(semiannualItem, 2026, m);
+          const isSMonth = (m % 6 === 0);
+          if (isSMonth !== sUrg.isExpiringSoon) {
+            errors.push("Semiannual urgency mismatch in month " + m + ": expected " + isSMonth + ", got " + sUrg.isExpiringSoon);
+          }
+        }
+      }
+
+      // --- Sub-check D: Duplicate Perk Groups & Overlap Optimizer ---
+      const loungeCards = getOwnedCardsInPerkGroup("lounge-access");
+      if (loungeCards.length < 2) {
+        errors.push("Expected at least 2 cards in lounge-access group, got " + loungeCards.length);
+      }
+      const cdwCards = getOwnedCardsInPerkGroup("primary-cdw");
+      if (cdwCards.length < 2) {
+        errors.push("Expected at least 2 cards in primary-cdw group, got " + cdwCards.length);
+      }
+
+      // Verify renderCredits and renderOverlapOptimizer run cleanly
+      try {
+        renderCredits();
+      } catch (e) {
+        errors.push("renderCredits() crashed: " + e.message);
+      }
+
+      try {
+        renderOverlapOptimizer();
+      } catch (e) {
+        errors.push("renderOverlapOptimizer() crashed: " + e.message);
+      }
+
+      return JSON.stringify({
+        errors: errors,
+        expectedSum: expectedSum,
+        loungeCardsCount: loungeCards.length,
+        cdwCardsCount: cdwCards.length
+      });
+    })()
+    """
+    rc, out, err = run_jsc_in_app_env(eval_code)
+    if rc != 0:
+        print(f"❌ Execution Error in check_business_logic_simulation:\\n{err}")
+        return False
+
+    try:
+        res = json.loads(out)
+    except Exception as e:
+        print(f"❌ JSON Parse Error in check_business_logic_simulation output '{out}': {e}")
+        return False
+
+    if res.get("errors"):
+        for e in res["errors"]:
+            print(f"❌ {e}")
+        return False
+
+    print(f"   ✅ Value conservation (${res['expectedSum']:.2f}/yr) preserved, Mute/Skip isolation verified, 12-mo simulation passed.")
+    return True
+
 def main():
     print("=" * 60)
     print("🚀 CardFlow Verification Test Suite")
@@ -251,11 +510,13 @@ def main():
         check_dom_ids() and
         check_i18n_symmetry() and
         check_card_portfolio() and
-        check_privacy_guardrails()
+        check_privacy_guardrails() and
+        check_data_integrity() and
+        check_business_logic_simulation()
     )
     print("=" * 60)
     if success:
-        print("🎉 ALL 5 CHECKS PASSED! CardFlow is ready for launch.")
+        print("🎉 ALL 7 CHECKS PASSED! CardFlow is ready for launch.")
         sys.exit(0)
     else:
         print("❌ VERIFICATION FAILED. Please resolve the errors above.")

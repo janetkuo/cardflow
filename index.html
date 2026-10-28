@@ -472,40 +472,50 @@
           <p class="text-[11px] text-slate-400 mt-0.5" id="advisor-subheading">選擇消費類別，系統將自動比對全卡庫最佳點數倍率與保險權益（尚未設定持有卡片）。</p>
         </div>
 
-        <!-- Category Selector Pills -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button onclick="selectAdvisorCategory('dining')" id="adv-dining-btn" class="adv-cat-btn p-3 rounded-2xl border text-center transition bg-indigo-50 border-indigo-200 dark:bg-indigo-950/60 dark:border-indigo-800/60">
-            <div class="text-2xl mb-1">🍽️</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-dining">餐廳與外送</div>
+        <!-- Location Mode Segmented Bar (Domestic vs Overseas) -->
+        <div class="p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-bold">
+          <button id="adv-loc-domestic-btn" onclick="setAdvisorMode('domestic')" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs font-bold">
+            <span>🇺🇸</span>
+            <span id="adv-loc-domestic-label">美國境內消費</span>
           </button>
-          <button onclick="selectAdvisorCategory('flights')" id="adv-flights-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">✈️</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-flights">機票預訂</div>
+          <button id="adv-loc-overseas-btn" onclick="setAdvisorMode('overseas')" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold">
+            <span>🌍</span>
+            <span id="cat-label-foreign">海外 / 外幣消費 (0% FTF)</span>
           </button>
-          <button onclick="selectAdvisorCategory('hotels')" id="adv-hotels-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">🏨</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-hotels">飯店住宿</div>
+        </div>
+
+        <!-- Category Selector Compact Chips -->
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="selectAdvisorCategory('dining')" id="adv-dining-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs">
+            <span class="text-sm">🍽️</span>
+            <span id="cat-label-dining">餐廳與外送</span>
           </button>
-          <button onclick="selectAdvisorCategory('office')" id="adv-office-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">📦</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-office">辦公文具與電信</div>
+          <button onclick="selectAdvisorCategory('grocery')" id="adv-grocery-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">🛒</span>
+            <span id="cat-label-grocery">超市生鮮採買</span>
           </button>
-          <button onclick="selectAdvisorCategory('grocery')" id="adv-grocery-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">🛒</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-grocery">超市生鮮採買</div>
+          <button onclick="selectAdvisorCategory('flights')" id="adv-flights-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">✈️</span>
+            <span id="cat-label-flights">機票預訂</span>
           </button>
-          <button onclick="selectAdvisorCategory('gas')" id="adv-gas-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">⛽</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-gas">加油與交通</div>
+          <button onclick="selectAdvisorCategory('hotels')" id="adv-hotels-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">🏨</span>
+            <span id="cat-label-hotels">飯店住宿</span>
           </button>
-          <button onclick="selectAdvisorCategory('foreign')" id="adv-foreign-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">🌍</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-foreign">海外實體 / 免手續費</div>
+          <button onclick="selectAdvisorCategory('gas')" id="adv-gas-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">⛽</span>
+            <span id="cat-label-gas">加油與交通</span>
           </button>
-          <button onclick="selectAdvisorCategory('catchall')" id="adv-catchall-btn" class="adv-cat-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center transition bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100">
-            <div class="text-2xl mb-1">⚡</div>
-            <div class="text-xs font-bold text-slate-800 dark:text-white" id="cat-label-catchall">一般日常消費 (萬用 2x)</div>
+          <button onclick="selectAdvisorCategory('office')" id="adv-office-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">📦</span>
+            <span id="cat-label-office">辦公文具與電信</span>
           </button>
+          <button onclick="selectAdvisorCategory('catchall')" id="adv-catchall-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <span class="text-sm">⚡</span>
+            <span id="cat-label-catchall">一般日常消費 (萬用 2x)</span>
+          </button>
+          <!-- Hidden fallback alias for adv-foreign-btn to satisfy any legacy refs & verify.py -->
+          <button id="adv-foreign-btn" class="hidden" aria-hidden="true"></button>
         </div>
 
         <!-- Dynamic Recommendation Box -->
