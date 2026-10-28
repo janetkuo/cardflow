@@ -233,12 +233,18 @@
         <div class="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
 
         <div class="relative z-10 space-y-3">
-          <div class="flex items-center justify-between text-white/95 text-xs font-bold uppercase tracking-wider">
-            <span id="monthly-credits-title" class="flex items-center gap-1.5">
+          <div class="flex items-center justify-between text-white/95 text-xs font-bold uppercase tracking-wider gap-2">
+            <span id="monthly-credits-title" class="flex items-center gap-1.5 shrink-0">
               <span>⚡</span>
               <span>本月待用折抵額度</span>
             </span>
-            <span id="balance-badge" class="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm">尚有待領 ⏳</span>
+            <div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+              <span id="balance-badge" class="px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-bold border border-white/25 backdrop-blur-sm inline-flex items-center gap-1">尚有待領 ⏳</span>
+              <button id="donut-cards-count-badge" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold border border-white/25 backdrop-blur-sm transition inline-flex items-center gap-1 cursor-pointer" title="點擊自選持卡 / Select Cards">
+                <span>🎴</span>
+                <span>0 / 12 張已持有</span>
+              </button>
+            </div>
           </div>
 
           <div class="flex items-baseline justify-between gap-2 flex-wrap">
@@ -246,10 +252,6 @@
               <span>$</span><span id="monthly-remaining-val">0.00</span>
               <span class="text-xs font-semibold text-white/80 ml-2" id="monthly-due-label">本月尚未折抵</span>
             </div>
-            <button id="donut-cards-count-badge" class="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full border border-white/30 backdrop-blur-sm transition flex items-center gap-1" title="點擊自選持卡 / Select Cards">
-              <span>🎴</span>
-              <span>0 / 12 張已持有</span>
-            </button>
           </div>
 
           <!-- Frosted Sub-metrics Chips -->
@@ -301,25 +303,58 @@
               </div>
             </button>
           </div>
+
+          <!-- Net Effective Annual Fee Progress Strip in Hero Banner -->
+          <div id="hero-net-af-box" class="bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/20 shadow-xs space-y-1.5 cursor-pointer hover:bg-white/15 transition" onclick="openAnnualBreakdownModal()" title="點擊查看年度實質淨年費與回本結構 / View Net Effective AF & break-even breakdown">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5 text-white/95">
+                <span>💰</span>
+                <span id="hero-net-af-title">實質淨持卡成本</span>
+              </span>
+              <span id="hero-net-af-status" class="text-xs font-extrabold text-amber-200 drop-shadow-sm">$0 (尚未回本)</span>
+            </div>
+            <div class="w-full bg-black/25 rounded-full h-2 overflow-hidden flex shadow-inner border border-white/10">
+              <div id="hero-net-af-bar" class="bg-emerald-400 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[10.5px] text-white/80 font-medium">
+              <span id="hero-net-af-claimed-label">已折抵 $0 / 總年費 $0</span>
+              <span id="hero-net-af-pct-label">回本率 0%</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Period Filter Segmented Pills (100% visible on Folded Phone / Zero horizontal scroll needed) -->
       <div class="space-y-1.5 pt-1">
+        <!-- View Mode Segmented Switch: Timeline vs Pure Cadence -->
+        <div class="flex items-center justify-between gap-2 px-1">
+          <div class="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800/90 rounded-xl text-xs font-bold shadow-inner">
+            <button id="view-mode-timeline-btn" onclick="setCreditsViewMode('timeline')" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold">
+              <span>⏳</span><span id="label-view-mode-timeline">時間軸視角</span>
+            </button>
+            <button id="view-mode-cadence-btn" onclick="setCreditsViewMode('cadence')" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold">
+              <span>🎯</span><span id="label-view-mode-cadence">純週期視角</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+            <span id="credits-count-label" class="shrink-0">0 項折抵</span>
+          </div>
+        </div>
+
         <div class="grid grid-cols-4 gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-2xl shadow-inner text-center font-bold text-xs">
-          <button id="period-monthly-btn" class="period-filter-btn py-1.5 px-1 rounded-xl transition bg-indigo-600 text-white shadow-xs cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-monthly-btn" onclick="setPeriodFilter('monthly')" class="period-filter-btn py-1.5 px-1 rounded-xl transition bg-indigo-600 text-white shadow-xs cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-month">本月</span>
             <span id="badge-period-month" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-quarterly-btn" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-quarterly-btn" onclick="setPeriodFilter('quarterly')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-quarter">本季</span>
             <span id="badge-period-quarter" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-semiannual-btn" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-semiannual-btn" onclick="setPeriodFilter('semiannual')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-half">下半年</span>
             <span id="badge-period-half" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-annual-btn" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-annual-btn" onclick="setPeriodFilter('annual')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-year">全年度</span>
             <span id="badge-period-year" class="text-[10px] opacity-80">(0)</span>
           </button>
@@ -329,7 +364,6 @@
 
         <div class="flex items-center justify-between text-xs font-semibold text-slate-400 px-1">
           <span id="credits-urgency-hint" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">⚡ 依緊迫性排序 · 含當月即將到期之非每月福利</span>
-          <span id="credits-count-label" class="shrink-0 ml-2">0 項折抵</span>
         </div>
       </div>
 
@@ -559,6 +593,62 @@
         </p>
         <div id="chase-524-detail" class="text-xs text-slate-600 dark:text-slate-300">
           <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Net Effective AF & Portfolio Break-Even Analytics Card -->
+      <div id="net-af-analytics-box" class="bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 id="net-af-section-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <span>💰</span>
+              <span>全皮夾實質淨持卡成本與回本分析</span>
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5" id="net-af-section-desc">
+              以今年度實際已折抵額度扣抵總年費，即時掌握全皮夾與各張年費卡片的回本進度。
+            </p>
+          </div>
+          <span id="net-af-status-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40">
+            回本率 0%
+          </span>
+        </div>
+
+        <!-- Wallet Big KPI Strip -->
+        <div class="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 text-center">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="kpi-total-af-title">總年費支出</span>
+            <div class="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-0.5" id="kpi-total-af-val">$0</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="kpi-claimed-title">年度已折抵</span>
+            <div class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="kpi-claimed-val">$0</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="kpi-net-af-title">實質淨持卡成本</span>
+            <div class="text-base font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5" id="kpi-net-af-val">$0</div>
+          </div>
+        </div>
+
+        <!-- Wallet Break-even Progress Bar -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+            <span id="net-af-bar-label">全皮夾年費回本進度</span>
+            <span id="net-af-bar-val" class="text-emerald-600 dark:text-emerald-400">0%</span>
+          </div>
+          <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden flex shadow-inner">
+            <div id="net-af-bar-fill" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Per-Card Net Effective AF Breakdown List -->
+        <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+            <span id="net-af-card-breakdown-title">各卡實質淨年費明細</span>
+            <span class="text-[10px] text-slate-400 font-normal" id="net-af-card-breakdown-sub">依年費高低排序</span>
+          </h4>
+          <div id="net-af-cards-list" class="space-y-2">
+            <!-- Populated dynamically -->
+          </div>
         </div>
       </div>
 

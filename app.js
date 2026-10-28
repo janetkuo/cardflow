@@ -365,7 +365,60 @@ const I18N = {
     overlapBadgeTopChoice: 'Top Choice',
     overlapBadgeBackup: 'Backup',
     overlapStatusDetected: '{n} Overlaps Detected',
-    overlapStatusOptimal: 'Balanced Portfolio'
+    overlapStatusOptimal: 'Balanced Portfolio',
+
+    // Net Effective AF
+    netEffectiveAF: 'Net Effective AF',
+    netEffectiveAFHero: 'Net Effective AF',
+    heroNetAfTitle: 'Net Effective AF',
+    netAFBreakEven: 'Broken Even (+${n})',
+    netAFRemaining: '${n} to break even',
+    netAFProgress: 'Break-even Rate',
+    netAFCardBrokenEven: 'Broken even (+${n})',
+    netAFCardShort: 'Short ${n} to break even',
+    netAFCardZero: 'No Annual Fee ($0)',
+    netAFCardClaimed: 'Claimed ${claimed} / AF ${af}',
+    netAFSectionTitle: 'Wallet Net Effective AF & Break-even Tracker',
+    netAFSectionDesc: 'Offsets total annual fees against claimed statement credits to track if your wallet has broken even this year.',
+    totalAnnualFees: 'Total Annual Fees',
+    totalClaimedOffsets: 'Total Claimed Offsets',
+    breakEvenStatus: 'Break-even Progress',
+    kpiTotalAfTitle: 'Total AF Spend',
+    kpiClaimedTitle: 'Total Claimed Offsets',
+    kpiNetAfTitle: 'Net Effective AF',
+    netAfBarLabel: 'Wallet Break-even Progress',
+    netAfCardBreakdownTitle: 'Card Break-even Breakdown',
+    netAfCardBreakdownSub: 'Sorted by Annual Fee',
+    netAfNoCardsDesc: 'No owned cards with annual fee. Select cards to analyze net costs.',
+    netAfCardFullyOffset: '100% Offset (+${n})',
+
+    // Cadence & Countdown
+    daysRemaining: '{n}d left',
+    resetsMonthly: 'Resets monthly',
+    resetsQuarterly: 'Resets quarterly',
+    resetsSemiannual: 'Resets semi-annually',
+    resetsAnnual: 'Resets Dec 31',
+    resetsAnniversary: 'Renewal reset',
+    cadenceMonthly: 'Calendar Month',
+    cadenceQuarterly: 'Calendar Quarter',
+    cadenceSemiannual: 'Calendar Half',
+    cadenceAnnual: 'Calendar Year (Dec 31)',
+    cadenceAnniversary: 'Cardmember Year',
+    claimedThisCycle: 'Claimed this cycle',
+    cycleLabelMonthly: 'Monthly reset',
+    cycleLabelQuarterly: 'Quarterly reset',
+    cycleLabelSemiannual: 'Semi-annual reset',
+    cycleLabelAnnual: 'Annual reset',
+
+    // View Mode (Urgency vs Cadence)
+    viewModeTimeline: 'Timeline',
+    viewModeCadence: 'Pure Cadence',
+    periodQuarterlyLabel: 'Quarterly',
+    periodSemiAnnualLabel: 'Semi-Annual',
+    creditsCadenceHintMonth: '🎯 Pure Cadence · Monthly credits only ($10-$25)',
+    creditsCadenceHintQuarter: '🎯 Pure Cadence · Quarterly credits only (IHG Dining, Indeed, etc.)',
+    creditsCadenceHintHalf: '🎯 Pure Cadence · Semi-annual credits only (Amex FHR, United TravelBank)',
+    creditsCadenceHintYear: '🎯 Pure Cadence · Annual credits only (Venture X $300, CSP Hotel, Airline $200, Dell)'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -641,7 +694,60 @@ const I18N = {
     overlapBadgeTopChoice: '推薦首選',
     overlapBadgeBackup: '備用覆蓋',
     overlapStatusDetected: '發現 {n} 項重複權益',
-    overlapStatusOptimal: '權益配置均衡'
+    overlapStatusOptimal: '權益配置均衡',
+
+    // Net Effective AF
+    netEffectiveAF: '實質淨持卡成本',
+    netEffectiveAFHero: '實質淨年費',
+    heroNetAfTitle: '實質淨持卡成本',
+    netAFBreakEven: '已倒賺回本 (+${n})',
+    netAFRemaining: '差 ${n} 回本',
+    netAFProgress: '回本率',
+    netAFCardBrokenEven: '已回本 (+${n})',
+    netAFCardShort: '差 ${n} 回本',
+    netAFCardZero: '免年費 ($0)',
+    netAFCardClaimed: '已折抵 ${claimed} / 年費 ${af}',
+    netAFSectionTitle: '全皮夾實質淨持卡成本與回本分析',
+    netAFSectionDesc: '以今年度實際已折抵額度扣抵總年費，即時掌握全皮夾與各張年費卡片的回本進度。',
+    totalAnnualFees: '總卡片年費',
+    totalClaimedOffsets: '年度已折抵額度',
+    breakEvenStatus: '回本進度',
+    kpiTotalAfTitle: '總年費支出',
+    kpiClaimedTitle: '年度已折抵',
+    kpiNetAfTitle: '實質淨持卡成本',
+    netAfBarLabel: '全皮夾年費回本進度',
+    netAfCardBreakdownTitle: '各卡實質淨年費明細',
+    netAfCardBreakdownSub: '依年費高低排序',
+    netAfNoCardsDesc: '尚未設定持有年費卡片，自選持卡後系統將自動分析回本進度。',
+    netAfCardFullyOffset: '已完全回本 (+${n})',
+
+    // Cadence & Countdown
+    daysRemaining: '剩 {n} 天',
+    resetsMonthly: '每月底重置',
+    resetsQuarterly: '本季末重置',
+    resetsSemiannual: '半年期重置',
+    resetsAnnual: '12/31 重置',
+    resetsAnniversary: '續卡週年重置',
+    cadenceMonthly: '日曆月制',
+    cadenceQuarterly: '日曆季制',
+    cadenceSemiannual: '日曆半年制',
+    cadenceAnnual: '日曆年制 (12/31)',
+    cadenceAnniversary: '卡片週年制',
+    claimedThisCycle: '此週期已折抵',
+    cycleLabelMonthly: '每月底重置',
+    cycleLabelQuarterly: '本季末重置',
+    cycleLabelSemiannual: '半年期重置',
+    cycleLabelAnnual: '年底重置',
+
+    // View Mode (Urgency vs Cadence)
+    viewModeTimeline: '時間軸視角',
+    viewModeCadence: '純週期視角',
+    periodQuarterlyLabel: '每季',
+    periodSemiAnnualLabel: '半年期',
+    creditsCadenceHintMonth: '🎯 純週期視角 · 僅顯示每月日常小額折抵 ($10-$25)',
+    creditsCadenceHintQuarter: '🎯 純週期視角 · 僅顯示每季大額專屬折抵（如 IHG 餐廳、Indeed）',
+    creditsCadenceHintHalf: '🎯 純週期視角 · 僅顯示半年期專屬折抵（如 商業大白 FHR $300、TravelBank）',
+    creditsCadenceHintYear: '🎯 純週期視角 · 僅顯示全年度大額福利（如 Venture X $300、CSP 飯店、航空附加費）'
   }
 };
 
@@ -1119,6 +1225,7 @@ const PRESET_CREDITS = [
     id: 'csp-hotel',
     cardId: 'csp',
     period: 'annual',
+    cycleType: 'anniversary',
     card: { en: 'Chase Sapphire Preferred', 'zh-TW': 'CSP 藍寶石卡' },
     title: { en: 'UPGRADED: Chase Travel $100 Hotel Credit', 'zh-TW': '升級: Chase Travel $100 年度飯店折抵' },
     amount: 100.0,
@@ -1129,6 +1236,7 @@ const PRESET_CREDITS = [
     id: 'vx-travel',
     cardId: 'venture-x',
     period: 'annual',
+    cycleType: 'anniversary',
     card: { en: 'Capital One Venture X', 'zh-TW': 'C1 Venture X' },
     title: { en: 'Capital One Travel $300 Credit', 'zh-TW': 'Capital One Travel 旅遊折抵額度 ($300)' },
     amount: 300.0,
@@ -1139,6 +1247,7 @@ const PRESET_CREDITS = [
     id: 'vx-anniversary',
     cardId: 'venture-x',
     period: 'annual',
+    cycleType: 'anniversary',
     card: { en: 'Capital One Venture X', 'zh-TW': 'C1 Venture X' },
     title: { en: '10,000 Anniversary Miles ($100 Value)', 'zh-TW': '每年續卡贈送 10,000 哩 ($100 旅遊金)' },
     amount: 100.0,
@@ -1486,6 +1595,7 @@ function renderAllViews() {
   renderOverlapOptimizer();
   selectAdvisorCategory(currentAdvisorCat);
   renderManageCardsChecklist();
+  renderNetEffectiveAF();
   updateBannerText();
 }
 
@@ -1657,6 +1767,31 @@ function renderAnnualBreakdownModal() {
     </div>
   `;
 
+  const totalAnnualFees = PRESET_CARDS.filter(c => isCardOwned(c.id)).reduce((acc, c) => acc + c.annualFee, 0);
+  const netDiff = totalAnnualFees - totalClaimedAnnualValue;
+  const isBrokenEven = totalClaimedAnnualValue >= totalAnnualFees;
+
+  const netAfModalHtml = `
+    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-850 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2">
+      <div class="flex items-center justify-between text-xs font-bold">
+        <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+          <span>💰</span>
+          <span>${t('netAFSectionTitle')}</span>
+        </span>
+        <span class="text-xs font-extrabold ${isBrokenEven && totalAnnualFees > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}">
+          ${totalAnnualFees === 0 ? t('netAFCardZero') : (isBrokenEven ? t('netAFBreakEven').replace('${n}', Math.round(totalClaimedAnnualValue - totalAnnualFees)) : t('netAFRemaining').replace('${n}', '$' + Math.round(netDiff)))}
+        </span>
+      </div>
+      <div class="w-full bg-black/20 dark:bg-black/40 rounded-full h-2 overflow-hidden flex shadow-inner">
+        <div class="${isBrokenEven ? 'bg-emerald-500' : 'bg-indigo-600'} h-full transition-all duration-500" style="width: ${totalAnnualFees > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnualFees) * 100)) : 100}%"></div>
+      </div>
+      <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <span>${t('annualFeeLabel')}: $${totalAnnualFees.toLocaleString()} · ${t('statClaimedPrefix')}: $${Math.round(totalClaimedAnnualValue).toLocaleString()}</span>
+        <span>${t('netAFProgress')} ${totalAnnualFees > 0 ? Math.round((totalClaimedAnnualValue / totalAnnualFees) * 100) : 100}%</span>
+      </div>
+    </div>
+  `;
+
   const sections = [
     {
       id: 'monthly',
@@ -1704,7 +1839,7 @@ function renderAnnualBreakdownModal() {
     }
   ];
 
-  container.innerHTML = utilizationCardHtml + sections.map(sec => {
+  container.innerHTML = utilizationCardHtml + netAfModalHtml + sections.map(sec => {
     const itemsHtml = sec.items.length > 0
       ? sec.items.map(it => {
           const tText = typeof it.title === 'object' ? (it.title[currentLang] || it.title['zh-TW']) : it.title;
@@ -1923,7 +2058,17 @@ function applyLanguage(lang) {
     'mob-label-loyalty': 'tabLoyalty',
     'mob-label-advisor': 'tabAdvisor',
     'period-all-btn': 'periodAll',
-    'period-semiannual-btn': 'periodSemiAnnual',
+    'label-view-mode-timeline': 'viewModeTimeline',
+    'label-view-mode-cadence': 'viewModeCadence',
+    'hero-net-af-title': 'heroNetAfTitle',
+    'net-af-section-title': 'netAFSectionTitle',
+    'net-af-section-desc': 'netAFSectionDesc',
+    'kpi-total-af-title': 'kpiTotalAfTitle',
+    'kpi-claimed-title': 'kpiClaimedTitle',
+    'kpi-net-af-title': 'kpiNetAfTitle',
+    'net-af-bar-label': 'netAfBarLabel',
+    'net-af-card-breakdown-title': 'netAfCardBreakdownTitle',
+    'net-af-card-breakdown-sub': 'netAfCardBreakdownSub',
     'fnc-section-title': 'fncSectionTitle',
     'fnc-section-desc': 'fncSectionDesc',
     'add-fnc-btn-label': 'addFncBtn',
@@ -2063,6 +2208,281 @@ function getCreditUrgencyInfo(item, curYear, curMonth) {
   }
 
   return { isDueThisMonth, isExpiringSoon, urgencyBadgeText, urgencyOrder };
+}
+
+let currentCreditsViewMode = 'timeline'; // 'timeline' | 'cadence'
+
+function setCreditsViewMode(mode) {
+  currentCreditsViewMode = mode;
+  const timeBtn = document.getElementById('view-mode-timeline-btn');
+  const cadBtn = document.getElementById('view-mode-cadence-btn');
+  if (timeBtn && cadBtn) {
+    if (mode === 'timeline') {
+      timeBtn.className = 'py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold';
+      cadBtn.className = 'py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold';
+    } else {
+      timeBtn.className = 'py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold';
+      cadBtn.className = 'py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold';
+    }
+  }
+  renderCredits();
+}
+
+function getCreditCycleInfo(item, curYear, curMonth) {
+  const meta = appState.cardMeta?.[item.cardId];
+  const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
+  const isAnniversary = item.period === 'annual' && item.cycleType === 'anniversary';
+
+  let daysRemaining = null;
+  let cycleText = '';
+  let isExpiringImminent = false;
+
+  const curDay = today.getDate();
+  const isCurrentViewingMonth = (selectedYear === today.getFullYear() && selectedMonth === (today.getMonth() + 1));
+
+  if (item.period === 'monthly') {
+    const lastDayOfMonth = new Date(curYear, curMonth, 0).getDate();
+    if (isCurrentViewingMonth) {
+      daysRemaining = Math.max(0, lastDayOfMonth - curDay);
+      if (daysRemaining <= 7) isExpiringImminent = true;
+      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
+      cycleText = `${daysText} · ${t('resetsMonthly')}`;
+    } else {
+      cycleText = t('resetsMonthly');
+    }
+  } else if (item.period === 'quarterly') {
+    const curQuarter = Math.ceil(curMonth / 3);
+    const isQuarterEndMonth = (curMonth % 3 === 0);
+    const lastDayOfQMonth = new Date(curYear, curMonth, 0).getDate();
+    if (isCurrentViewingMonth && isQuarterEndMonth) {
+      daysRemaining = Math.max(0, lastDayOfQMonth - curDay);
+      if (daysRemaining <= 14) isExpiringImminent = true;
+      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
+      cycleText = `${daysText} · ${t('resetsQuarterly')}`;
+    } else {
+      cycleText = `Q${curQuarter} · ${t('resetsQuarterly')}`;
+    }
+  } else if (item.period === 'semiannual') {
+    const curHalf = curMonth <= 6 ? 1 : 2;
+    const isHalfEndMonth = (curMonth % 6 === 0);
+    const lastDayOfHMonth = new Date(curYear, curMonth, 0).getDate();
+    if (isCurrentViewingMonth && isHalfEndMonth) {
+      daysRemaining = Math.max(0, lastDayOfHMonth - curDay);
+      if (daysRemaining <= 20) isExpiringImminent = true;
+      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
+      cycleText = `${daysText} · ${t('resetsSemiannual')}`;
+    } else {
+      cycleText = `${curHalf === 1 ? 'H1' : 'H2'} · ${t('resetsSemiannual')}`;
+    }
+  } else if (item.period === 'annual') {
+    if (isAnniversary) {
+      if (openedMonth) {
+        if (isCurrentViewingMonth && curMonth === openedMonth) {
+          const lastDayOfAnniv = new Date(curYear, openedMonth, 0).getDate();
+          daysRemaining = Math.max(0, lastDayOfAnniv - curDay);
+          if (daysRemaining <= 30) isExpiringImminent = true;
+          const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
+          cycleText = `${daysText} · ${t('resetsAnniversary')}`;
+        } else {
+          cycleText = `${t('cadenceAnniversary')} · ${openedMonth} ${t('monthUnit')}`;
+        }
+      } else {
+        cycleText = `${t('cadenceAnniversary')} (${t('btnSetDates')})`;
+      }
+    } else {
+      // Calendar year
+      if (isCurrentViewingMonth && curMonth === 12) {
+        const lastDayOfYear = 31;
+        daysRemaining = Math.max(0, lastDayOfYear - curDay);
+        if (daysRemaining <= 30) isExpiringImminent = true;
+        const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
+        cycleText = `${daysText} · ${t('resetsAnnual')}`;
+      } else {
+        cycleText = t('cadenceAnnual');
+      }
+    }
+  }
+
+  return { daysRemaining, cycleText, isExpiringImminent, isAnniversary };
+}
+
+function getCardClaimedValueThisYear(cardId, curYear) {
+  const credits = PRESET_CREDITS.filter(cr => cr.cardId === cardId && !isCreditMuted(cr.id));
+  let claimed = 0;
+  credits.forEach(c => {
+    if (c.period === 'monthly') {
+      for (let m = 1; m <= 12; m++) {
+        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
+        if (appState.creditsClaimed[`${c.id}_${mStr}`]) claimed += c.amount;
+      }
+    } else if (c.period === 'quarterly') {
+      for (let q = 1; q <= 4; q++) {
+        if (appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`]) claimed += c.amount;
+      }
+    } else if (c.period === 'semiannual') {
+      ['H1', 'H2'].forEach(h => {
+        if (appState.creditsClaimed[`${c.id}_${curYear}_${h}`]) claimed += c.amount;
+      });
+    } else {
+      if (appState.creditsClaimed[`${c.id}_${curYear}`]) claimed += c.amount;
+    }
+  });
+  return claimed;
+}
+
+function renderNetEffectiveAF() {
+  const curYear = selectedYear;
+  const ownedCards = PRESET_CARDS.filter(c => isCardOwned(c.id));
+  const totalAnnualFees = ownedCards.reduce((acc, c) => acc + c.annualFee, 0);
+
+  let totalClaimedOffsets = 0;
+  const cardStats = ownedCards.map(c => {
+    const claimed = getCardClaimedValueThisYear(c.id, curYear);
+    totalClaimedOffsets += claimed;
+    const netCost = c.annualFee - claimed;
+    const pct = c.annualFee > 0 ? Math.round((claimed / c.annualFee) * 100) : 100;
+    return { card: c, claimed, netCost, pct };
+  });
+
+  cardStats.sort((a, b) => b.card.annualFee - a.card.annualFee);
+
+  const netDiff = totalAnnualFees - totalClaimedOffsets;
+  const breakEvenPct = totalAnnualFees > 0 ? Math.min(100, Math.round((totalClaimedOffsets / totalAnnualFees) * 100)) : 100;
+  const isFullyBrokenEven = totalAnnualFees > 0 ? (totalClaimedOffsets >= totalAnnualFees) : true;
+
+  // 1. Update Hero Banner Strip
+  const heroStatusEl = document.getElementById('hero-net-af-status');
+  const heroBarEl = document.getElementById('hero-net-af-bar');
+  const heroClaimedLabel = document.getElementById('hero-net-af-claimed-label');
+  const heroPctLabel = document.getElementById('hero-net-af-pct-label');
+
+  if (heroStatusEl) {
+    if (ownedCards.length === 0) {
+      heroStatusEl.innerText = `$0 (${t('noOwnedCardsTitle')})`;
+    } else if (totalAnnualFees === 0) {
+      heroStatusEl.innerText = t('netAFCardZero');
+    } else if (isFullyBrokenEven) {
+      const profit = Math.round(Math.abs(netDiff));
+      heroStatusEl.innerText = t('netAFBreakEven').replace('${n}', profit);
+    } else {
+      const remainingShort = Math.round(netDiff);
+      heroStatusEl.innerText = `$${remainingShort} (${t('netAFRemaining').replace('${n}', '$' + remainingShort)})`;
+    }
+  }
+
+  if (heroBarEl) {
+    heroBarEl.style.width = `${breakEvenPct}%`;
+    heroBarEl.className = isFullyBrokenEven
+      ? 'bg-emerald-400 h-full transition-all duration-500'
+      : 'bg-gradient-to-r from-amber-400 to-emerald-400 h-full transition-all duration-500';
+  }
+
+  if (heroClaimedLabel) {
+    heroClaimedLabel.innerText = `${t('statClaimedPrefix')} $${Math.round(totalClaimedOffsets).toLocaleString()} / ${t('annualFeeLabel')} $${totalAnnualFees.toLocaleString()}`;
+  }
+
+  if (heroPctLabel) {
+    heroPctLabel.innerText = `${t('netAFProgress')} ${breakEvenPct}%`;
+  }
+
+  // 2. Update Advisor & Analytics Section
+  const kpiTotalAfVal = document.getElementById('kpi-total-af-val');
+  const kpiClaimedVal = document.getElementById('kpi-claimed-val');
+  const kpiNetAfVal = document.getElementById('kpi-net-af-val');
+  const netAfStatusBadge = document.getElementById('net-af-status-badge');
+  const netAfBarVal = document.getElementById('net-af-bar-val');
+  const netAfBarFill = document.getElementById('net-af-bar-fill');
+  const cardsListContainer = document.getElementById('net-af-cards-list');
+
+  if (kpiTotalAfVal) kpiTotalAfVal.innerText = `$${totalAnnualFees.toLocaleString()}`;
+  if (kpiClaimedVal) kpiClaimedVal.innerText = `$${Math.round(totalClaimedOffsets).toLocaleString()}`;
+  if (kpiNetAfVal) {
+    if (isFullyBrokenEven && totalAnnualFees > 0) {
+      kpiNetAfVal.innerText = `+$${Math.round(Math.abs(netDiff)).toLocaleString()}`;
+      kpiNetAfVal.className = 'text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5';
+    } else {
+      kpiNetAfVal.innerText = `$${Math.round(Math.max(0, netDiff)).toLocaleString()}`;
+      kpiNetAfVal.className = 'text-base font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5';
+    }
+  }
+
+  if (netAfStatusBadge) {
+    if (ownedCards.length === 0) {
+      netAfStatusBadge.innerText = t('noOwnedCardsTitle');
+      netAfStatusBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
+    } else if (isFullyBrokenEven) {
+      const profit = Math.round(Math.abs(netDiff));
+      netAfStatusBadge.innerText = `🎉 ${t('netAFBreakEven').replace('${n}', profit)}`;
+      netAfStatusBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40';
+    } else {
+      netAfStatusBadge.innerText = `${t('netAFProgress')} ${breakEvenPct}%`;
+      netAfStatusBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40';
+    }
+  }
+
+  if (netAfBarVal) netAfBarVal.innerText = `${breakEvenPct}%`;
+  if (netAfBarFill) {
+    netAfBarFill.style.width = `${breakEvenPct}%`;
+    netAfBarFill.className = isFullyBrokenEven
+      ? 'bg-emerald-500 h-full transition-all duration-500'
+      : 'bg-gradient-to-r from-indigo-500 to-emerald-500 h-full transition-all duration-500';
+  }
+
+  if (cardsListContainer) {
+    if (ownedCards.length === 0) {
+      cardsListContainer.innerHTML = `
+        <div class="p-4 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
+          ${t('netAfNoCardsDesc')}
+        </div>
+      `;
+    } else {
+      cardsListContainer.innerHTML = cardStats.map(({ card, claimed, netCost, pct }) => {
+        const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+        const isFree = card.annualFee === 0;
+        const isCardBreakEven = isFree || (claimed >= card.annualFee);
+
+        let statusText = '';
+        let statusClass = '';
+        if (isFree) {
+          statusText = t('netAFCardZero');
+          statusClass = 'text-emerald-600 dark:text-emerald-400';
+        } else if (isCardBreakEven) {
+          statusText = `✓ ${t('netAfCardFullyOffset').replace('${n}', Math.round(Math.abs(netCost)))}`;
+          statusClass = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+        } else {
+          const shortVal = Math.round(netCost);
+          statusText = `${t('netEffectiveAF')}: $${shortVal} (${t('netAFCardShort').replace('${n}', '$' + shortVal)})`;
+          statusClass = 'text-indigo-600 dark:text-indigo-400 font-bold';
+        }
+
+        return `
+          <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${card.name}</div>
+                <div class="text-[10px] text-slate-400">${nick} · ${card.issuer}</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-xs ${statusClass}">${statusText}</div>
+                <div class="text-[10px] text-slate-400">${t('annualFeeLabel')}: $${card.annualFee}</div>
+              </div>
+            </div>
+            ${!isFree ? `
+              <div class="space-y-1 pt-0.5">
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden flex shadow-inner">
+                  <div class="${isCardBreakEven ? 'bg-emerald-500' : 'bg-indigo-600'} h-full transition-all duration-500" style="width: ${Math.min(100, pct)}%"></div>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                  <span>${t('statClaimedPrefix')} $${Math.round(claimed).toLocaleString()} / $${card.annualFee}</span>
+                  <span>${pct}%</span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+  }
 }
 
 function setPeriodFilter(p) {
@@ -2210,7 +2630,7 @@ function renderCredits() {
     }
   });
 
-  // Calculate items matching each tab for badge counts
+  // Calculate items matching each tab for badge counts (timeline vs pure cadence mode)
   const monthItems = creditMetaList.filter(({ item, urgency }) => urgency.isDueThisMonth);
   const quarterItems = creditMetaList.filter(({ item }) => {
     if (item.period === 'monthly' || item.period === 'quarterly') return true;
@@ -2225,39 +2645,66 @@ function renderCredits() {
   });
   const yearItems = creditMetaList;
 
+  const monthCadenceItems = creditMetaList.filter(({ item }) => item.period === 'monthly');
+  const quarterCadenceItems = creditMetaList.filter(({ item }) => item.period === 'quarterly');
+  const halfCadenceItems = creditMetaList.filter(({ item }) => item.period === 'semiannual');
+  const yearCadenceItems = creditMetaList.filter(({ item }) => item.period === 'annual');
+
+  const isCadenceMode = currentCreditsViewMode === 'cadence';
+
   // Update Period Tab Badges & Labels
   const badgeMonth = document.getElementById('badge-period-month');
-  if (badgeMonth) badgeMonth.innerText = `(${monthItems.length})`;
+  if (badgeMonth) badgeMonth.innerText = `(${isCadenceMode ? monthCadenceItems.length : monthItems.length})`;
 
   const badgeQuarter = document.getElementById('badge-period-quarter');
-  if (badgeQuarter) badgeQuarter.innerText = `(${quarterItems.length})`;
+  if (badgeQuarter) badgeQuarter.innerText = `(${isCadenceMode ? quarterCadenceItems.length : quarterItems.length})`;
 
   const badgeHalf = document.getElementById('badge-period-half');
-  if (badgeHalf) badgeHalf.innerText = `(${halfItems.length})`;
+  if (badgeHalf) badgeHalf.innerText = `(${isCadenceMode ? halfCadenceItems.length : halfItems.length})`;
 
   const badgeYear = document.getElementById('badge-period-year');
-  if (badgeYear) badgeYear.innerText = `(${yearItems.length})`;
+  if (badgeYear) badgeYear.innerText = `(${isCadenceMode ? yearCadenceItems.length : yearItems.length})`;
 
   const labelMonth = document.getElementById('label-period-month');
   if (labelMonth) labelMonth.innerText = t('periodTabMonth');
 
   const labelQuarter = document.getElementById('label-period-quarter');
-  if (labelQuarter) labelQuarter.innerText = t('periodTabQuarter');
+  if (labelQuarter) labelQuarter.innerText = isCadenceMode ? t('periodQuarterlyLabel') : t('periodTabQuarter');
 
   const labelHalf = document.getElementById('label-period-half');
-  if (labelHalf) labelHalf.innerText = curMonth <= 6 ? t('periodTabHalfH1') : t('periodTabHalfH2');
+  if (labelHalf) {
+    if (isCadenceMode) {
+      labelHalf.innerText = t('periodSemiAnnualLabel');
+    } else {
+      labelHalf.innerText = curMonth <= 6 ? t('periodTabHalfH1') : t('periodTabHalfH2');
+    }
+  }
 
   const labelYear = document.getElementById('label-period-year');
   if (labelYear) labelYear.innerText = t('periodTabYear');
 
-  // Determine items to display based on active period filter
+  // Determine items to display based on active period filter and view mode
   let displayMetaList = monthItems;
-  if (currentPeriodFilter === 'quarterly') {
-    displayMetaList = quarterItems;
-  } else if (currentPeriodFilter === 'semiannual') {
-    displayMetaList = halfItems;
-  } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
-    displayMetaList = yearItems;
+  if (isCadenceMode) {
+    if (currentPeriodFilter === 'quarterly') {
+      displayMetaList = quarterCadenceItems;
+    } else if (currentPeriodFilter === 'semiannual') {
+      displayMetaList = halfCadenceItems;
+    } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
+      displayMetaList = yearCadenceItems;
+    } else {
+      displayMetaList = monthCadenceItems;
+    }
+  } else {
+    if (currentPeriodFilter === 'quarterly') {
+      displayMetaList = quarterItems;
+    } else if (currentPeriodFilter === 'semiannual') {
+      displayMetaList = halfItems;
+    } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
+      displayMetaList = yearItems;
+    } else {
+      displayMetaList = monthItems;
+    }
   }
 
   // Determine stateKey and claim status for each item
@@ -2341,10 +2788,26 @@ function renderCredits() {
       const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
       const tipText = typeof item.tip === 'object' ? (item.tip[currentLang] || item.tip['zh-TW']) : item.tip;
 
-      const cardMeta = appState.cardMeta?.[item.cardId];
-      let cycleNoteHtml = '';
-      if (item.period === 'annual' && cardMeta && cardMeta.openedMonth) {
-        cycleNoteHtml = `<span class="px-1.5 py-0.5 rounded-md text-[9.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">📅 ${t('anniversaryResetPrefix')} ${cardMeta.openedMonth} ${t('anniversaryResetSuffix')}</span>`;
+      let cycleBadgeHtml = '';
+      if (isClaimed) {
+        cycleBadgeHtml = `
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50 shrink-0">
+            ✓ ${t('claimedThisCycle')}
+          </span>
+        `;
+      } else if (!isSkipped) {
+        const cycleInfo = getCreditCycleInfo(item, curYear, curMonth);
+        const badgeBg = cycleInfo.isExpiringImminent
+          ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/60 font-bold'
+          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium';
+        const icon = cycleInfo.isExpiringImminent ? '⏳' : (cycleInfo.isAnniversary ? '📅' : '🗓️');
+
+        cycleBadgeHtml = `
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] ${badgeBg} flex items-center gap-1 shrink-0" title="${cycleInfo.cycleText}">
+            <span>${icon}</span>
+            <span>${cycleInfo.cycleText}</span>
+          </span>
+        `;
       }
 
       let urgencyBadgeHtml = '';
@@ -2410,8 +2873,8 @@ function renderCredits() {
               <span class="text-xs sm:text-sm font-bold ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : isSkipped ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${titleText}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
               ${urgencyBadgeHtml}
+              ${cycleBadgeHtml}
               ${skippedBadgeHtml}
-              ${cycleNoteHtml}
             </div>
             <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
           </div>
@@ -2490,19 +2953,20 @@ function renderCredits() {
   if (badgeEl) {
     if (ownedCount === 0) {
       badgeEl.innerText = t('balanceNoCards');
-      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold backdrop-blur-sm';
+      badgeEl.className = 'px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-bold border border-white/25 backdrop-blur-sm inline-flex items-center gap-1';
     } else if (totalMonthlyItems === 0 || monthlyUnclaimed === 0) {
       badgeEl.innerText = t('balanceHealthy');
-      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 text-[11px] font-bold backdrop-blur-sm';
+      badgeEl.className = 'px-2.5 py-1 rounded-full bg-emerald-500/30 text-emerald-200 text-xs font-bold border border-emerald-300/40 backdrop-blur-sm inline-flex items-center gap-1';
     } else {
       badgeEl.innerText = t('balanceAction');
-      badgeEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-[11px] font-bold backdrop-blur-sm';
+      badgeEl.className = 'px-2.5 py-1 rounded-full bg-amber-500/30 text-amber-200 text-xs font-bold border border-amber-300/40 backdrop-blur-sm inline-flex items-center gap-1';
     }
   }
 
   const donutBadge = document.getElementById('donut-cards-count-badge');
   if (donutBadge) {
-    donutBadge.innerText = `${ownedCount} / ${PRESET_CARDS.length} ${t('cardsCountBadgeSuffix')}`;
+    donutBadge.innerHTML = `<span>🎴</span><span>${ownedCount} / ${PRESET_CARDS.length} ${t('cardsCountBadgeSuffix')}</span>`;
+    donutBadge.className = 'px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold border border-white/25 backdrop-blur-sm transition inline-flex items-center gap-1 cursor-pointer';
   }
 
   // Hidden alias button for verify.py
@@ -2511,24 +2975,43 @@ function renderCredits() {
     allBtn.innerText = t('periodAll');
   }
 
-  // Urgency hint under segmented tabs
-  const hintEl = document.getElementById('credits-urgency-hint');
-  if (hintEl) {
-    if (currentPeriodFilter === 'monthly') {
-      hintEl.innerText = t('creditsUrgencyHintMonth');
-    } else if (currentPeriodFilter === 'quarterly') {
-      hintEl.innerText = t('creditsUrgencyHintQuarter');
-    } else if (currentPeriodFilter === 'semiannual') {
-      hintEl.innerText = t('creditsUrgencyHintHalf');
-    } else {
-      hintEl.innerText = t('creditsUrgencyHintYear');
-    }
-  }
-
+  // Credits Count Label
   const countLabel = document.getElementById('credits-count-label');
   if (countLabel) {
     countLabel.innerText = `${preparedItems.length} ${t('itemsUnit')}`;
   }
+
+  // Urgency hint under segmented tabs
+  const hintEl = document.getElementById('credits-urgency-hint');
+  if (hintEl) {
+    if (isCadenceMode) {
+      if (currentPeriodFilter === 'monthly') {
+        hintEl.innerText = t('creditsCadenceHintMonth');
+      } else if (currentPeriodFilter === 'quarterly') {
+        hintEl.innerText = t('creditsCadenceHintQuarter');
+      } else if (currentPeriodFilter === 'semiannual') {
+        hintEl.innerText = t('creditsCadenceHintHalf');
+      } else {
+        hintEl.innerText = t('creditsCadenceHintYear');
+      }
+    } else {
+      if (currentPeriodFilter === 'monthly') {
+        hintEl.innerText = t('creditsUrgencyHintMonth');
+      } else if (currentPeriodFilter === 'quarterly') {
+        hintEl.innerText = t('creditsUrgencyHintQuarter');
+      } else if (currentPeriodFilter === 'semiannual') {
+        hintEl.innerText = t('creditsUrgencyHintHalf');
+      } else {
+        hintEl.innerText = t('creditsUrgencyHintYear');
+      }
+    }
+  }
+
+  // Render collapsible muted section at bottom of credits feed
+  renderMutedCreditsSection(mutedOwnedCredits);
+
+  // Update Net Effective AF indicators & progress
+  renderNetEffectiveAF();
 
   // Render collapsible muted section at bottom of credits feed
   renderMutedCreditsSection(mutedOwnedCredits);
@@ -2958,6 +3441,30 @@ function renderCards() {
               </button>
             ` : ''}
           </div>
+          ${isOwned && card.annualFee > 0 ? (() => {
+            const cardClaimedVal = getCardClaimedValueThisYear(card.id, selectedYear);
+            const cardNetCost = card.annualFee - cardClaimedVal;
+            const cardPct = Math.round((cardClaimedVal / card.annualFee) * 100);
+            const isCardBreakEven = cardClaimedVal >= card.annualFee;
+            const shortVal = Math.round(cardNetCost);
+            return `
+              <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                <div class="flex items-center justify-between text-[11px] font-bold">
+                  <span class="text-slate-500 dark:text-slate-400">${t('netEffectiveAF')}</span>
+                  <span class="${isCardBreakEven ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-indigo-600 dark:text-indigo-400 font-bold'}">
+                    ${isCardBreakEven ? `✓ ${t('netAfCardFullyOffset').replace('${n}', Math.round(Math.abs(cardNetCost)))}` : `$${shortVal} (${t('netAFCardShort').replace('${n}', '$' + shortVal)})`}
+                  </span>
+                </div>
+                <div class="w-full bg-slate-200/80 dark:bg-slate-700/80 rounded-full h-1.5 overflow-hidden flex shadow-inner">
+                  <div class="${isCardBreakEven ? 'bg-emerald-500' : 'bg-indigo-600'} h-full transition-all duration-500" style="width: ${Math.min(100, cardPct)}%"></div>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                  <span>${t('statClaimedPrefix')} $${Math.round(cardClaimedVal).toLocaleString()} / $${card.annualFee}</span>
+                  <span>${cardPct}%</span>
+                </div>
+              </div>
+            `;
+          })() : ''}
           <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
             ${renewMonth ? `<span>📅 ${t('renewMonthLabel')}: <strong class="text-slate-700 dark:text-slate-200">${renewMonth}</strong></span>` : ''}
             ${openedYearVal ? `<span class="text-slate-300 dark:text-slate-600">|</span><span>${t('openedYearLabel')} <strong class="text-slate-700 dark:text-slate-200">${openedYearVal}</strong></span>` : ''}
@@ -4543,6 +5050,7 @@ function switchSubView(viewId, updateHash = true) {
   if (viewId === 'advisor') {
     renderOverlapOptimizer();
     renderChase524();
+    renderNetEffectiveAF();
   } else if (viewId === 'cards') {
     renderCards();
   }
