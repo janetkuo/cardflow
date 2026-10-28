@@ -642,6 +642,54 @@ def check_business_logic_simulation():
         errors.push("Legacy backup fallback failed to initialize fncsClaimed");
       }
 
+      // 9. Verify Tab 2 Polish Features (Compact/Detailed View, Decision Status & Deeplinks)
+      setCardsViewMode('compact');
+      if (currentCardsViewMode !== 'compact') errors.push("setCardsViewMode('compact') failed");
+      toggleCardDetailExpand('bonvoy-brilliant');
+      if (!expandedCardIds.has('bonvoy-brilliant')) errors.push("toggleCardDetailExpand failed to toggle state");
+      setCardsViewMode('detailed');
+      if (currentCardsViewMode !== 'detailed') errors.push("setCardsViewMode('detailed') failed");
+
+      const badgeKeep = getDecisionBadgeInfo('keep');
+      if (!badgeKeep || badgeKeep.icon !== '✓') errors.push("getDecisionBadgeInfo('keep') failed");
+      const badgeRetention = getDecisionBadgeInfo('retention');
+      if (!badgeRetention || badgeRetention.icon !== '🎁') errors.push("getDecisionBadgeInfo('retention') failed");
+
+      if (!appState.cardMeta) appState.cardMeta = {};
+      if (!appState.cardMeta['bonvoy-brilliant']) appState.cardMeta['bonvoy-brilliant'] = {};
+      appState.cardMeta['bonvoy-brilliant'].retentionStatus = 'retention';
+      appState.cardMeta['bonvoy-brilliant'].retentionNote = '$150 statement credit';
+      saveState(true);
+      if (appState.cardMeta['bonvoy-brilliant'].retentionStatus !== 'retention') {
+        errors.push("Failed to persist retentionStatus in cardMeta");
+      }
+
+      const brilliantDiningPerk = PRESET_CARDS.find(c => c.id === 'bonvoy-brilliant').perks.find(p => p.creditId === 'bb-dining');
+      if (!brilliantDiningPerk) errors.push("Missing creditId 'bb-dining' in Marriott Brilliant perks");
+      const linked = findLinkedCredit('bonvoy-brilliant', brilliantDiningPerk);
+      if (!linked || linked.id !== 'bb-dining') errors.push("findLinkedCredit failed for bb-dining");
+
+      try {
+        jumpToCredit('bb-dining');
+      } catch (e) {
+        errors.push("jumpToCredit('bb-dining') crashed: " + e.message);
+      }
+
+      try {
+        jumpToLoyalty();
+      } catch (e) {
+        errors.push("jumpToLoyalty() crashed: " + e.message);
+      }
+
+      try {
+        setCardsViewMode('compact');
+        renderCards();
+        setCardsViewMode('detailed');
+        renderCards();
+      } catch (e) {
+        errors.push("renderCards crashed during view mode test: " + e.message);
+      }
+
       return JSON.stringify({
         errors: errors,
         expectedSum: expectedSum,

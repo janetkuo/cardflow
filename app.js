@@ -418,7 +418,35 @@ const I18N = {
     creditsCadenceHintMonth: '🎯 Pure Cadence · Monthly credits only ($10-$25)',
     creditsCadenceHintQuarter: '🎯 Pure Cadence · Quarterly credits only (IHG Dining, Indeed, etc.)',
     creditsCadenceHintHalf: '🎯 Pure Cadence · Semi-annual credits only (Amex FHR, United TravelBank)',
-    creditsCadenceHintYear: '🎯 Pure Cadence · Annual credits only (Venture X $300, CSP Hotel, Airline $200, Dell)'
+    creditsCadenceHintYear: '🎯 Pure Cadence · Annual credits only (Venture X $300, CSP Hotel, Airline $200, Dell)',
+
+    // Cards Tab View Mode & Retention Decision
+    viewModeCompact: 'Compact',
+    viewModeDetailed: 'Detailed',
+    viewModeToggleTitle: 'Toggle compact or detailed card view',
+    expandCardDetails: 'Show perks & categories',
+    collapseCardDetails: 'Collapse details',
+    cardCategoriesCount: 'categories',
+    cardPerksCount: 'perks',
+    cardDateDecisionLabel: 'Annual Fee & Retention Decision (Optional)',
+    cardDateNoteLabel: 'Retention Offer / Decision Notes (Optional)',
+    cardDateNotePlaceholder: 'e.g., $150 credit, 30k points, or downgrade to no AF card',
+    decisionStatusSelectDefault: '-- Undecided / Default --',
+    decisionStatusKeep: 'Keep Card (Confirmed)',
+    decisionStatusConsidering: 'Considering (Undecided)',
+    decisionStatusRetention: 'Retention Offer Accepted',
+    decisionStatusDowngrade: 'Plan to Downgrade',
+    decisionStatusCancel: 'Plan to Cancel',
+    decisionStatusLabel: 'Renewal Decision',
+    decisionNotePrefix: 'Decision Note',
+    btnRecordDecision: 'Record Decision',
+    btnEditDecisionTooltip: 'Click to record or update renewal decision & retention offer',
+    jumpToCreditBtn: 'Track Credit',
+    jumpToCreditTooltip: 'Jump to this statement credit in Credits tab',
+    jumpToLoyaltyBtn: 'FNC Award',
+    jumpToLoyaltyTooltip: 'Jump to Free Night Certificate tracker',
+    toastJumpedToCredit: 'Jumped to credit',
+    toastActivateCardFirst: 'Please activate this card first to track credits'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -747,7 +775,35 @@ const I18N = {
     creditsCadenceHintMonth: '🎯 純週期視角 · 僅顯示每月日常小額折抵 ($10-$25)',
     creditsCadenceHintQuarter: '🎯 純週期視角 · 僅顯示每季大額專屬折抵（如 IHG 餐廳、Indeed）',
     creditsCadenceHintHalf: '🎯 純週期視角 · 僅顯示半年期專屬折抵（如 商業大白 FHR $300、TravelBank）',
-    creditsCadenceHintYear: '🎯 純週期視角 · 僅顯示全年度大額福利（如 Venture X $300、CSP 飯店、航空附加費）'
+    creditsCadenceHintYear: '🎯 純週期視角 · 僅顯示全年度大額福利（如 Venture X $300、CSP 飯店、航空附加費）',
+
+    // Cards Tab View Mode & Retention Decision
+    viewModeCompact: '精簡',
+    viewModeDetailed: '展開',
+    viewModeToggleTitle: '切換精簡或詳細卡片檢視',
+    expandCardDetails: '展開權益與點數倍率',
+    collapseCardDetails: '收合細節',
+    cardCategoriesCount: '項倍率類別',
+    cardPerksCount: '項權益',
+    cardDateDecisionLabel: '年費續卡與化緣決策 (選填)',
+    cardDateNoteLabel: '化緣優惠 / 決策筆記 (選填)',
+    cardDateNotePlaceholder: '例如：已拿 $150 折抵 / 30,000 點 / 預計降為免年費卡',
+    decisionStatusSelectDefault: '-- 尚未決定 / 預設 --',
+    decisionStatusKeep: '確定續卡 (Keep)',
+    decisionStatusConsidering: '考慮中 (Considering)',
+    decisionStatusRetention: '已拿 Retention 化緣優惠',
+    decisionStatusDowngrade: '預計降卡 (Downgrade)',
+    decisionStatusCancel: '預計剪卡 (Cancel)',
+    decisionStatusLabel: '年費決策',
+    decisionNotePrefix: '決策筆記',
+    btnRecordDecision: '記錄決策',
+    btnEditDecisionTooltip: '點擊記錄或更新年費決策與化緣優惠',
+    jumpToCreditBtn: '前往折抵',
+    jumpToCreditTooltip: '直接跳轉至第一分頁對應的折抵項目',
+    jumpToLoyaltyBtn: '查看房券',
+    jumpToLoyaltyTooltip: '跳轉至酒店住宿券追蹤',
+    toastJumpedToCredit: '已跳轉至對應折抵項目',
+    toastActivateCardFirst: '請先將此卡設為「已持有」以追蹤折抵'
   }
 };
 
@@ -826,8 +882,8 @@ const PRESET_CARDS = [
       { name: { en: 'Other Purchases', 'zh-TW': '其他所有一般消費' }, mult: '2x Points' }
     ],
     perks: [
-      { title: { en: 'Monthly $25 Dining Credit', 'zh-TW': '每月 $25 全球餐廳帳單折抵' }, note: { en: 'Up to $300/yr worldwide restaurants statement credit', 'zh-TW': '每年最高折抵 $300 美元，全球餐廳皆適用' } },
-      { title: { en: 'Annual 85k Free Night Award', 'zh-TW': '年度 85,000 分免費住宿券 (FNC)' }, note: { en: 'Can be topped off with up to 15,000 points', 'zh-TW': '可再自補最高 15,000 點，兌換高達 10 萬點奢華飯店' } },
+      { creditId: 'bb-dining', title: { en: 'Monthly $25 Dining Credit', 'zh-TW': '每月 $25 全球餐廳帳單折抵' }, note: { en: 'Up to $300/yr worldwide restaurants statement credit', 'zh-TW': '每年最高折抵 $300 美元，全球餐廳皆適用' } },
+      { fncLink: true, title: { en: 'Annual 85k Free Night Award', 'zh-TW': '年度 85,000 分免費住宿券 (FNC)' }, note: { en: 'Can be topped off with up to 15,000 points', 'zh-TW': '可再自補最高 15,000 點，兌換高達 10 萬點奢華飯店' } },
       { title: { en: 'Marriott Platinum Elite Status', 'zh-TW': '自動享有萬豪白金會籍 (Platinum)' }, note: { en: 'Complimentary breakfast, lounge access & 4pm checkout', 'zh-TW': '保證雙人免費早餐、行政酒廊禮遇、下午 4 點延遲退房' } },
       { title: { en: '25 Elite Night Credits', 'zh-TW': '每年贈送 25 晚尊貴會籍房晚 (ENC)' }, note: { en: 'Direct boost towards Titanium/Ambassador', 'zh-TW': '極大幅降低衝擊鈦金／大使會籍的門檻' } },
       { title: { en: '$100 Luxury Property Credit', 'zh-TW': '$100 麗思卡爾頓與瑞吉消費額度' }, note: { en: '$100 property credit on 2+ consecutive nights at Ritz-Carlton or St. Regis', 'zh-TW': '連續入住 2 晚以上 The Ritz-Carlton 或 St. Regis 享 $100 館內消費折抵' } },
@@ -855,8 +911,8 @@ const PRESET_CARDS = [
       { name: { en: 'Other Business Purchases', 'zh-TW': '其他商業採購消費' }, mult: '1x MR' }
     ],
     perks: [
-      { title: { en: 'Monthly $20 Flexible Business Credit', 'zh-TW': '每月 $20 彈性商業消費折抵' }, note: { en: 'Grubhub delivery, FedEx shipping, or Office Depot ($240/yr)', 'zh-TW': '適用於 Grubhub 外送、FedEx 寄件或 Office Depot 辦公用品' } },
-      { title: { en: 'Monthly Walmart+ Membership Credit', 'zh-TW': '每月 Walmart+ 會費折抵 ($12.95)' }, note: { en: '$12.95/month plus tax reimbursement with Paramount+', 'zh-TW': '免運費外送並贈送 Paramount+ 影音串流會員' } }
+      { creditId: 'bg-flexible', title: { en: 'Monthly $20 Flexible Business Credit', 'zh-TW': '每月 $20 彈性商業消費折抵' }, note: { en: 'Grubhub delivery, FedEx shipping, or Office Depot ($240/yr)', 'zh-TW': '適用於 Grubhub 外送、FedEx 寄件或 Office Depot 辦公用品' } },
+      { creditId: 'bg-walmart', title: { en: 'Monthly Walmart+ Membership Credit', 'zh-TW': '每月 Walmart+ 會費折抵 ($12.95)' }, note: { en: '$12.95/month plus tax reimbursement with Paramount+', 'zh-TW': '免運費外送並贈送 Paramount+ 影音串流會員' } }
     ]
   },
   {
@@ -880,11 +936,12 @@ const PRESET_CARDS = [
       { name: { en: 'Other Purchases', 'zh-TW': '其他一般消費' }, mult: '1x MR' }
     ],
     perks: [
-      { title: { en: 'NEW: $600 Prepaid Hotel Credit (FHR/THC)', 'zh-TW': '新增: $600 頂級預付飯店折抵 (FHR/THC)' }, note: { en: '$300 semi-annually (Jan-Jun & Jul-Dec) via Amex Travel', 'zh-TW': '每半年 $300 (1-6月與 7-12月)，可訂五星級飯店享受免費雙人早餐與升等' } },
-      { title: { en: '$200 Annual Airline Incidental Credit', 'zh-TW': '年度指定航空公司附加費折抵 ($200)' }, note: { en: 'Checked bags, seat selection, lounge day passes', 'zh-TW': '指定 1 家美籍航空，折抵行李、選位或貴賓室單日券' } },
-      { title: { en: '$150 Annual Dell Credit (Calendar Year)', 'zh-TW': 'Dell 科技硬體採購折抵 ($150/年)' }, note: { en: 'Standard $150 credit, plus $1,000 bonus if spending $5,000+', 'zh-TW': '改版為日曆年標準 $150 折抵，滿 5,000 美元再獲 $1,000 加碼' } },
-      { title: { en: '$120 Annual Wireless Credit ($10/mo)', 'zh-TW': '每月 $10 電信通訊話費折抵' }, note: { en: 'Direct mobile phone statement credits ($120/yr)', 'zh-TW': '繳納美國主要電信話費，全年累計折抵 $120' } },
-      { title: { en: '$189 CLEAR Plus Credit', 'zh-TW': 'CLEAR® Plus 機場快速安檢身分驗證' }, note: { en: 'Fast-track airport security lines', 'zh-TW': '全額補助年費，免排隊光速通過美國主要機場安檢查驗' } },
+      { creditId: 'bp-fhr', title: { en: 'NEW: $600 Prepaid Hotel Credit (FHR/THC)', 'zh-TW': '新增: $600 頂級預付飯店折抵 (FHR/THC)' }, note: { en: '$300 semi-annually (Jan-Jun & Jul-Dec) via Amex Travel', 'zh-TW': '每半年 $300 (1-6月與 7-12月)，可訂五星級飯店享受免費雙人早餐與升等' } },
+      { creditId: 'bp-airline', title: { en: '$200 Annual Airline Incidental Credit', 'zh-TW': '年度指定航空公司附加費折抵 ($200)' }, note: { en: 'Checked bags, seat selection, lounge day passes', 'zh-TW': '指定 1 家美籍航空，折抵行李、選位或貴賓室單日券' } },
+      { creditId: 'bp-dell', title: { en: '$150 Annual Dell Credit (Calendar Year)', 'zh-TW': 'Dell 科技硬體採購折抵 ($150/年)' }, note: { en: 'Standard $150 credit, plus $1,000 bonus if spending $5,000+', 'zh-TW': '改版為日曆年標準 $150 折抵，滿 5,000 美元再獲 $1,000 加碼' } },
+      { creditId: 'bp-wireless', title: { en: '$120 Annual Wireless Credit ($10/mo)', 'zh-TW': '每月 $10 電信通訊話費折抵' }, note: { en: 'Direct mobile phone statement credits ($120/yr)', 'zh-TW': '繳納美國主要電信話費，全年累計折抵 $120' } },
+      { creditId: 'bp-indeed', title: { en: 'Indeed Hiring Credit ($90/quarter)', 'zh-TW': 'Indeed 徵才廣告刊登折抵 ($90/季)' }, note: { en: '$90 per calendar quarter for recruitment advertising', 'zh-TW': '每季提供 $90 美元刊登招聘廣告折抵' } },
+      { creditId: 'bp-clear', title: { en: '$189 CLEAR Plus Credit', 'zh-TW': 'CLEAR® Plus 機場快速安檢身分驗證' }, note: { en: 'Fast-track airport security lines', 'zh-TW': '全額補助年費，免排隊光速通過美國主要機場安檢查驗' } },
       { title: { en: '35% Pay with Points Flight Rebate', 'zh-TW': '點數開機票 35% 返還特權' }, note: { en: 'Selected airline or first/business class (min 5k pts)', 'zh-TW': '經由 AmexTravel 購票享 35% 點數回贈 (1pt 價值高達 1.54 美分)' } },
       { title: { en: 'Hilton Gold, Marriott Gold & Leaders Club', 'zh-TW': '自動享有希爾頓金卡、萬豪金卡與 Leaders Club' }, note: { en: 'Complimentary breakfast/F&B credits, room upgrades', 'zh-TW': '享有免費早餐／餐飲折抵金與獨立奢華飯店升等特權' } },
       { group: 'lounge-access', best: true, title: { en: 'American Express Global Lounge Collection', 'zh-TW': 'Amex 全球貴賓室網絡 (Centurion + PP)' }, note: { en: 'Centurion Lounges, Priority Pass Select, Delta SkyClub', 'zh-TW': '包含頂級 Centurion 貴賓室、Priority Pass 與搭乘達美時免費進 SkyClub' } },
@@ -913,8 +970,8 @@ const PRESET_CARDS = [
       { name: { en: 'All Other Purchases (Everywhere)', 'zh-TW': '任何其他所有消費 (萬用無腦刷)' }, mult: '2x Miles' }
     ],
     perks: [
-      { title: { en: '$300 Annual C1 Travel Credit', 'zh-TW': '每年 $300 Capital One Travel 旅遊折抵' }, note: { en: 'Seamless discount on flights, hotels & cars', 'zh-TW': '直接折抵機票、飯店或租車費用，輕鬆抵銷大部分年費' } },
-      { title: { en: '10,000 Anniversary Miles ($100+)', 'zh-TW': '每年續卡贈送 10,000 哩程' }, note: { en: 'Awarded every year starting at renewal', 'zh-TW': '價值至少 $100 美元，開卡第二年起每年自動入帳' } },
+      { creditId: 'vx-travel', title: { en: '$300 Annual C1 Travel Credit', 'zh-TW': '每年 $300 Capital One Travel 旅遊折抵' }, note: { en: 'Seamless discount on flights, hotels & cars', 'zh-TW': '直接折抵機票、飯店或租車費用，輕鬆抵銷大部分年費' } },
+      { creditId: 'vx-anniversary', title: { en: '10,000 Anniversary Miles ($100+)', 'zh-TW': '每年續卡贈送 10,000 哩程' }, note: { en: 'Awarded every year starting at renewal', 'zh-TW': '價值至少 $100 美元，開卡第二年起每年自動入帳' } },
       { group: 'lounge-access', title: { en: 'Cardholder Lounge Access (2026 Policy)', 'zh-TW': '主卡人貴賓室權益 (2026 最新規定)' }, note: { en: 'C1 Lounges & Priority Pass for primary; guest access now $45/visit unless spend $75k+', 'zh-TW': '主卡人仍享無限次免費進入；2026年起攜伴調整為每位 $45 (年刷滿 7.5 萬免收)' } },
       { title: { en: 'Hertz President’s Circle Status', 'zh-TW': 'Hertz President’s Circle 頂級租車會籍' }, note: { en: 'Vehicle upgrades & guaranteed choices', 'zh-TW': '可直接至專屬車位自選升等豪華車款' } },
       { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck Credit', 'zh-TW': '$120 Global Entry / TSA 申請費折抵' }, note: { en: 'Reimbursed up to $120 every 4 years', 'zh-TW': '每 4 年提供最高 $120 申請費折抵，全額抵免' } },
@@ -946,8 +1003,8 @@ const PRESET_CARDS = [
       { name: { en: 'Chase Travel Portal', 'zh-TW': 'Chase 旅遊入口預訂' }, mult: '5x UR' }
     ],
     perks: [
-      { title: { en: 'Monthly $10 DoorDash Non-Restaurant Credit', 'zh-TW': '每月 $10 DoorDash 生鮮便利超商折抵' }, note: { en: '$10/mo grocery/convenience promo code through Dec 31, 2029 ($120/yr value)', 'zh-TW': '每月提供 $10 折抵券用於便利商店、生鮮雜貨，效期至 2029/12/31（每年省 $120）' } },
-      { title: { en: 'UPGRADED: $100 Annual Hotel Credit', 'zh-TW': '翻倍升級: $100 Chase Travel 飯店折抵' }, note: { en: 'Doubled from $50 to $100 per cardmember year', 'zh-TW': '飯店折抵由原先 $50 翻倍至 $100，直接抵銷整張卡片年費' } },
+      { creditId: 'csp-doordash', title: { en: 'Monthly $10 DoorDash Non-Restaurant Credit', 'zh-TW': '每月 $10 DoorDash 生鮮便利超商折抵' }, note: { en: '$10/mo grocery/convenience promo code through Dec 31, 2029 ($120/yr value)', 'zh-TW': '每月提供 $10 折抵券用於便利商店、生鮮雜貨，效期至 2029/12/31（每年省 $120）' } },
+      { creditId: 'csp-hotel', title: { en: 'UPGRADED: $100 Annual Hotel Credit', 'zh-TW': '翻倍升級: $100 Chase Travel 飯店折抵' }, note: { en: 'Doubled from $50 to $100 per cardmember year', 'zh-TW': '飯店折抵由原先 $50 翻倍至 $100，直接抵銷整張卡片年費' } },
       { group: 'global-entry', title: { en: 'NEW: $120 Global Entry / TSA PreCheck Credit', 'zh-TW': '新增: $120 機場快速通關申請費折抵' }, note: { en: 'Up to $120 credit every 4 years for Global Entry/NEXUS', 'zh-TW': '每 4 年提供高達 $120 美元，全額補助 Global Entry 或 TSA 費用' } },
       { title: { en: 'Transfer Partner Hub', 'zh-TW': '解鎖航空與飯店轉點樞紐' }, note: { en: 'Transfer to United, Aeroplan, Flying Blue, and Hyatt (4:3)', 'zh-TW': '可將 Ink Cash、CFU 的點數集中轉點，發揮最大商務艙價值' } },
       { group: 'primary-cdw', best: true, title: { en: 'Primary Car Rental CDW', 'zh-TW': '租車頂級 Primary 車碰險' }, note: { en: 'Top-tier comprehensive collision damage waiver', 'zh-TW': '出險免先動用個人汽車保險，在美租車最省心首選' } }
@@ -974,11 +1031,11 @@ const PRESET_CARDS = [
       { name: { en: 'All Other Purchases', 'zh-TW': '其他一般消費' }, mult: '3x Points' }
     ],
     perks: [
-      { title: { en: 'UPGRADED: 50,000 pt Free Night Award', 'zh-TW': '升級: 50,000 分免費住宿券 (原 40k)' }, note: { en: 'Anniversary FNC increased to 50k points + points top-off', 'zh-TW': '房券點數上限由 40k 提升至 50k 點，可兌換更高階洲際酒店' } },
-      { title: { en: 'NEW: $100 Annual Food & Beverage Credit', 'zh-TW': '新增: $100 飯店餐飲折抵 ($25/季)' }, note: { en: '$25 per calendar quarter for dining at IHG properties', 'zh-TW': '每季 $25 美元餐飲消費折抵，入住或在旗下餐廳用餐直接扣抵' } },
-      { title: { en: 'NEW: $100 Annual Airline Statement Credit', 'zh-TW': '新增: $100 航空公司購票折抵' }, note: { en: '$100 back on $250+ qualifying direct airline bookings', 'zh-TW': '購買單筆 $250 以上機票，享 $100 帳單直接折抵' } },
+      { fncLink: true, title: { en: 'UPGRADED: 50,000 pt Free Night Award', 'zh-TW': '升級: 50,000 分免費住宿券 (原 40k)' }, note: { en: 'Anniversary FNC increased to 50k points + points top-off', 'zh-TW': '房券點數上限由 40k 提升至 50k 點，可兌換更高階洲際酒店' } },
+      { creditId: 'ihg-fb', title: { en: 'NEW: $100 Annual Food & Beverage Credit', 'zh-TW': '新增: $100 飯店餐飲折抵 ($25/季)' }, note: { en: '$25 per calendar quarter for dining at IHG properties', 'zh-TW': '每季 $25 美元餐飲消費折抵，入住或在旗下餐廳用餐直接扣抵' } },
+      { creditId: 'ihg-air', title: { en: 'NEW: $100 Annual Airline Statement Credit', 'zh-TW': '新增: $100 航空公司購票折抵' }, note: { en: '$100 back on $250+ qualifying direct airline bookings', 'zh-TW': '購買單筆 $250 以上機票，享 $100 帳單直接折抵' } },
       { title: { en: '4th Night Free on Award Stays', 'zh-TW': '點數換房住四晚免一晚 (住四免一)' }, note: { en: 'Redeem 3 nights, 4th night costs 0 points', 'zh-TW': '兌換連續 4 晚僅需支付 3 晚點數，長期度假極划算' } },
-      { title: { en: '$50 United TravelBank Cash ($25 H1, $25 H2)', 'zh-TW': '每年 $50 聯合航空 TravelBank 購票金' }, note: { en: 'Direct discount on United flights', 'zh-TW': '每年 1 月與 7 月各入帳 $25，買美聯航機票現抵' } },
+      { creditId: 'ihg-tb', title: { en: '$50 United TravelBank Cash ($25 H1, $25 H2)', 'zh-TW': '每年 $50 聯合航空 TravelBank 購票金' }, note: { en: 'Direct discount on United flights', 'zh-TW': '每年 1 月與 7 月各入帳 $25，買美聯航機票現抵' } },
       { title: { en: 'Elite Status (Platinum through 2027)', 'zh-TW': '精英會籍 (持卡人享白金待遇至 2027 底)' }, note: { en: 'Existing holders grandfathered in Platinum through 2027', 'zh-TW': '現有持卡人至 2027 年底前維持白金權益（房型升等與加成）' } },
       { group: 'global-entry', title: { en: '$120 Global Entry / TSA PreCheck / NEXUS Credit', 'zh-TW': '$120 Global Entry / TSA / NEXUS 申請費折抵' }, note: { en: 'Reimbursed every 4 years', 'zh-TW': '每 4 年提供 $120 美元申請費折抵' } },
       { group: 'cell-protection', title: { en: '$800 Cell Phone Protection', 'zh-TW': '$800 手機損壞保險' }, note: { en: 'Up to $800 coverage with $50 deductible', 'zh-TW': '支付手機帳單享最高 $800 損壞賠付' } }
@@ -1535,6 +1592,25 @@ function openCardDateModal(cardId) {
     renewSelect.value = (meta.renewMonth !== undefined && meta.renewMonth !== null) ? String(meta.renewMonth) : '';
   }
 
+  const decisionSelect = document.getElementById('card-date-decision-select');
+  if (decisionSelect) {
+    decisionSelect.innerHTML = `
+      <option value="">${t('decisionStatusSelectDefault')}</option>
+      <option value="keep">✓ ${t('decisionStatusKeep')}</option>
+      <option value="considering">🤔 ${t('decisionStatusConsidering')}</option>
+      <option value="retention">🎁 ${t('decisionStatusRetention')}</option>
+      <option value="downgrade">📉 ${t('decisionStatusDowngrade')}</option>
+      <option value="cancel">✂️ ${t('decisionStatusCancel')}</option>
+    `;
+    decisionSelect.value = meta.retentionStatus || '';
+  }
+
+  const noteInput = document.getElementById('card-date-note-input');
+  if (noteInput) {
+    noteInput.value = meta.retentionNote || '';
+    noteInput.placeholder = t('cardDateNotePlaceholder');
+  }
+
   modal.classList.remove('hidden');
 }
 
@@ -1551,6 +1627,8 @@ function saveCardDate() {
   const yearVal = document.getElementById('card-date-year-select')?.value;
   const monthVal = document.getElementById('card-date-month-select')?.value;
   const renewVal = document.getElementById('card-date-renew-select')?.value;
+  const decisionVal = document.getElementById('card-date-decision-select')?.value || '';
+  const noteVal = (document.getElementById('card-date-note-input')?.value || '').trim();
 
   const openedYear = yearVal ? parseInt(yearVal, 10) : null;
   const openedMonth = monthVal ? parseInt(monthVal, 10) : null;
@@ -1559,11 +1637,20 @@ function saveCardDate() {
     renewMonth = renewVal === '0' ? 'No AF' : parseInt(renewVal, 10);
   }
 
-  appState.cardMeta[activeCardDateId] = {
+  const newMeta = {
     openedYear,
     openedMonth,
     renewMonth
   };
+
+  if (decisionVal) {
+    newMeta.retentionStatus = decisionVal;
+  }
+  if (noteVal) {
+    newMeta.retentionNote = noteVal;
+  }
+
+  appState.cardMeta[activeCardDateId] = newMeta;
 
   if (!appState.ownedCards) appState.ownedCards = {};
   appState.ownedCards[activeCardDateId] = true;
@@ -2134,7 +2221,11 @@ function applyLanguage(lang) {
     'cancel-perk-action-btn': 'cancelBtn',
     'muted-section-title': 'mutedSectionTitle',
     'overlap-optimizer-title': 'overlapOptimizerTitle',
-    'overlap-optimizer-desc': 'overlapOptimizerDesc'
+    'overlap-optimizer-desc': 'overlapOptimizerDesc',
+    'label-view-compact': 'viewModeCompact',
+    'label-view-detailed': 'viewModeDetailed',
+    'card-date-decision-label': 'cardDateDecisionLabel',
+    'card-date-note-label': 'cardDateNoteLabel'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -2143,6 +2234,13 @@ function applyLanguage(lang) {
       el.innerText = t(i18nKey);
     }
   });
+
+  const compactBtn = document.getElementById('cards-view-compact-btn');
+  if (compactBtn) compactBtn.title = t('viewModeToggleTitle');
+  const detailedBtn = document.getElementById('cards-view-detailed-btn');
+  if (detailedBtn) detailedBtn.title = t('viewModeToggleTitle');
+  const noteInput = document.getElementById('card-date-note-input');
+  if (noteInput) noteInput.placeholder = t('cardDateNotePlaceholder');
 
   const searchInput = document.getElementById('cards-search-input');
   if (searchInput) searchInput.placeholder = t('cardsSearchPlaceholder');
@@ -2830,6 +2928,7 @@ function renderCredits() {
       }
 
       const cardEl = document.createElement('div');
+      cardEl.id = `credit-item-${item.id}`;
       let cardBgClass = 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800';
       if (isClaimed) {
         cardBgClass = 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60';
@@ -3182,10 +3281,158 @@ function resetCurrentMonth() {
 // --- 10. RENDER CARDS GRID ---
 let currentIssuerFilter = 'all';
 let currentOwnershipFilter = 'owned'; // 'owned' by default for intuitive wallet view, or 'all', 'unowned'
+let currentCardsViewMode = 'detailed';
+try {
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem('cardflow_cards_view_mode');
+    if (saved === 'compact' || saved === 'detailed') {
+      currentCardsViewMode = saved;
+    }
+  }
+} catch (e) {}
+
+let expandedCardIds = new Set();
 
 function setOwnershipFilter(mode) {
   currentOwnershipFilter = mode;
   renderCards();
+}
+
+function setCardsViewMode(mode) {
+  currentCardsViewMode = mode;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('cardflow_cards_view_mode', mode);
+    }
+  } catch (e) {}
+  renderCards();
+}
+
+function toggleCardDetailExpand(cardId) {
+  if (expandedCardIds.has(cardId)) {
+    expandedCardIds.delete(cardId);
+  } else {
+    expandedCardIds.add(cardId);
+  }
+  renderCards();
+}
+
+function getDecisionBadgeInfo(status) {
+  switch (status) {
+    case 'keep':
+      return {
+        text: t('decisionStatusKeep'),
+        icon: '✓',
+        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50'
+      };
+    case 'considering':
+      return {
+        text: t('decisionStatusConsidering'),
+        icon: '🤔',
+        badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50'
+      };
+    case 'retention':
+      return {
+        text: t('decisionStatusRetention'),
+        icon: '🎁',
+        badgeClass: 'bg-purple-50 text-purple-700 border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/50'
+      };
+    case 'downgrade':
+      return {
+        text: t('decisionStatusDowngrade'),
+        icon: '📉',
+        badgeClass: 'bg-blue-50 text-blue-700 border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/50'
+      };
+    case 'cancel':
+      return {
+        text: t('decisionStatusCancel'),
+        icon: '✂️',
+        badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50'
+      };
+    default:
+      return null;
+  }
+}
+
+function findLinkedCredit(cardId, perk) {
+  if (perk.creditId) {
+    return PRESET_CREDITS.find(c => c.id === perk.creditId) || null;
+  }
+  const titleStr = (typeof perk.title === 'object' ? (perk.title['zh-TW'] + ' ' + perk.title.en) : String(perk.title)).toLowerCase();
+  return PRESET_CREDITS.find(c => {
+    if (c.cardId !== cardId) return false;
+    const cTitle = (typeof c.title === 'object' ? (c.title['zh-TW'] + ' ' + c.title.en) : String(c.title)).toLowerCase();
+    if (titleStr.includes('dining') && cTitle.includes('dining')) return true;
+    if (titleStr.includes('餐廳') && cTitle.includes('餐廳')) return true;
+    if (titleStr.includes('doordash') && cTitle.includes('doordash')) return true;
+    if (titleStr.includes('walmart') && cTitle.includes('walmart')) return true;
+    if (titleStr.includes('wireless') && cTitle.includes('wireless')) return true;
+    if (titleStr.includes('話費') && cTitle.includes('話費')) return true;
+    if (titleStr.includes('fhr') && cTitle.includes('fhr')) return true;
+    if (titleStr.includes('dell') && cTitle.includes('dell')) return true;
+    if (titleStr.includes('clear') && cTitle.includes('clear')) return true;
+    if (titleStr.includes('indeed') && cTitle.includes('indeed')) return true;
+    if (titleStr.includes('travelbank') && cTitle.includes('travelbank')) return true;
+    if ((titleStr.includes('airline') || titleStr.includes('航空')) && (cTitle.includes('airline') || cTitle.includes('航空'))) return true;
+    if ((titleStr.includes('travel') || titleStr.includes('旅遊')) && (cTitle.includes('travel') || cTitle.includes('旅遊'))) return true;
+    return false;
+  }) || null;
+}
+
+function jumpToCredit(creditId) {
+  const credit = PRESET_CREDITS.find(c => c.id === creditId);
+  if (!credit) return;
+
+  if (!isCardOwned(credit.cardId)) {
+    showToast(t('toastActivateCardFirst'));
+    return;
+  }
+
+  switchSubView('credits');
+
+  if (currentPeriodFilter !== 'all' && currentPeriodFilter !== credit.period) {
+    setPeriodFilter(credit.period);
+  } else {
+    renderCredits();
+  }
+
+  if (isCreditMuted(credit.id)) {
+    const list = document.getElementById('muted-credits-list');
+    const chevron = document.getElementById('muted-section-chevron');
+    if (list && list.classList.contains('hidden')) {
+      isMutedSectionExpanded = true;
+      list.classList.remove('hidden');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+  }
+
+  if (typeof setTimeout === 'function') {
+    setTimeout(() => {
+      const el = document.getElementById('credit-item-' + creditId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-900', 'scale-[1.01]', 'bg-indigo-50/70', 'dark:bg-indigo-950/50');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-900', 'scale-[1.01]', 'bg-indigo-50/70', 'dark:bg-indigo-950/50');
+        }, 2000);
+      }
+    }, 120);
+  }
+
+  const title = typeof credit.title === 'object' ? (credit.title[currentLang] || credit.title['zh-TW']) : credit.title;
+  showToast(`${t('toastJumpedToCredit')}: ${title}`);
+}
+
+function jumpToLoyalty() {
+  switchSubView('loyalty');
+  if (typeof setTimeout === 'function') {
+    setTimeout(() => {
+      const el = document.getElementById('fnc-cards-container') || document.getElementById('subview-loyalty');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 120);
+  }
 }
 
 function renderCards() {
@@ -3212,6 +3459,19 @@ function renderCards() {
   if (unownedBtn) {
     unownedBtn.innerText = `${t('filterUnowned')} (${unownedCount})`;
     unownedBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'unowned' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
+  }
+
+  // Update view mode toggle buttons
+  const compactBtn = document.getElementById('cards-view-compact-btn');
+  const detailedBtn = document.getElementById('cards-view-detailed-btn');
+  if (compactBtn && detailedBtn) {
+    if (currentCardsViewMode === 'compact') {
+      compactBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs';
+      detailedBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+    } else {
+      detailedBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs';
+      compactBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+    }
   }
 
   const tabLabelCards = document.getElementById('tab-label-cards');
@@ -3305,26 +3565,83 @@ function renderCards() {
     }
     const openedYearVal = meta?.openedYear || card.openedYear || null;
 
+    // Decision Status & Notes
+    const decisionInfo = meta?.retentionStatus ? getDecisionBadgeInfo(meta.retentionStatus) : null;
+    let decisionBadgeHtml = '';
+    if (decisionInfo) {
+      decisionBadgeHtml = `
+        <button onclick="event.stopPropagation(); openCardDateModal('${card.id}')"
+                class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold border transition flex items-center gap-1 cursor-pointer shadow-2xs ${decisionInfo.badgeClass}"
+                title="${t('btnEditDecisionTooltip')}">
+          <span>${decisionInfo.icon}</span>
+          <span>${decisionInfo.text}</span>
+          <span class="text-[9px] opacity-70">✎</span>
+        </button>
+      `;
+    } else {
+      decisionBadgeHtml = `
+        <button onclick="event.stopPropagation(); openCardDateModal('${card.id}')"
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs bg-white/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400"
+                title="${t('btnEditDecisionTooltip')}">
+          <span>📝</span>
+          <span>${t('btnRecordDecision')}</span>
+        </button>
+      `;
+    }
+
+    const decisionNoteHtml = meta?.retentionNote ? `
+      <div class="mt-1 text-[10.5px] px-2 py-1 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+        <span class="text-indigo-500 font-bold shrink-0">📝</span>
+        <span class="truncate"><strong>${t('decisionNotePrefix')}:</strong> ${meta.retentionNote}</span>
+      </div>
+    ` : '';
+
     let renewalAlertHtml = '';
     const curM = today.getMonth() + 1;
     const numRenewM = (meta && meta.renewMonth && meta.renewMonth !== 'No AF') ? Number(meta.renewMonth) : (meta?.openedMonth ? Number(meta.openedMonth) : null);
     if (isOwned && card.annualFee > 0 && numRenewM) {
       if (numRenewM === curM) {
         renewalAlertHtml = `
-          <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 text-[10.5px] text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-            <span>⏳</span>
-            <span><strong>${t('renewDueThisMonth')}:</strong> $${card.annualFee} · ${t('retentionReminder')}</span>
+          <div class="mt-2.5 p-2.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/50 space-y-1.5">
+            <div class="flex items-center justify-between gap-1.5 flex-wrap">
+              <div class="text-[11px] text-rose-700 dark:text-rose-300 font-bold flex items-center gap-1.5">
+                <span>⏳</span>
+                <span><strong>${t('renewDueThisMonth')}:</strong> $${card.annualFee} · ${t('retentionReminder')}</span>
+              </div>
+              ${decisionBadgeHtml}
+            </div>
+            ${decisionNoteHtml}
           </div>
         `;
       } else if (numRenewM === (curM % 12) + 1) {
         renewalAlertHtml = `
-          <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 text-[10.5px] text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-            <span>⏳</span>
-            <span><strong>${t('renewDueNextMonth')}:</strong> $${card.annualFee}</span>
+          <div class="mt-2.5 p-2.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 space-y-1.5">
+            <div class="flex items-center justify-between gap-1.5 flex-wrap">
+              <div class="text-[11px] text-amber-700 dark:text-amber-300 font-bold flex items-center gap-1.5">
+                <span>⏳</span>
+                <span><strong>${t('renewDueNextMonth')}:</strong> $${card.annualFee}</span>
+              </div>
+              ${decisionBadgeHtml}
+            </div>
+            ${decisionNoteHtml}
           </div>
         `;
       }
     }
+
+    const standaloneDecisionHtml = (decisionInfo && !renewalAlertHtml) ? `
+      <div class="pt-1.5 mt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-1.5 flex-wrap text-[10.5px]">
+        <span class="text-slate-400 font-medium">${t('decisionStatusLabel')}:</span>
+        <button onclick="event.stopPropagation(); openCardDateModal('${card.id}')"
+                class="px-2 py-0.5 rounded-lg font-bold border transition flex items-center gap-1 cursor-pointer shadow-2xs ${decisionInfo.badgeClass}"
+                title="${t('btnEditDecisionTooltip')}">
+          <span>${decisionInfo.icon}</span>
+          <span>${decisionInfo.text}</span>
+          ${meta.retentionNote ? `<span class="opacity-80 font-normal truncate max-w-[120px]">(${meta.retentionNote})</span>` : ''}
+          <span class="text-[9px] opacity-70">✎</span>
+        </button>
+      </div>
+    ` : '';
 
     const signupBonus = card.signupBonus ? (typeof card.signupBonus === 'object' ? (card.signupBonus[currentLang] || card.signupBonus['zh-TW']) : card.signupBonus) : null;
     const useForText = card.useFor ? (typeof card.useFor === 'object' ? (card.useFor[currentLang] || card.useFor['zh-TW']) : card.useFor) : null;
@@ -3372,22 +3689,68 @@ function renderCards() {
         }
       }
 
+      // Deeplink & Quick Jump
+      const linkedCredit = findLinkedCredit(card.id, p);
+      let jumpActionHtml = '';
+
+      if (linkedCredit) {
+        jumpActionHtml = `
+          <button onclick="event.stopPropagation(); jumpToCredit('${linkedCredit.id}')"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer shrink-0 shadow-2xs"
+                  title="${t('jumpToCreditTooltip')}">
+            <span>⚡</span>
+            <span>${t('jumpToCreditBtn')}</span>
+          </button>
+        `;
+      } else if (p.fncLink) {
+        jumpActionHtml = `
+          <button onclick="event.stopPropagation(); jumpToLoyalty()"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer shrink-0 shadow-2xs"
+                  title="${t('jumpToLoyaltyTooltip')}">
+            <span>🏨</span>
+            <span>${t('jumpToLoyaltyBtn')}</span>
+          </button>
+        `;
+      }
+
+      const isClickableTitle = Boolean(linkedCredit || p.fncLink);
+      const titleClickAttr = linkedCredit
+        ? `onclick="jumpToCredit('${linkedCredit.id}')"`
+        : p.fncLink
+        ? `onclick="jumpToLoyalty()"`
+        : '';
+
       return `
-        <li class="text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-1.5 flex-wrap">
-          <span class="text-indigo-500 font-bold shrink-0">·</span>
-          <span><strong>${title}</strong>: ${note}</span>
-          ${overlapBadgeHtml}
+        <li class="text-[11px] text-slate-600 dark:text-slate-300 flex items-start justify-between gap-1.5 py-0.5">
+          <div class="flex items-start gap-1.5 flex-wrap min-w-0">
+            <span class="text-indigo-500 font-bold shrink-0">·</span>
+            <span ${titleClickAttr} class="${isClickableTitle ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition' : ''}">
+              <strong class="${isClickableTitle ? 'underline decoration-dotted decoration-indigo-300 dark:decoration-indigo-700 underline-offset-2' : ''}">${title}</strong>: ${note}
+            </span>
+            ${overlapBadgeHtml}
+          </div>
+          ${jumpActionHtml}
         </li>
       `;
     }).join('');
 
-    const issuerBg = card.issuer === 'Amex' ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border-sky-200 dark:border-sky-800/40' :
-                     card.issuer === 'Chase' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' :
-                     'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40';
+    const issuerBg = card.issuer === 'Amex'
+      ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800/40'
+      : card.issuer === 'Chase'
+      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/40'
+      : 'bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/50';
 
     const ftfBadge = card.noFtf
-      ? `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">${t('noFtfLabel')}</span>`
-      : `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40">⚠️ ${t('ftfFeeLabel')} ${card.ftfRate}</span>`;
+      ? `<span class="px-1.5 py-0.5 rounded-full text-[9.5px] font-medium bg-emerald-50/70 text-emerald-700/90 dark:bg-emerald-950/30 dark:text-emerald-300/90 border border-emerald-200/60 dark:border-emerald-800/40">${t('noFtfLabel')}</span>`
+      : `<span class="px-1.5 py-0.5 rounded-full text-[9.5px] font-medium bg-rose-50/70 text-rose-600/90 dark:bg-rose-950/30 dark:text-rose-400/90 border border-rose-200/60 dark:border-rose-800/40">⚠️ ${t('ftfFeeLabel')} ${card.ftfRate}</span>`;
+
+    const metalBadge = card.metal
+      ? `<span class="px-1.5 py-0.5 rounded-full text-[9.5px] font-medium bg-slate-100/80 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">${t('metalBadge')}</span>`
+      : '';
+
+    const ownershipBtnClass = isOwned
+      ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+      : 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300';
 
     const bonusHtml = signupBonus ? `
       <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10.5px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
@@ -3405,27 +3768,71 @@ function renderCards() {
       </div>
     ` : '';
 
+    const isExpanded = currentCardsViewMode === 'detailed' || expandedCardIds.has(card.id);
+
+    let detailsHtml = '';
+    if (isExpanded) {
+      detailsHtml = `
+        ${bonusHtml}
+
+        <div class="space-y-1 my-2.5">
+          ${catList}
+        </div>
+
+        ${useForHtml}
+
+        <div class="pt-2 mt-3 border-t border-slate-100 dark:border-slate-800/80">
+          <ul class="space-y-1">
+            ${perkList}
+          </ul>
+        </div>
+
+        ${currentCardsViewMode === 'compact' ? `
+          <div class="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/60 flex justify-end">
+            <button onclick="toggleCardDetailExpand('${card.id}')"
+                    class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-100/70 dark:bg-slate-800/60 transition cursor-pointer flex items-center gap-1">
+              <span>${t('collapseCardDetails')}</span>
+              <span>▲</span>
+            </button>
+          </div>
+        ` : ''}
+      `;
+    } else {
+      detailsHtml = `
+        <div class="pt-2 mt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+            ${card.categories.length} ${t('cardCategoriesCount')} · ${card.perks.length} ${t('cardPerksCount')}
+          </span>
+          <button onclick="toggleCardDetailExpand('${card.id}')"
+                  class="px-2.5 py-1 rounded-xl text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100/60 dark:border-indigo-900/30 transition cursor-pointer flex items-center gap-1">
+            <span>${t('expandCardDetails')}</span>
+            <span>▼</span>
+          </button>
+        </div>
+      `;
+    }
+
     el.innerHTML = `
       <div>
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${issuerBg} border">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${issuerBg}">
               ${card.issuer}
             </span>
-            ${card.metal ? `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">${t('metalBadge')}</span>` : ''}
+            ${metalBadge}
             ${ftfBadge}
           </div>
 
           <button onclick="toggleCardOwnership('${card.id}')"
-                  class="px-2.5 py-1 rounded-full text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs ${isOwned ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-slate-300'}">
+                  class="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold transition flex items-center gap-1 cursor-pointer border shadow-2xs ${ownershipBtnClass}">
             ${isOwned ? '<span>✓</span> <span>' + t('cardOwned') + '</span>' : '<span>+</span> <span>' + t('cardNotOwned') + '</span>'}
           </button>
         </div>
 
-        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug">${card.name}</h4>
-        <div class="text-[11px] text-slate-400 mt-0.5">${nick}</div>
+        <h4 class="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug tracking-tight">${card.name}</h4>
+        <div class="text-[11.5px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">${nick}</div>
 
-        <div class="my-2.5 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 space-y-1.5">
+        <div class="my-2.5 bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1.5">
           <div class="flex items-center justify-between">
             <div>
               <span class="text-[11px] text-slate-400">${t('annualFeeLabel')}: </span>
@@ -3469,23 +3876,12 @@ function renderCards() {
             ${renewMonth ? `<span>📅 ${t('renewMonthLabel')}: <strong class="text-slate-700 dark:text-slate-200">${renewMonth}</strong></span>` : ''}
             ${openedYearVal ? `<span class="text-slate-300 dark:text-slate-600">|</span><span>${t('openedYearLabel')} <strong class="text-slate-700 dark:text-slate-200">${openedYearVal}</strong></span>` : ''}
           </div>
+          ${standaloneDecisionHtml}
         </div>
 
         ${renewalAlertHtml}
 
-        ${bonusHtml}
-
-        <div class="space-y-1 my-2.5">
-          ${catList}
-        </div>
-
-        ${useForHtml}
-      </div>
-
-      <div class="pt-2 mt-3 border-t border-slate-100 dark:border-slate-800/80">
-        <ul class="space-y-1">
-          ${perkList}
-        </ul>
+        ${detailsHtml}
       </div>
     `;
     container.appendChild(el);
@@ -5675,6 +6071,8 @@ function init() {
   });
 
   document.getElementById('cards-search-input')?.addEventListener('input', renderCards);
+  document.getElementById('cards-view-compact-btn')?.addEventListener('click', () => setCardsViewMode('compact'));
+  document.getElementById('cards-view-detailed-btn')?.addEventListener('click', () => setCardsViewMode('detailed'));
 
   initFoldScreenObserver();
   setupModals();

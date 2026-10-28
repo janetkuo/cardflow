@@ -414,7 +414,7 @@
           </button>
         </div>
 
-        <!-- Secondary Row: Issuer Filter Pills & Search Input -->
+        <!-- Secondary Row: Issuer Filter Pills & Search Input & View Mode Toggle -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
           <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar py-0.5">
             <button id="issuer-all-btn" class="issuer-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shrink-0">
@@ -430,7 +430,19 @@
               Capital One (1)
             </button>
           </div>
-          <input type="text" id="cards-search-input" placeholder="搜尋卡片名稱、回饋倍率、權益..." class="px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+          <div class="flex items-center gap-2 flex-1 sm:flex-initial">
+            <input type="text" id="cards-search-input" placeholder="搜尋卡片名稱、回饋倍率、權益..." class="flex-1 sm:w-56 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
+            <div class="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shrink-0 shadow-2xs">
+              <button id="cards-view-compact-btn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white" title="精簡檢視">
+                <span>☰</span>
+                <span id="label-view-compact">精簡</span>
+              </button>
+              <button id="cards-view-detailed-btn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs" title="詳細檢視">
+                <span>▤</span>
+                <span id="label-view-detailed">展開</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1112,6 +1124,23 @@
           <label id="card-date-renew-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">年費續卡月份 / Renewal Month (選填)</label>
           <select id="card-date-renew-select" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
           </select>
+        </div>
+
+        <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          <div>
+            <label id="card-date-decision-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              年費續卡與化緣決策 (選填)
+            </label>
+            <select id="card-date-decision-select" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </select>
+          </div>
+
+          <div id="card-date-note-container">
+            <label id="card-date-note-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              化緣優惠 / 決策筆記 (選填)
+            </label>
+            <input type="text" id="card-date-note-input" placeholder="例如：已拿 $150 折抵 / 30,000 點 / 預計降為免年費卡" class="w-full text-xs rounded-xl p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
         </div>
 
         <div class="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
