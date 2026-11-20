@@ -16,6 +16,58 @@ import subprocess
 import sys
 import os
 
+MODULE_FILES = [
+    'js/palettes.js',
+    'js/i18n.js',
+    'js/data.js',
+    'js/state.js',
+    'js/logic.js',
+    'js/ui-core.js',
+    'js/drive.js',
+    'js/views.js',
+    'js/main.js'
+]
+
+def load_all_modules_source(base_dir):
+    parts = []
+    for rel in MODULE_FILES:
+        with open(os.path.join(base_dir, rel)) as f:
+            parts.append((rel, f.read()))
+    return parts
+
+def strip_esm_syntax(code):
+    # Strip multi-line and single-line import statements, then strip export keywords
+    code = re.sub(r'^import\s+[\s\S]*?from\s+[\'"][^\'"]+[\'"];\s*\n?', '', code, flags=re.MULTILINE)
+    code = re.sub(r'^export\s+(?=(?:async\s+)?function\b|const\b|let\b|class\b)', '', code, flags=re.MULTILINE)
+    return code
+
+def build_bundled_js(base_dir):
+    return "\n".join(strip_esm_syntax(src) for _, src in load_all_modules_source(base_dir))
+
+def check_esm_graph(base_dir):
+    exports = {}
+    module_srcs = load_all_modules_source(base_dir)
+    for rel, src in module_srcs:
+        exports[rel] = set(re.findall(r'^export\s+(?:async\s+)?(?:function|const|let)\s+([a-zA-Z0-9_]+)', src, re.MULTILINE))
+
+    errors = []
+    for rel, src in module_srcs:
+        imported = set()
+        for m in re.finditer(r'import\s*\{([^}]+)\}\s*from\s*[\'"]\.\/([^\'"]+)[\'"]', src):
+            names = [n.strip() for n in m.group(1).split(',') if n.strip()]
+            target = 'js/' + m.group(2)
+            if target not in exports:
+                errors.append(f"{rel} imports unknown module {target}")
+                continue
+            missing = [n for n in names if n not in exports[target]]
+            if missing:
+                errors.append(f"{rel} imports missing {missing} from {target}")
+            imported.update(names)
+        for name in imported:
+            if re.search(rf'(?<![.\w]){name}\s*=(?!=)', src):
+                errors.append(f"{rel} assigns directly to imported ESM binding '{name}'")
+    return errors
+
 def run_js_snippet(js_body, base_dir):
     if shutil.which('osascript'):
         proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', js_body], capture_output=True, text=True, cwd=base_dir)
@@ -34,14 +86,16 @@ def run_js_snippet(js_body, base_dir):
     return 1, '', 'Neither osascript nor node is available to execute JavaScript checks', 'none'
 
 def check_js_syntax():
-    print("🔍 [1/7] Validating JavaScript syntax (JavaScriptCore / Node fallback)...")
+    print("🔍 [1/7] Validating ES modules graph & JavaScript syntax (JavaScriptCore / Node fallback)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    read_expr = (
-        "$.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js"
-        if shutil.which('osascript')
-        else "__readFile('app.js')"
-    )
+    esm_errors = check_esm_graph(base_dir)
+    if esm_errors:
+        for e in esm_errors:
+            print(f"❌ {e}")
+        return False
+
+    bundled_js = build_bundled_js(base_dir)
     sw_read_expr = (
         "$.NSString.stringWithContentsOfFileEncodingError('sw.js', $.NSUTF8StringEncoding, null).js"
         if shutil.which('osascript')
@@ -81,16 +135,16 @@ def check_js_syntax():
     }};
     const setTimeout = (fn) => {{}};
     const clearTimeout = () => {{}};
-    eval({read_expr});
+    eval({json.dumps(bundled_js)});
     return 'OK';
     """
     if shutil.which('osascript'):
         app_test = app_test.replace("return 'OK';", "'OK';")
     rc, _, err, engine = run_js_snippet(app_test, base_dir)
     if rc != 0:
-        print(f"❌ Syntax Error in app.js ({engine}):\n{err}")
+        print(f"❌ Syntax Error in js/*.js ({engine}):\n{err}")
         return False
-    print(f"   ✅ app.js parsed and executed cleanly with 0 syntax errors ({engine}).")
+    print(f"   ✅ {len(MODULE_FILES)} ES modules parsed and executed cleanly with 0 syntax/import errors ({engine}).")
 
     sw_test = f"""
     const self = {{
@@ -112,22 +166,21 @@ def check_js_syntax():
     return True
 
 def check_dom_ids():
-    print("🔍 [2/7] Checking DOM bindings, onclick handlers, CSS classes & PWA assets...")
+    print("🔍 [2/7] Checking DOM bindings, onclick/window bridge, CSS classes & PWA assets...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    app_path = os.path.join(base_dir, 'app.js')
     html_path = os.path.join(base_dir, 'index.html')
     sw_path = os.path.join(base_dir, 'sw.js')
     manifest_path = os.path.join(base_dir, 'manifest.json')
 
-    with open(app_path) as f:
-        app_js = f.read()
+    module_srcs = load_all_modules_source(base_dir)
+    all_js = "\n".join(src for _, src in module_srcs)
     with open(html_path) as f:
         html = f.read()
 
-    ids_in_js = set(re.findall(r'document\.getElementById\([\'\"]([a-zA-Z0-9_-]+)[\'\"]\)', app_js))
+    ids_in_js = set(re.findall(r'document\.getElementById\([\'\"]([a-zA-Z0-9_-]+)[\'\"]\)', all_js))
 
     # Dynamically extract all DOM IDs mapped inside applyLanguage()'s `const map = { ... }`
-    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', app_js, re.DOTALL)
+    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', all_js, re.DOTALL)
     i18n_map_ids = set(re.findall(r"'([a-zA-Z0-9_-]+)'\s*:\s*'[a-zA-Z0-9_-]+'", map_match.group(1))) if map_match else set()
 
     all_needed_ids = ids_in_js.union(i18n_map_ids)
@@ -138,23 +191,35 @@ def check_dom_ids():
         print(f"❌ Missing element IDs in index.html: {missing}")
         return False
 
-    # Check inline onclick="..." function calls exist in app.js
-    defined_fns = set(re.findall(r'(?:async\s+)?function\s+([a-zA-Z0-9_]+)\s*\(', app_js))
+    # Check inline onclick="..." function calls exist in js/*.js AND are exposed on window in js/main.js
+    defined_fns = set(re.findall(r'(?:export\s+)?(?:async\s+)?function\s+([a-zA-Z0-9_]+)\s*\(', all_js))
+    main_js = dict(module_srcs).get('js/main.js', '')
+    bridge_match = re.search(r'Object\.assign\(window,\s*\{(.*?)\}\);', main_js, re.DOTALL)
+    window_bridged = set(re.findall(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b', bridge_match.group(1))) if bridge_match else set()
+
     missing_onclick = []
-    for fname, content in [('index.html', html), ('app.js', app_js)]:
+    unbridged_onclick = []
+    for fname, content in [('index.html', html)] + module_srcs:
         for m in re.finditer(r'onclick=[\"\']([^\"\']+)[\"\']', content):
             expr = m.group(1)
             for cm in re.finditer(r'(?<![.\w])([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', expr):
                 fn_name = cm.group(1)
-                if fn_name not in ('if', 'for', 'while', 'switch', 'catch') and fn_name not in defined_fns:
+                if fn_name in ('if', 'for', 'while', 'switch', 'catch'):
+                    continue
+                if fn_name not in defined_fns:
                     missing_onclick.append((fname, fn_name))
+                elif fn_name not in window_bridged:
+                    unbridged_onclick.append((fname, fn_name))
     if missing_onclick:
         print(f"❌ Undefined inline onclick handlers detected: {missing_onclick}")
+        return False
+    if unbridged_onclick:
+        print(f"❌ Inline onclick handlers missing from window bridge in js/main.js: {unbridged_onclick}")
         return False
 
     # Check for non-existent Tailwind slate-*50 utility classes
     invalid_slate = []
-    for fname, content in [('index.html', html), ('app.js', app_js)]:
+    for fname, content in [('index.html', html)] + module_srcs:
         hits = re.findall(r'\bslate-(?:650|750|850)\b', content)
         if hits:
             invalid_slate.append((fname, sorted(set(hits))))
@@ -174,6 +239,9 @@ def check_dom_ids():
             continue
         if not os.path.exists(os.path.join(base_dir, rel)):
             missing_assets.append(f"sw.js:{asset}")
+    for mod in MODULE_FILES:
+        if f'./{mod}' not in sw_assets:
+            missing_assets.append(f"sw.js:missing-module-{mod}")
 
     with open(manifest_path) as f:
         manifest = json.load(f)
@@ -184,16 +252,16 @@ def check_dom_ids():
             missing_assets.append(f"manifest.json:{src}")
 
     if missing_assets:
-        print(f"❌ Missing PWA asset files on disk: {missing_assets}")
+        print(f"❌ Missing PWA asset files on disk or in sw.js ASSETS: {missing_assets}")
         return False
 
     if 'user-scalable=no' in html:
         print("❌ Viewport meta tag disables pinch-zoom (user-scalable=no)")
         return False
 
-    native_dialogs = re.findall(r'(?<![.\w])(?:alert|confirm)\s*\(', app_js)
+    native_dialogs = re.findall(r'(?<![.\w])(?:alert|confirm)\s*\(', all_js)
     if native_dialogs:
-        print(f"❌ Native blocking alert/confirm calls detected in app.js: {len(native_dialogs)}")
+        print(f"❌ Native blocking alert/confirm calls detected in js/*.js: {len(native_dialogs)}")
         return False
 
     if 'cdn.tailwindcss.com' in html:
@@ -202,28 +270,32 @@ def check_dom_ids():
     if './styles.css' not in html or './styles.css' not in sw_assets:
         print("❌ Prebuilt ./styles.css must be linked in index.html and cached in sw.js ASSETS")
         return False
+    if 'type="module"' not in html or './js/main.js' not in html:
+        print("❌ index.html must load ./js/main.js as ES module")
+        return False
 
-    print(f"   ✅ {len(all_needed_ids)} DOM IDs, inline onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
+    print(f"   ✅ {len(all_needed_ids)} DOM IDs, {len(window_bridged)} bridged onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
 def check_i18n_symmetry():
     print("🔍 [3/7] Validating bilingual dictionary symmetry & t() key references...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    app_path = os.path.join(base_dir, 'app.js')
+    i18n_path = os.path.join(base_dir, 'js/i18n.js')
 
-    with open(app_path) as f:
-        app_js = f.read()
+    with open(i18n_path) as f:
+        i18n_js = f.read()
+    all_js = "\n".join(src for _, src in load_all_modules_source(base_dir))
 
-    pos_en = app_js.find("const I18N = {")
-    pos_zh = app_js.find("'zh-TW': {", pos_en)
-    pos_end = app_js.find("};", pos_zh)
+    pos_en = i18n_js.find("const I18N = {")
+    pos_zh = i18n_js.find("'zh-TW': {", pos_en)
+    pos_end = i18n_js.find("};", pos_zh)
 
     if pos_en == -1 or pos_zh == -1 or pos_end == -1:
-        print("❌ Could not locate I18N dictionary blocks in app.js")
+        print("❌ Could not locate I18N dictionary blocks in js/i18n.js")
         return False
 
-    en_block = app_js[pos_en:pos_zh]
-    zh_block = app_js[pos_zh:pos_end]
+    en_block = i18n_js[pos_en:pos_zh]
+    zh_block = i18n_js[pos_zh:pos_end]
 
     en_keys = set(re.findall(r"^\s*(\w+):\s*['\"`]", en_block, re.MULTILINE))
     zh_keys = set(re.findall(r"^\s*(\w+):\s*['\"`]", zh_block, re.MULTILINE))
@@ -239,8 +311,8 @@ def check_i18n_symmetry():
         return False
 
     # Verify every t('key') call & applyLanguage map key exists in I18N
-    t_calls = set(re.findall(r"\bt\(\s*'([a-zA-Z0-9_]+)'\s*\)", app_js))
-    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', app_js, re.DOTALL)
+    t_calls = set(re.findall(r"\bt\(\s*'([a-zA-Z0-9_]+)'\s*\)", all_js))
+    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', all_js, re.DOTALL)
     map_vals = set(re.findall(r":\s*'([a-zA-Z0-9_]+)'", map_match.group(1))) if map_match else set()
     undefined_keys = (t_calls | map_vals) - en_keys
     if undefined_keys:
@@ -253,8 +325,8 @@ def check_i18n_symmetry():
 def check_card_portfolio():
     print("🔍 [4/7] Verifying card portfolio completeness & business classifications...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    app_path = os.path.join(base_dir, 'app.js')
-    with open(app_path) as f:
+    data_path = os.path.join(base_dir, 'js/data.js')
+    with open(data_path) as f:
         content = f.read()
     
     expected_cards = [
@@ -292,7 +364,7 @@ def check_card_portfolio():
 def check_privacy_guardrails():
     print("🔍 [5/7] Scanning for privacy guardrail leaks (Generic Patterns)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    scanned_files = ['app.js', 'index.html', 'sw.js', 'verify.py']
+    scanned_files = MODULE_FILES + ['index.html', 'sw.js', 'verify.py']
 
     has_error = False
 
@@ -319,10 +391,10 @@ def check_privacy_guardrails():
             has_error = True
 
     # Ensure PRESET_CARDS does not contain hardcoded personal opening dates
-    app_path = os.path.join(base_dir, 'app.js')
-    with open(app_path) as f:
-        app_js = f.read()
-    cards_block = app_js[app_js.find("PRESET_CARDS = ["):app_js.find("PRESET_CREDITS = [")]
+    data_path = os.path.join(base_dir, 'js/data.js')
+    with open(data_path) as f:
+        data_js = f.read()
+    cards_block = data_js[data_js.find("PRESET_CARDS = ["):data_js.find("PRESET_CREDITS = [")]
     if 'openedYear:' in cards_block:
         print("❌ PRESET_CARDS must not contain hardcoded 'openedYear' (must reside in localStorage/appState.cardMeta)")
         has_error = True
@@ -335,11 +407,7 @@ def check_privacy_guardrails():
 
 def run_jsc_in_app_env(eval_body):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    read_expr = (
-        "$.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js"
-        if shutil.which('osascript')
-        else "__readFile('app.js')"
-    )
+    bundled_js = build_bundled_js(base_dir)
     return_stmt = "eval(appCode + \"\\n; \" + " + json.dumps(eval_body) + ");"
     if not shutil.which('osascript'):
         return_stmt = "return " + return_stmt
@@ -420,7 +488,7 @@ def run_jsc_in_app_env(eval_body):
     const confirm = () => true;
     const setTimeout = (fn) => {{}};
     const clearTimeout = () => {{}};
-    const appCode = {read_expr};
+    const appCode = {json.dumps(bundled_js)};
     {return_stmt}
     """
     rc, out, err, _ = run_js_snippet(js_code, base_dir)
@@ -1085,11 +1153,11 @@ def check_business_logic_simulation():
 
 def check_drive_async_with_node():
     base_dir = os.path.dirname(os.path.abspath(__file__))
+    bundled_js = build_bundled_js(base_dir)
     async_test_tail = """
     (async () => {
       const errors = [];
-      gdriveToken = 'valid-token';
-      gdriveTokenExpiresAt = Date.now() + 3600000;
+      setDriveTokenState('valid-token', Date.now() + 3600000);
       nextMode = 'post';
       await backupToGoogleDrive(false);
       await new Promise(r => setTimeout(r, 20));
@@ -1102,7 +1170,7 @@ def check_drive_async_with_node():
       if (!fetchCalls.some(c => c.method === 'PATCH' && c.url.includes('uploadType=media'))) errors.push('Expected PATCH media upload when file exists');
 
       nextMode = 'restore';
-      appState = normalizeAppState(null, false);
+      setAppState(normalizeAppState(null, false));
       await restoreFromGoogleDrive();
       await new Promise(r => setTimeout(r, 20));
       document.getElementById('confirm-modal-ok-btn').onclick();
@@ -1119,7 +1187,6 @@ def check_drive_async_with_node():
     })();
     """
     node_test = f"""
-    const fs = require('fs');
     const storage = {{}};
     const localStorage = {{
       getItem: (k) => storage[k] !== undefined ? storage[k] : null,
@@ -1154,7 +1221,7 @@ def check_drive_async_with_node():
       if (url.includes('alt=media')) return {{ ok: true, status: 200, json: async () => ({{ ownedCards: {{ csp: true }}, fncs: [] }}) }};
       return {{ ok: true, status: 200, json: async () => ({{}}) }};
     }};
-    eval(fs.readFileSync('app.js', 'utf8') + "\\n;" + {json.dumps(async_test_tail)});
+    eval({json.dumps(bundled_js)} + "\\n;" + {json.dumps(async_test_tail)});
     """
     proc = subprocess.run(['node', '-e', node_test], capture_output=True, text=True, cwd=base_dir)
     if proc.returncode != 0:

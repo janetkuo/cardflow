@@ -1,10 +1,18 @@
 // CardFlow Service Worker - Offline Caching & Instant Network-First Updates
-const CACHE_NAME = 'cardflow-tracker-v18';
+const CACHE_NAME = 'cardflow-tracker-v19';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
-  './app.js',
+  './js/palettes.js',
+  './js/i18n.js',
+  './js/data.js',
+  './js/state.js',
+  './js/logic.js',
+  './js/ui-core.js',
+  './js/drive.js',
+  './js/views.js',
+  './js/main.js',
   './manifest.json',
   './icon.svg',
   './icon-192.png',
@@ -60,9 +68,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isNavigation = event.request.mode === 'navigate';
-  const isCoreAsset = isSameOrigin && (url.pathname.endsWith('app.js') || url.pathname.endsWith('styles.css'));
+  const isCoreAsset = isSameOrigin && ((url.pathname.includes('/js/') && url.pathname.endsWith('.js')) || url.pathname.endsWith('styles.css'));
 
-  // Strategy 1: Network-First for Navigation (HTML), core app logic (app.js) & prebuilt styles (styles.css)
+  // Strategy 1: Network-First for Navigation (HTML), core ES modules (js/*.js) & prebuilt styles (styles.css)
   // Ensures updates appear immediately upon refreshing without requiring two reloads
   if (isNavigation || isCoreAsset) {
     event.respondWith(
