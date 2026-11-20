@@ -446,7 +446,20 @@ const I18N = {
     jumpToLoyaltyBtn: 'FNC Award',
     jumpToLoyaltyTooltip: 'Jump to Free Night Certificate tracker',
     toastJumpedToCredit: 'Jumped to credit',
-    toastActivateCardFirst: 'Please activate this card first to track credits'
+    toastActivateCardFirst: 'Please activate this card first to track credits',
+    settingsProgressSection: 'Progress & Banner Controls',
+    settingsResetMonthLabel: 'Reset Current Month',
+    restoreBannerLabel: 'Show Top Banner',
+    selectAllCardsBtn: '✓ Select All',
+    deselectAllCardsBtn: '✕ Deselect All',
+    saveManageCardsBtn: 'Done',
+    fncIssuerMarriott: 'Marriott Bonvoy',
+    fncIssuerIhg: 'IHG One Rewards',
+    fncIssuerHyatt: 'World of Hyatt',
+    fncIssuerHilton: 'Hilton Honors',
+    fncNamePlaceholder: 'e.g. Marriott 85k Free Night Award (Brilliant)',
+    fncPointsPlaceholder: 'e.g. 85,000 pts',
+    invalidBackupFile: 'Invalid CardFlow backup JSON file.'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -803,7 +816,20 @@ const I18N = {
     jumpToLoyaltyBtn: '查看房券',
     jumpToLoyaltyTooltip: '跳轉至酒店住宿券追蹤',
     toastJumpedToCredit: '已跳轉至對應折抵項目',
-    toastActivateCardFirst: '請先將此卡設為「已持有」以追蹤折抵'
+    toastActivateCardFirst: '請先將此卡設為「已持有」以追蹤折抵',
+    settingsProgressSection: '折抵進度與提醒設定',
+    settingsResetMonthLabel: '重置本月折抵',
+    restoreBannerLabel: '顯示提醒橫條',
+    selectAllCardsBtn: '✓ 全部選取',
+    deselectAllCardsBtn: '✕ 全部取消',
+    saveManageCardsBtn: '完成',
+    fncIssuerMarriott: '萬豪 Marriott Bonvoy',
+    fncIssuerIhg: '洲際 IHG One Rewards',
+    fncIssuerHyatt: '凱悅 World of Hyatt',
+    fncIssuerHilton: '希爾頓 Hilton Honors',
+    fncNamePlaceholder: '例如: 萬豪 85,000 分免費住宿券 (Brilliant)',
+    fncPointsPlaceholder: '例如: 85,000 點',
+    invalidBackupFile: '無效的 CardFlow 備份 JSON 檔案。'
   }
 };
 
@@ -1399,53 +1425,96 @@ const today = new Date();
 let selectedYear = today.getFullYear();
 let selectedMonth = today.getMonth() + 1; // 1-12
 
-let appState = {
-  ownedCards: {}, // cardId: boolean (default false: cards are unowned until user selects)
-  cardMeta: {},   // cardId: { openedYear: null, openedMonth: null, renewMonth: null }
-  creditsClaimed: {},
-  mutedCredits: {},   // creditId: boolean (permanent mute)
-  skippedCredits: {}, // stateKey: boolean (skipped for this specific period)
-  fncs: [],
-  fncsClaimed: {}
-};
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getLocalDateStr(dateObj = new Date()) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function parseLocalYmd(dateStr) {
+  if (typeof dateStr !== 'string') return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function isPlainObject(val) {
+  return Boolean(val) && typeof val === 'object' && !Array.isArray(val);
+}
+
+function normalizeAppState(raw, strict = false) {
+  if (!isPlainObject(raw)) {
+    if (strict) throw new Error('Invalid state root');
+    return {
+      ownedCards: {},
+      cardMeta: {},
+      creditsClaimed: {},
+      mutedCredits: {},
+      skippedCredits: {},
+      fncs: [],
+      fncsClaimed: {}
+    };
+  }
+
+  const expectedKeys = ['ownedCards', 'cardMeta', 'creditsClaimed', 'mutedCredits', 'skippedCredits', 'fncs', 'fncsClaimed'];
+  if (strict && !expectedKeys.some(k => k in raw)) {
+    throw new Error('Missing CardFlow state keys');
+  }
+
+  const cleanFncs = Array.isArray(raw.fncs)
+    ? raw.fncs
+        .filter(f => isPlainObject(f) && typeof f.id === 'string' && typeof f.name === 'string')
+        .map(f => ({
+          id: f.id,
+          name: f.name,
+          issuer: typeof f.issuer === 'string' ? f.issuer : 'Marriott',
+          points: typeof f.points === 'string' || typeof f.points === 'number' ? String(f.points) : '',
+          expireDate: typeof f.expireDate === 'string' ? f.expireDate : '',
+          used: Boolean(f.used)
+        }))
+    : [];
+
+  return {
+    ownedCards: isPlainObject(raw.ownedCards) ? { ...raw.ownedCards } : {},
+    cardMeta: isPlainObject(raw.cardMeta) ? { ...raw.cardMeta } : {},
+    creditsClaimed: isPlainObject(raw.creditsClaimed) ? { ...raw.creditsClaimed } : {},
+    mutedCredits: isPlainObject(raw.mutedCredits) ? { ...raw.mutedCredits } : {},
+    skippedCredits: isPlainObject(raw.skippedCredits) ? { ...raw.skippedCredits } : {},
+    fncs: cleanFncs,
+    fncsClaimed: isPlainObject(raw.fncsClaimed) ? { ...raw.fncsClaimed } : {}
+  };
+}
+
+let appState = normalizeAppState(null, false);
 
 function loadState() {
   const saved = localStorage.getItem(STATE_KEY);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      appState = Object.assign(appState, parsed);
+      appState = normalizeAppState(parsed, false);
     } catch (e) {
       console.error('Failed to parse appState:', e);
+      appState = normalizeAppState(null, false);
     }
-  }
-  if (!appState.ownedCards || typeof appState.ownedCards !== 'object') {
-    appState.ownedCards = {};
-  }
-  if (!appState.cardMeta || typeof appState.cardMeta !== 'object') {
-    appState.cardMeta = {};
-  }
-  if (!appState.mutedCredits || typeof appState.mutedCredits !== 'object') {
-    appState.mutedCredits = {};
-  }
-  if (!appState.skippedCredits || typeof appState.skippedCredits !== 'object') {
-    appState.skippedCredits = {};
-  }
-  if (!Array.isArray(appState.fncs)) {
-    appState.fncs = [];
-  }
-  if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') {
-    appState.fncsClaimed = {};
+  } else {
+    appState = normalizeAppState(appState, false);
   }
 }
 
 function saveState(skipAutoSync = false) {
-  if (!appState.ownedCards || typeof appState.ownedCards !== 'object') appState.ownedCards = {};
-  if (!appState.cardMeta || typeof appState.cardMeta !== 'object') appState.cardMeta = {};
-  if (!appState.mutedCredits || typeof appState.mutedCredits !== 'object') appState.mutedCredits = {};
-  if (!appState.skippedCredits || typeof appState.skippedCredits !== 'object') appState.skippedCredits = {};
-  if (!Array.isArray(appState.fncs)) appState.fncs = [];
-  if (!appState.fncsClaimed || typeof appState.fncsClaimed !== 'object') appState.fncsClaimed = {};
+  appState = normalizeAppState(appState, false);
   localStorage.setItem(STATE_KEY, JSON.stringify(appState));
   if (!skipAutoSync) {
     handleDriveAutoSync();
@@ -1721,6 +1790,83 @@ function switchPeriodFromModal(p) {
   }
 }
 
+function computeAnnualUtilization(creditsList, curYear, curMonth) {
+  const curQuarter = Math.ceil(curMonth / 3);
+  let totalAnnualPerks = 0;
+  let totalClaimedAnnualValue = 0;
+  let totalExpiredAnnualValue = 0;
+
+  creditsList.forEach(c => {
+    const meta = appState.cardMeta?.[c.cardId];
+    const openedYear = meta?.openedYear ? Number(meta.openedYear) : null;
+    const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
+
+    if (c.period === 'monthly') {
+      totalAnnualPerks += c.amount * 12;
+      for (let m = 1; m <= 12; m++) {
+        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
+        const isCl = !!appState.creditsClaimed[`${c.id}_${mStr}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (m < curMonth) {
+          const wasOwnedThen = !(openedYear === curYear && openedMonth && m < openedMonth);
+          if (wasOwnedThen) {
+            totalExpiredAnnualValue += c.amount;
+          }
+        }
+      }
+    } else if (c.period === 'quarterly') {
+      totalAnnualPerks += c.amount * 4;
+      for (let q = 1; q <= 4; q++) {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (q < curQuarter) {
+          const qEndMonth = q * 3;
+          const wasOwnedInQ = !(openedYear === curYear && openedMonth && openedMonth > qEndMonth);
+          if (wasOwnedInQ) {
+            totalExpiredAnnualValue += c.amount;
+          }
+        }
+      }
+    } else if (c.period === 'semiannual') {
+      totalAnnualPerks += c.amount * 2;
+      ['H1', 'H2'].forEach((h, idx) => {
+        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_${h}`];
+        if (isCl) {
+          totalClaimedAnnualValue += c.amount;
+        } else if (idx === 0 && curMonth > 6) {
+          const wasOwnedInH1 = !(openedYear === curYear && openedMonth && openedMonth > 6);
+          if (wasOwnedInH1) {
+            totalExpiredAnnualValue += c.amount;
+          }
+        }
+      });
+    } else {
+      totalAnnualPerks += c.amount;
+      const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
+      if (isCl) {
+        totalClaimedAnnualValue += c.amount;
+      }
+    }
+  });
+
+  const remainingValue = Math.max(0, totalAnnualPerks - totalClaimedAnnualValue - totalExpiredAnnualValue);
+  const claimedPct = totalAnnualPerks > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnualPerks) * 100)) : 0;
+  const expiredPct = totalAnnualPerks > 0 ? Math.min(100 - claimedPct, Math.round((totalExpiredAnnualValue / totalAnnualPerks) * 100)) : 0;
+  const remainingPct = Math.max(0, 100 - claimedPct - expiredPct);
+
+  return {
+    totalAnnualPerks,
+    totalClaimedAnnualValue,
+    totalExpiredAnnualValue,
+    remainingValue,
+    claimedPct,
+    expiredPct,
+    remainingPct
+  };
+}
+
 function renderAnnualBreakdownModal() {
   const container = document.getElementById('annual-breakdown-content');
   const totalAmountEl = document.getElementById('annual-modal-total-amount');
@@ -1777,63 +1923,17 @@ function renderAnnualBreakdownModal() {
   const pct = (part) => totalAnnual > 0 ? ((part / totalAnnual) * 100).toFixed(1) : '0';
 
   // Calculate annual utilization metrics (Claimed vs Expired vs Remaining)
-  const curYear = selectedYear;
-  const curMonth = selectedMonth;
-  const curQuarter = Math.ceil(curMonth / 3);
-  let totalClaimedAnnualValue = 0;
-  let totalExpiredAnnualValue = 0;
-
-  ownedCredits.forEach(c => {
-    const meta = appState.cardMeta?.[c.cardId];
-    const openedYear = meta?.openedYear ? Number(meta.openedYear) : null;
-    const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
-
-    if (c.period === 'monthly') {
-      for (let m = 1; m <= 12; m++) {
-        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
-        const isCl = !!appState.creditsClaimed[`${c.id}_${mStr}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (m < curMonth) {
-          const wasOwnedThen = !(openedYear === curYear && openedMonth && m < openedMonth);
-          if (wasOwnedThen) {
-            totalExpiredAnnualValue += c.amount;
-          }
-        }
-      }
-    } else if (c.period === 'quarterly') {
-      for (let q = 1; q <= 4; q++) {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (q < curQuarter) {
-          totalExpiredAnnualValue += c.amount;
-        }
-      }
-    } else if (c.period === 'semiannual') {
-      ['H1', 'H2'].forEach((h, idx) => {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_${h}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (idx === 0 && curMonth > 6) {
-          totalExpiredAnnualValue += c.amount;
-        }
-      });
-    } else {
-      const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
-      if (isCl) {
-        totalClaimedAnnualValue += c.amount;
-      }
-    }
-  });
-
-  const remainingValue = Math.max(0, totalAnnual - totalClaimedAnnualValue - totalExpiredAnnualValue);
-  const claimedPct = totalAnnual > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnual) * 100)) : 0;
-  const expiredPct = totalAnnual > 0 ? Math.min(100 - claimedPct, Math.round((totalExpiredAnnualValue / totalAnnual) * 100)) : 0;
-  const remainingPct = Math.max(0, 100 - claimedPct - expiredPct);
+  const {
+    totalClaimedAnnualValue,
+    totalExpiredAnnualValue,
+    remainingValue,
+    claimedPct,
+    expiredPct,
+    remainingPct
+  } = computeAnnualUtilization(ownedCredits, selectedYear, selectedMonth);
 
   const utilizationCardHtml = `
-    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-850 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2.5">
+    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-900 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2.5">
       <div class="flex items-center justify-between text-xs font-bold">
         <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
           <span>📊</span>
@@ -1859,7 +1959,7 @@ function renderAnnualBreakdownModal() {
   const isBrokenEven = totalClaimedAnnualValue >= totalAnnualFees;
 
   const netAfModalHtml = `
-    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-850 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2">
+    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-900 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2">
       <div class="flex items-center justify-between text-xs font-bold">
         <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
           <span>💰</span>
@@ -1945,7 +2045,7 @@ function renderAnnualBreakdownModal() {
       : `<div class="text-[11px] text-slate-400 py-1 italic">${currentLang === 'zh-TW' ? '目前無此週期之權益' : 'No perks active in this period'}</div>`;
 
     return `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-base">${sec.icon}</span>
@@ -2015,7 +2115,9 @@ function renderManageCardsChecklist() {
     }
 
     return `
-      <div onclick="toggleCardOwnership('${card.id}')"
+      <div role="button" tabindex="0" aria-pressed="${owned}"
+           onclick="toggleCardOwnership('${card.id}')"
+           onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCardOwnership('${card.id}'); }"
            class="p-2.5 sm:p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${owned ? 'bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800/60 shadow-xs' : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-100'}">
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${owned ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700'}">
@@ -2102,7 +2204,7 @@ function renderPalettePicker() {
   Object.values(MORANDI_PALETTES).forEach(p => {
     const isSel = p.id === currentPalette;
     const btn = document.createElement('button');
-    btn.className = `palette-btn p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${isSel ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800/40'}`;
+    btn.className = `palette-btn p-2.5 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${isSel ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'}`;
     btn.onclick = () => applyPalette(p.id);
     btn.innerHTML = `
       <span class="w-5 h-5 rounded-full shadow-xs" style="background-color: ${p.primary}"></span>
@@ -2121,6 +2223,9 @@ function t(key) {
 function applyLanguage(lang) {
   currentLang = lang;
   localStorage.setItem(LANG_KEY, lang);
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.lang = lang;
+  }
 
   const langLabel = document.getElementById('lang-label');
   if (langLabel) langLabel.innerText = lang === 'zh-TW' ? 'English' : '繁中';
@@ -2225,7 +2330,18 @@ function applyLanguage(lang) {
     'label-view-compact': 'viewModeCompact',
     'label-view-detailed': 'viewModeDetailed',
     'card-date-decision-label': 'cardDateDecisionLabel',
-    'card-date-note-label': 'cardDateNoteLabel'
+    'card-date-note-label': 'cardDateNoteLabel',
+    'settings-progress-section-label': 'settingsProgressSection',
+    'settings-reset-month-label': 'settingsResetMonthLabel',
+    'restore-banner-label': 'restoreBannerLabel',
+    'annual-modal-unit-label': 'perYearUnit',
+    'select-all-cards-btn': 'selectAllCardsBtn',
+    'deselect-all-cards-btn': 'deselectAllCardsBtn',
+    'save-manage-cards-btn': 'saveManageCardsBtn',
+    'fnc-issuer-opt-marriott': 'fncIssuerMarriott',
+    'fnc-issuer-opt-ihg': 'fncIssuerIhg',
+    'fnc-issuer-opt-hyatt': 'fncIssuerHyatt',
+    'fnc-issuer-opt-hilton': 'fncIssuerHilton'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -2234,6 +2350,11 @@ function applyLanguage(lang) {
       el.innerText = t(i18nKey);
     }
   });
+
+  const fncNameInput = document.getElementById('fnc-name-input');
+  if (fncNameInput) fncNameInput.placeholder = t('fncNamePlaceholder');
+  const fncPointsInput = document.getElementById('fnc-points-input');
+  if (fncPointsInput) fncPointsInput.placeholder = t('fncPointsPlaceholder');
 
   const compactBtn = document.getElementById('cards-view-compact-btn');
   if (compactBtn) compactBtn.title = t('viewModeToggleTitle');
@@ -2622,123 +2743,96 @@ function renderCredits() {
   let monthlyClaimedCount = 0;
   let totalMonthlyItems = 0;
 
-  let totalAnnualPerks = 0;
-  let totalClaimedAnnualValue = 0;
-  let totalExpiredAnnualValue = 0;
-
   // Pre-calculate urgency info for all active owned credits
   const creditMetaList = ownedCredits.map(item => {
     const urgency = getCreditUrgencyInfo(item, curYear, curMonth);
     return { item, urgency };
   });
 
-  // Calculate annual utilization & monthly pending metrics
+  // Calculate monthly pending metrics & annual utilization via shared helper
   ownedCredits.forEach(c => {
     const meta = appState.cardMeta?.[c.cardId];
-    const openedYear = meta?.openedYear ? Number(meta.openedYear) : null;
     const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
 
     if (c.period === 'monthly') {
-      totalAnnualPerks += c.amount * 12;
       totalMonthlyItems++;
       const currentMonthClaimed = !!appState.creditsClaimed[`${c.id}_${mKey}`];
       const currentMonthSkipped = isCreditSkipped(`${c.id}_${mKey}`);
       if (currentMonthClaimed) {
         monthlyClaimedCount++;
-      } else if (currentMonthSkipped) {
-        // Skipped for current month, do not count as pending debt
-      } else {
+      } else if (!currentMonthSkipped) {
         monthlyUnclaimed += c.amount;
       }
-
-      for (let m = 1; m <= 12; m++) {
-        const mStr = `${curYear}-${String(m).padStart(2, '0')}`;
-        const isCl = !!appState.creditsClaimed[`${c.id}_${mStr}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (m < curMonth) {
-          const wasOwnedThen = !(openedYear === curYear && openedMonth && m < openedMonth);
-          if (wasOwnedThen) {
-            totalExpiredAnnualValue += c.amount;
-          }
-        }
-      }
     } else if (c.period === 'quarterly') {
-      totalAnnualPerks += c.amount * 4;
-      for (let q = 1; q <= 4; q++) {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${q}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (q < curQuarter) {
-          totalExpiredAnnualValue += c.amount;
-        }
-      }
       if (curMonth % 3 === 0) {
         const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${curQuarter}`];
         const isSk = isCreditSkipped(`${c.id}_${curYear}_Q${curQuarter}`);
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
-        } else if (isSk) {
-          // Skipped for current quarter
-        } else {
+        } else if (!isSk) {
           monthlyUnclaimed += c.amount;
         }
       }
     } else if (c.period === 'semiannual') {
-      totalAnnualPerks += c.amount * 2;
-      ['H1', 'H2'].forEach((h, idx) => {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_${h}`];
-        if (isCl) {
-          totalClaimedAnnualValue += c.amount;
-        } else if (idx === 0 && curMonth > 6) {
-          totalExpiredAnnualValue += c.amount;
-        }
-      });
       if (curMonth % 6 === 0) {
         const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_H${curHalf}`];
         const isSk = isCreditSkipped(`${c.id}_${curYear}_H${curHalf}`);
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
-        } else if (isSk) {
-          // Skipped for current half
-        } else {
+        } else if (!isSk) {
           monthlyUnclaimed += c.amount;
         }
       }
     } else {
-      totalAnnualPerks += c.amount;
       const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
       const isSk = isCreditSkipped(`${c.id}_${curYear}`);
-      if (isCl) {
-        totalClaimedAnnualValue += c.amount;
-      }
       const isAnnivThisMonth = openedMonth && openedMonth === curMonth;
       if (curMonth === 12 || isAnnivThisMonth) {
         totalMonthlyItems++;
         if (isCl) {
           monthlyClaimedCount++;
-        } else if (isSk) {
-          // Skipped for current year
-        } else {
+        } else if (!isSk) {
           monthlyUnclaimed += c.amount;
         }
       }
     }
   });
 
+  const {
+    totalAnnualPerks,
+    totalClaimedAnnualValue,
+    totalExpiredAnnualValue,
+    remainingValue,
+    claimedPct,
+    expiredPct,
+    remainingPct
+  } = computeAnnualUtilization(ownedCredits, curYear, curMonth);
+
   // Calculate items matching each tab for badge counts (timeline vs pure cadence mode)
   const monthItems = creditMetaList.filter(({ item, urgency }) => urgency.isDueThisMonth);
   const quarterItems = creditMetaList.filter(({ item }) => {
     if (item.period === 'monthly' || item.period === 'quarterly') return true;
     if (item.period === 'semiannual' && (curQuarter === 2 || curQuarter === 4)) return true;
-    if (item.period === 'annual' && curQuarter === 4) return true;
+    if (item.period === 'annual') {
+      if (item.cycleType === 'anniversary') {
+        const annivMonth = appState.cardMeta?.[item.cardId]?.openedMonth ? Number(appState.cardMeta[item.cardId].openedMonth) : null;
+        if (annivMonth) return Math.ceil(annivMonth / 3) === curQuarter;
+      }
+      return curQuarter === 4;
+    }
     return false;
   });
   const halfItems = creditMetaList.filter(({ item }) => {
     if (item.period === 'monthly' || item.period === 'quarterly' || item.period === 'semiannual') return true;
-    if (item.period === 'annual' && curHalf === 2) return true;
+    if (item.period === 'annual') {
+      if (item.cycleType === 'anniversary') {
+        const annivMonth = appState.cardMeta?.[item.cardId]?.openedMonth ? Number(appState.cardMeta[item.cardId].openedMonth) : null;
+        if (annivMonth) return (annivMonth <= 6 ? 1 : 2) === curHalf;
+      }
+      return curHalf === 2;
+    }
     return false;
   });
   const yearItems = creditMetaList;
@@ -2858,7 +2952,7 @@ function renderCredits() {
             <span>➕</span>
             <span>${t('btnSelectCards')}</span>
           </button>
-          <button onclick="loadDemoStarterPack()" class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold active:scale-95 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+          <button onclick="loadDemoStarterPack()" class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold active:scale-95 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
             <span>⚡</span>
             <span>${t('btnLoadDemoPack')}</span>
           </button>
@@ -3005,12 +3099,7 @@ function renderCredits() {
   const unitLabel = document.getElementById('monthly-unit-label');
   if (unitLabel) unitLabel.innerText = t('usedUnit');
 
-  // Calculate Hero Card Annual Utilization
-  const remainingValue = Math.max(0, totalAnnualPerks - totalClaimedAnnualValue - totalExpiredAnnualValue);
-  const claimedPct = totalAnnualPerks > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnualPerks) * 100)) : 0;
-  const expiredPct = totalAnnualPerks > 0 ? Math.min(100 - claimedPct, Math.round((totalExpiredAnnualValue / totalAnnualPerks) * 100)) : 0;
-  const remainingPct = Math.max(0, 100 - claimedPct - expiredPct);
-
+  // Update Hero Card Annual Utilization (computed via shared computeAnnualUtilization above)
   const utilPctEl = document.getElementById('annual-utilization-pct');
   if (utilPctEl) {
     utilPctEl.innerText = `${claimedPct}%`;
@@ -3111,9 +3200,6 @@ function renderCredits() {
 
   // Update Net Effective AF indicators & progress
   renderNetEffectiveAF();
-
-  // Render collapsible muted section at bottom of credits feed
-  renderMutedCreditsSection(mutedOwnedCredits);
 }
 
 // --- Muted Credits Section & Perk Action Modal Handlers ---
@@ -3151,7 +3237,7 @@ function renderMutedCreditsSection(mutedCredits) {
           </div>
           <div class="text-[10.5px] text-slate-400 mt-0.5">+$${item.amount.toFixed(2)} (${periodLabel})</div>
         </div>
-        <button onclick="unmuteCredit('${item.id}')" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-650 border border-slate-200 dark:border-slate-600 text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-2xs transition shrink-0 cursor-pointer flex items-center gap-1">
+        <button onclick="unmuteCredit('${item.id}')" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-2xs transition shrink-0 cursor-pointer flex items-center gap-1">
           <span>↩️</span>
           <span>${t('restoreTrackingBtn')}</span>
         </button>
@@ -3527,7 +3613,7 @@ function renderCards() {
               <span>➕</span>
               <span>${t('manageCardsBtnLabel')}</span>
             </button>
-            <button onclick="loadDemoStarterPack()" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+            <button onclick="loadDemoStarterPack()" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
               <span>⚡</span>
               <span>${t('btnLoadDemoPack')}</span>
             </button>
@@ -3563,7 +3649,7 @@ function renderCards() {
     } else if (card.renewMonth) {
       renewMonth = typeof card.renewMonth === 'object' ? (card.renewMonth[currentLang] || card.renewMonth['zh-TW']) : card.renewMonth;
     }
-    const openedYearVal = meta?.openedYear || card.openedYear || null;
+    const openedYearVal = meta?.openedYear || null;
 
     // Decision Status & Notes
     const decisionInfo = meta?.retentionStatus ? getDecisionBadgeInfo(meta.retentionStatus) : null;
@@ -3589,10 +3675,12 @@ function renderCards() {
       `;
     }
 
-    const decisionNoteHtml = meta?.retentionNote ? `
+    const safeRetentionNote = meta?.retentionNote ? escapeHtml(meta.retentionNote) : '';
+
+    const decisionNoteHtml = safeRetentionNote ? `
       <div class="mt-1 text-[10.5px] px-2 py-1 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
         <span class="text-indigo-500 font-bold shrink-0">📝</span>
-        <span class="truncate"><strong>${t('decisionNotePrefix')}:</strong> ${meta.retentionNote}</span>
+        <span class="truncate"><strong>${t('decisionNotePrefix')}:</strong> ${safeRetentionNote}</span>
       </div>
     ` : '';
 
@@ -3637,7 +3725,7 @@ function renderCards() {
                 title="${t('btnEditDecisionTooltip')}">
           <span>${decisionInfo.icon}</span>
           <span>${decisionInfo.text}</span>
-          ${meta.retentionNote ? `<span class="opacity-80 font-normal truncate max-w-[120px]">(${meta.retentionNote})</span>` : ''}
+          ${safeRetentionNote ? `<span class="opacity-80 font-normal truncate max-w-[120px]">(${safeRetentionNote})</span>` : ''}
           <span class="text-[9px] opacity-70">✎</span>
         </button>
       </div>
@@ -3900,11 +3988,12 @@ function renderFncs() {
   // Build combined list of FNCs:
   // 1. Auto-derived from owned hotel cards
   const autoFncs = [];
+  const curMonth = today.getMonth() + 1;
   if (ownedBrilliant) {
     const meta = appState.cardMeta?.['bonvoy-brilliant'] || {};
     const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
     const annMonthStr = String(renewMonth).padStart(2, '0');
-    const grantYear = selectedYear;
+    const grantYear = (selectedYear === today.getFullYear() && curMonth < renewMonth) ? selectedYear - 1 : selectedYear;
     const expireYear = grantYear + 1;
     const expireDate = `${expireYear}-${annMonthStr}-28`;
     const autoKey = `auto_fnc_brilliant_${grantYear}`;
@@ -3933,7 +4022,7 @@ function renderFncs() {
     const meta = appState.cardMeta?.['ihg-premier'] || {};
     const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
     const annMonthStr = String(renewMonth).padStart(2, '0');
-    const grantYear = selectedYear;
+    const grantYear = (selectedYear === today.getFullYear() && curMonth < renewMonth) ? selectedYear - 1 : selectedYear;
     const expireYear = grantYear + 1;
     const expireDate = `${expireYear}-${annMonthStr}-28`;
     const autoKey = `auto_fnc_ihg_${grantYear}`;
@@ -3973,35 +4062,40 @@ function renderFncs() {
     return;
   }
 
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   allFncs.forEach(fnc => {
-    const expDate = new Date(fnc.expireDate);
-    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+    const expDate = parseLocalYmd(fnc.expireDate) || new Date(fnc.expireDate);
+    const diffDays = isNaN(expDate.getTime()) ? 0 : Math.round((expDate - todayMidnight) / (1000 * 60 * 60 * 24));
     const isUrgent = diffDays <= 60 && !fnc.used;
 
-    const nameText = typeof fnc.name === 'object' ? (fnc.name[currentLang] || fnc.name['zh-TW']) : fnc.name;
-    const grantText = fnc.grantNote ? (typeof fnc.grantNote === 'object' ? (fnc.grantNote[currentLang] || fnc.grantNote['zh-TW']) : fnc.grantNote) : null;
+    const nameText = escapeHtml(typeof fnc.name === 'object' ? (fnc.name[currentLang] || fnc.name['zh-TW']) : fnc.name);
+    const grantText = fnc.grantNote ? escapeHtml(typeof fnc.grantNote === 'object' ? (fnc.grantNote[currentLang] || fnc.grantNote['zh-TW']) : fnc.grantNote) : null;
+    const safeIssuer = escapeHtml(fnc.issuer);
+    const safePoints = escapeHtml(fnc.points);
+    const safeExpire = escapeHtml(fnc.expireDate);
+    const safeIdAttr = escapeHtml(fnc.id);
 
     const el = document.createElement('div');
-    el.className = `p-3.5 rounded-2xl border transition ${fnc.used ? 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : isUrgent ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60' : 'bg-slate-50/70 dark:bg-slate-850/60 border-slate-200 dark:border-slate-800'}`;
+    el.className = `p-3.5 rounded-2xl border transition ${fnc.used ? 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60' : isUrgent ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60' : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800'}`;
     
     el.innerHTML = `
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5">
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${fnc.issuer === 'Marriott' ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'}">
-            ${fnc.issuer}
+            ${safeIssuer}
           </span>
           ${fnc.isAuto ? `<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">✨ ${t('fncAutoDerived')}</span>` : ''}
         </div>
-        <span class="text-xs font-black text-amber-600 dark:text-amber-400">${fnc.points}</span>
+        <span class="text-xs font-black text-amber-600 dark:text-amber-400">${safePoints}</span>
       </div>
       <div class="text-xs font-bold text-slate-800 dark:text-slate-100 ${fnc.used ? 'line-through text-slate-400' : ''}">${nameText}</div>
       ${grantText ? `<div class="text-[10px] text-slate-400 mt-0.5">${grantText}</div>` : ''}
       <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
         <div>
-          <span>${fnc.expireDate}</span>
+          <span>${safeExpire}</span>
           ${!fnc.used ? `<span class="ml-1 font-bold ${isUrgent ? 'text-amber-600 dark:text-amber-400 animate-pulse' : ''}">(${diffDays > 0 ? diffDays + ' ' + t('daysLeft') : t('expired')})</span>` : ''}
         </div>
-        <button onclick="toggleFncStatus('${fnc.id}')" class="px-2 py-1 rounded-lg border text-[10px] font-bold transition ${fnc.used ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500'}">
+        <button onclick="toggleFncStatus('${safeIdAttr}')" class="px-2 py-1 rounded-lg border text-[10px] font-bold transition ${fnc.used ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500'}">
           ${fnc.used ? t('markUnused') : t('markRedeemed')}
         </button>
       </div>
@@ -4188,7 +4282,7 @@ function renderDonutChart() {
   let totalAnnual = 0;
 
   PRESET_CREDITS.forEach(cr => {
-    if (!isCardOwned(cr.cardId)) return;
+    if (!isCardOwned(cr.cardId) || isCreditMuted(cr.id)) return;
     let factor = 1;
     if (cr.period === 'monthly') factor = 12;
     else if (cr.period === 'quarterly') factor = 4;
@@ -4980,7 +5074,7 @@ function renderChase524() {
   const detail = document.getElementById('chase-524-detail');
   if (!box || !badge || !detail) return;
 
-  const personalCardIds = ['bonvoy-brilliant', 'venture-x', 'csp', 'ihg-premier', 'cfu', 'amex-ed'];
+  const personalCardIds = PRESET_CARDS.filter(c => !c.isBusiness).map(c => c.id);
   const ownedPersonalCards = personalCardIds.filter(id => isCardOwned(id));
 
   if (ownedPersonalCards.length === 0) {
@@ -5213,7 +5307,7 @@ function selectAdvisorCategory(cat) {
             <span>✨</span>
             <span>${t('btnSelectCards')}</span>
           </button>
-          <button onclick="loadDemoStarterPack()" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-750 active:scale-95 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700/80 text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1">
+          <button onclick="loadDemoStarterPack()" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 active:scale-95 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700/80 text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1">
             <span>⚡</span>
             <span>${t('btnLoadDemoPack')}</span>
           </button>
@@ -5558,12 +5652,28 @@ function updateDriveUI() {
   }
 }
 
-function requestGoogleDriveToken(onSuccess) {
+let isDriveBackupInFlight = false;
+let driveAutoSyncTimer = null;
+
+function clearStaleDriveToken() {
+  gdriveToken = null;
+  gdriveTokenExpiresAt = 0;
+  localStorage.removeItem(GDRIVE_TOKEN_KEY);
+  localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+  updateDriveUI();
+}
+
+function requestGoogleDriveToken(onSuccess, onError) {
+  const notifyError = (err) => {
+    if (typeof onError === 'function') onError(err);
+  };
+
   const clientId = getGoogleClientId();
   if (!clientId) {
     alert(t('gdriveNoClientIdPrompt'));
     const input = document.getElementById('gdrive-client-id-input');
     if (input) input.focus();
+    notifyError(new Error('Missing Client ID'));
     return;
   }
 
@@ -5574,6 +5684,7 @@ function requestGoogleDriveToken(onSuccess) {
 
   if (typeof window === 'undefined' || typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.oauth2) {
     alert(currentLang === 'zh-TW' ? 'Google 服務腳本尚未載入完成，請檢查網路連線或重新整理頁面。' : 'Google Identity Services library not yet loaded. Please check your internet connection.');
+    notifyError(new Error('GIS not loaded'));
     return;
   }
 
@@ -5592,12 +5703,18 @@ function requestGoogleDriveToken(onSuccess) {
           fetchGoogleDriveUserInfo(gdriveToken);
           updateDriveUI();
           onSuccess(gdriveToken);
-        } else if (resp && resp.error) {
+        } else {
+          const errCode = resp?.error || 'oauth_cancelled';
           console.error('Google OAuth error:', resp);
-          if (resp.error !== 'popup_closed_by_user') {
+          if (resp && resp.error && resp.error !== 'popup_closed_by_user') {
             alert((currentLang === 'zh-TW' ? 'Google 登入失敗: ' : 'Google Sign-in failed: ') + (resp.error_description || resp.error));
           }
+          notifyError(new Error(errCode));
         }
+      },
+      error_callback: (err) => {
+        console.error('Google OAuth popup error:', err);
+        notifyError(err instanceof Error ? err : new Error(err?.type || 'oauth_popup_error'));
       }
     });
 
@@ -5605,133 +5722,176 @@ function requestGoogleDriveToken(onSuccess) {
   } catch (err) {
     console.error('Token Client init failed:', err);
     alert((currentLang === 'zh-TW' ? '初始化 Google 登入失敗: ' : 'Failed to init Google Sign-in: ') + err.message);
+    notifyError(err);
   }
 }
 
+async function assertDriveResponseOk(res) {
+  if (res.ok) return res;
+  if (res.status === 401 || res.status === 403) {
+    clearStaleDriveToken();
+  }
+  let detail = `HTTP ${res.status}`;
+  try {
+    const errBody = await res.json();
+    if (errBody?.error?.message) detail = `${detail}: ${errBody.error.message}`;
+  } catch (_) {}
+  throw new Error(detail);
+}
+
 async function backupToGoogleDrive(isSilent = false) {
+  if (isDriveBackupInFlight) return;
   const backupBtn = document.getElementById('gdrive-backup-btn');
   if (backupBtn && !isSilent) backupBtn.disabled = true;
 
-  requestGoogleDriveToken(async (token) => {
-    try {
-      const searchRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const searchData = await searchRes.json();
-      const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
-
-      const fileData = JSON.stringify(appState, null, 2);
-
-      if (existingFile) {
-        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: fileData
-        });
-      } else {
-        const metadata = {
-          name: GDRIVE_FILE_NAME,
-          mimeType: 'application/json',
-          description: 'CardFlow Credit Card & Loyalty Tracker Backup'
-        };
-        const boundary = '-------cardflow_boundary_' + Date.now();
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const close_delim = "\r\n--" + boundary + "--";
-
-        const multipartRequestBody =
-          delimiter +
-          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          fileData +
-          close_delim;
-
-        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`
-          },
-          body: multipartRequestBody
-        });
+  requestGoogleDriveToken(
+    async (token) => {
+      if (isDriveBackupInFlight) {
+        if (backupBtn && !isSilent) backupBtn.disabled = false;
+        return;
       }
+      isDriveBackupInFlight = true;
+      try {
+        const searchRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await assertDriveResponseOk(searchRes);
+        const searchData = await searchRes.json();
+        const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
 
-      const now = new Date();
-      const nowStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      localStorage.setItem(GDRIVE_LAST_SYNC_KEY, nowStr);
-      updateDriveUI();
+        const fileData = JSON.stringify(appState, null, 2);
 
-      if (!isSilent) {
-        alert(t('gdriveBackupSuccess'));
+        if (existingFile) {
+          const patchRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: fileData
+          });
+          await assertDriveResponseOk(patchRes);
+        } else {
+          const metadata = {
+            name: GDRIVE_FILE_NAME,
+            mimeType: 'application/json',
+            description: 'CardFlow Credit Card & Loyalty Tracker Backup'
+          };
+          const boundary = '-------cardflow_boundary_' + Date.now();
+          const delimiter = "\r\n--" + boundary + "\r\n";
+          const close_delim = "\r\n--" + boundary + "--";
+
+          const multipartRequestBody =
+            delimiter +
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+            JSON.stringify(metadata) +
+            delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            fileData +
+            close_delim;
+
+          const postRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': `multipart/related; boundary=${boundary}`
+            },
+            body: multipartRequestBody
+          });
+          await assertDriveResponseOk(postRes);
+        }
+
+        const now = new Date();
+        const nowStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        localStorage.setItem(GDRIVE_LAST_SYNC_KEY, nowStr);
+        updateDriveUI();
+
+        if (!isSilent) {
+          alert(t('gdriveBackupSuccess'));
+        }
+      } catch (err) {
+        console.error('Drive backup error:', err);
+        if (!isSilent) {
+          alert((currentLang === 'zh-TW' ? '備份至 Google Drive 失敗: ' : 'Backup to Google Drive failed: ') + err.message);
+        }
+      } finally {
+        isDriveBackupInFlight = false;
+        if (backupBtn && !isSilent) backupBtn.disabled = false;
       }
-    } catch (err) {
-      console.error('Drive backup error:', err);
-      if (!isSilent) {
-        alert((currentLang === 'zh-TW' ? '備份至 Google Drive 失敗: ' : 'Backup to Google Drive failed: ') + err.message);
-      }
-    } finally {
+    },
+    () => {
       if (backupBtn && !isSilent) backupBtn.disabled = false;
     }
-  });
+  );
 }
 
 async function restoreFromGoogleDrive() {
   const restoreBtn = document.getElementById('gdrive-restore-btn');
   if (restoreBtn) restoreBtn.disabled = true;
 
-  requestGoogleDriveToken(async (token) => {
-    try {
-      const searchRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const searchData = await searchRes.json();
-      const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
+  requestGoogleDriveToken(
+    async (token) => {
+      try {
+        const searchRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await assertDriveResponseOk(searchRes);
+        const searchData = await searchRes.json();
+        const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
 
-      if (!existingFile) {
-        alert(t('gdriveNoBackupFound'));
-        return;
-      }
+        if (!existingFile) {
+          alert(t('gdriveNoBackupFound'));
+          return;
+        }
 
-      const downloadRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const parsed = await downloadRes.json();
+        const downloadRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await assertDriveResponseOk(downloadRes);
+        const parsed = await downloadRes.json();
+        const normalized = normalizeAppState(parsed, true);
 
-      if (parsed && typeof parsed === 'object') {
         const modTimeStr = existingFile.modifiedTime ? new Date(existingFile.modifiedTime).toLocaleString() : '未知';
         const confirmMsg = currentLang === 'zh-TW'
           ? `找到雲端備份（更新時間: ${modTimeStr}），確定要還原覆蓋目前資料嗎？`
           : `Found cloud backup (modified: ${modTimeStr}). Restore and overwrite current state?`;
 
         if (confirm(confirmMsg)) {
-          appState = parsed;
+          appState = normalized;
           saveState(true);
           applyLanguage(currentLang);
           alert(t('gdriveRestoreSuccess'));
           document.getElementById('settings-modal')?.classList.add('hidden');
         }
-      } else {
-        throw new Error('Invalid JSON format');
+      } catch (err) {
+        console.error('Drive restore error:', err);
+        alert((currentLang === 'zh-TW' ? '從 Google Drive 還原失敗: ' : 'Restore from Google Drive failed: ') + err.message);
+      } finally {
+        if (restoreBtn) restoreBtn.disabled = false;
       }
-    } catch (err) {
-      console.error('Drive restore error:', err);
-      alert((currentLang === 'zh-TW' ? '從 Google Drive 還原失敗: ' : 'Restore from Google Drive failed: ') + err.message);
-    } finally {
+    },
+    () => {
       if (restoreBtn) restoreBtn.disabled = false;
     }
-  });
+  );
 }
 
 function handleDriveAutoSync() {
-  if (localStorage.getItem(GDRIVE_AUTO_SYNC_KEY) === 'true' && gdriveToken && Date.now() < gdriveTokenExpiresAt) {
-    backupToGoogleDrive(true);
+  if (localStorage.getItem(GDRIVE_AUTO_SYNC_KEY) === 'true' && gdriveToken && Date.now() < gdriveTokenExpiresAt - 30000) {
+    if (typeof setTimeout === 'function') {
+      if (typeof clearTimeout === 'function' && driveAutoSyncTimer) {
+        clearTimeout(driveAutoSyncTimer);
+      }
+      driveAutoSyncTimer = setTimeout(() => {
+        driveAutoSyncTimer = null;
+        backupToGoogleDrive(true);
+      }, 1500);
+    } else {
+      backupToGoogleDrive(true);
+    }
   }
 }
 
@@ -5743,19 +5903,24 @@ function setupModals() {
   const cancelFncBtn = document.getElementById('cancel-fnc-btn');
   const fncForm = document.getElementById('fnc-form');
 
-  if (openFncBtn) openFncBtn.onclick = () => fncModal.classList.remove('hidden');
-  if (closeFncBtn) closeFncBtn.onclick = () => fncModal.classList.add('hidden');
-  if (cancelFncBtn) cancelFncBtn.onclick = () => fncModal.classList.add('hidden');
+  if (openFncBtn && fncModal) openFncBtn.onclick = () => fncModal.classList.remove('hidden');
+  if (closeFncBtn && fncModal) closeFncBtn.onclick = () => fncModal.classList.add('hidden');
+  if (cancelFncBtn && fncModal) cancelFncBtn.onclick = () => fncModal.classList.add('hidden');
+  if (fncModal) {
+    fncModal.addEventListener('click', (e) => {
+      if (e.target === fncModal) fncModal.classList.add('hidden');
+    });
+  }
 
   const fab = document.getElementById('floating-add-btn');
-  if (fab) fab.onclick = () => fncModal.classList.remove('hidden');
+  if (fab && fncModal) fab.onclick = () => fncModal.classList.remove('hidden');
 
   if (fncForm) {
     fncForm.onsubmit = e => {
       e.preventDefault();
-      const name = document.getElementById('fnc-name-input').value;
+      const name = document.getElementById('fnc-name-input').value.trim();
       const issuer = document.getElementById('fnc-issuer-input').value;
-      const points = document.getElementById('fnc-points-input').value;
+      const points = document.getElementById('fnc-points-input').value.trim();
       const expire = document.getElementById('fnc-expire-input').value;
 
       appState.fncs.push({
@@ -5768,7 +5933,7 @@ function setupModals() {
       });
       saveState();
       renderFncs();
-      fncModal.classList.add('hidden');
+      if (fncModal) fncModal.classList.add('hidden');
       fncForm.reset();
     };
   }
@@ -5777,8 +5942,13 @@ function setupModals() {
   const openSettingsBtn = document.getElementById('open-settings-btn');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
 
-  if (openSettingsBtn) openSettingsBtn.onclick = () => settingsModal.classList.remove('hidden');
-  if (closeSettingsBtn) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+  if (openSettingsBtn && settingsModal) openSettingsBtn.onclick = () => settingsModal.classList.remove('hidden');
+  if (closeSettingsBtn && settingsModal) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) settingsModal.classList.add('hidden');
+    });
+  }
 
   const exportBtn = document.getElementById('export-json-btn');
   if (exportBtn) {
@@ -5786,7 +5956,7 @@ function setupModals() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
       const a = document.createElement('a');
       a.setAttribute('href', dataStr);
-      a.setAttribute('download', `cardflow_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      a.setAttribute('download', `cardflow_backup_${getLocalDateStr(new Date())}.json`);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -5804,13 +5974,15 @@ function setupModals() {
       reader.onload = ev => {
         try {
           const parsed = JSON.parse(ev.target.result);
-          appState = parsed;
+          appState = normalizeAppState(parsed, true);
           saveState();
           applyLanguage(currentLang);
           alert(currentLang === 'zh-TW' ? '備份資料還原成功！' : 'Data restored successfully!');
-          settingsModal.classList.add('hidden');
+          if (settingsModal) settingsModal.classList.add('hidden');
         } catch (err) {
-          alert('Invalid JSON file.');
+          alert(t('invalidBackupFile'));
+        } finally {
+          fileInput.value = '';
         }
       };
       reader.readAsText(file);
@@ -5843,6 +6015,7 @@ function setupModals() {
   }
 
   // Manage Owned Cards Modal Bindings
+  const manageCardsModal = document.getElementById('manage-cards-modal');
   const openManageCardsBtn = document.getElementById('open-manage-cards-btn');
   const closeManageCardsBtn = document.getElementById('close-manage-cards-btn');
   const saveManageCardsBtn = document.getElementById('save-manage-cards-btn');
@@ -5855,6 +6028,11 @@ function setupModals() {
   if (donutBadge) donutBadge.onclick = openManageCardsModal;
   if (closeManageCardsBtn) closeManageCardsBtn.onclick = closeManageCardsModal;
   if (saveManageCardsBtn) saveManageCardsBtn.onclick = closeManageCardsModal;
+  if (manageCardsModal) {
+    manageCardsModal.addEventListener('click', (e) => {
+      if (e.target === manageCardsModal) closeManageCardsModal();
+    });
+  }
   if (selectAllCardsBtn) selectAllCardsBtn.onclick = () => selectAllCards(true);
   if (deselectAllCardsBtn) deselectAllCardsBtn.onclick = () => selectAllCards(false);
   if (manageCardsDemoBtn) {
@@ -5953,6 +6131,32 @@ function setupModals() {
   if (gdriveHelpBtn && gdriveHelpModal) gdriveHelpBtn.onclick = () => gdriveHelpModal.classList.remove('hidden');
   if (closeGdriveHelpBtn && gdriveHelpModal) closeGdriveHelpBtn.onclick = () => gdriveHelpModal.classList.add('hidden');
   if (confirmGdriveHelpBtn && gdriveHelpModal) confirmGdriveHelpBtn.onclick = () => gdriveHelpModal.classList.add('hidden');
+  if (gdriveHelpModal) {
+    gdriveHelpModal.addEventListener('click', (e) => {
+      if (e.target === gdriveHelpModal) gdriveHelpModal.classList.add('hidden');
+    });
+  }
+
+  // Global Escape key to close topmost open modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const modalClosers = [
+      ['perk-action-modal', closePerkActionModal],
+      ['card-date-modal', closeCardDateModal],
+      ['gdrive-help-modal', () => gdriveHelpModal?.classList.add('hidden')],
+      ['annual-breakdown-modal', closeAnnualBreakdownModal],
+      ['manage-cards-modal', closeManageCardsModal],
+      ['fnc-modal', () => fncModal?.classList.add('hidden')],
+      ['settings-modal', () => settingsModal?.classList.add('hidden')]
+    ];
+    for (const [id, closeFn] of modalClosers) {
+      const m = document.getElementById(id);
+      if (m && !m.classList.contains('hidden')) {
+        closeFn();
+        break;
+      }
+    }
+  });
 
   const toggleConfigBtn = document.getElementById('gdrive-toggle-config-btn');
   const configBox = document.getElementById('gdrive-client-id-box');

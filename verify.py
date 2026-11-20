@@ -11,76 +11,113 @@ along with 12-month time-travel lifecycle testing.
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 import os
 
-def check_js_syntax():
-    print("🔍 [1/7] Validating JavaScript syntax with macOS JavaScriptCore...")
-    
-    app_test = """
-    const localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-    const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
-    const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {} } };
-    const document = {
-      documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} } },
-      addEventListener: () => {},
-      getElementById: () => ({
-        classList: { add: () => {}, remove: () => {}, toggle: () => {} },
-        setAttribute: () => {},
-        addEventListener: () => {},
-        appendChild: () => {},
-        querySelectorAll: () => [],
-        style: {},
-        innerHTML: '',
-        innerText: '',
-        value: ''
-      }),
-      querySelectorAll: () => [],
-      createElement: () => ({
-        classList: { add: () => {}, remove: () => {}, toggle: () => {} },
-        setAttribute: () => {},
-        addEventListener: () => {},
-        appendChild: () => {},
-        querySelectorAll: () => [],
-        style: {},
-        innerHTML: '',
-        innerText: '',
-        value: ''
-      })
-    };
-    const setTimeout = (fn) => {};
-    eval($.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js);
-    'OK'
-    """
-    proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', app_test], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
-    if proc.returncode != 0:
-        print(f"❌ Syntax Error in app.js:\n{proc.stderr.strip()}")
-        return False
-    print("   ✅ app.js parsed and executed cleanly with 0 syntax errors.")
+def run_js_snippet(js_body, base_dir):
+    if shutil.which('osascript'):
+        proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', js_body], capture_output=True, text=True, cwd=base_dir)
+        return proc.returncode, proc.stdout.strip(), proc.stderr.strip(), 'osascript'
+    if shutil.which('node'):
+        node_wrapper = f"""
+        const fs = require('fs');
+        const __readFile = (p) => fs.readFileSync(p, 'utf8');
+        const __res = (() => {{
+          {js_body}
+        }})();
+        if (__res !== undefined) process.stdout.write(String(__res));
+        """
+        proc = subprocess.run(['node', '-e', node_wrapper], capture_output=True, text=True, cwd=base_dir)
+        return proc.returncode, proc.stdout.strip(), proc.stderr.strip(), 'node'
+    return 1, '', 'Neither osascript nor node is available to execute JavaScript checks', 'none'
 
-    sw_test = """
-    const self = {
-      addEventListener: () => {},
-      skipWaiting: () => {},
-      clients: { claim: () => {} }
-    };
-    const caches = { open: () => Promise.resolve(), keys: () => Promise.resolve([]) };
-    eval($.NSString.stringWithContentsOfFileEncodingError('sw.js', $.NSUTF8StringEncoding, null).js);
-    'OK'
+def check_js_syntax():
+    print("🔍 [1/7] Validating JavaScript syntax (JavaScriptCore / Node fallback)...")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    read_expr = (
+        "$.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js"
+        if shutil.which('osascript')
+        else "__readFile('app.js')"
+    )
+    sw_read_expr = (
+        "$.NSString.stringWithContentsOfFileEncodingError('sw.js', $.NSUTF8StringEncoding, null).js"
+        if shutil.which('osascript')
+        else "__readFile('sw.js')"
+    )
+
+    app_test = f"""
+    const localStorage = {{ getItem: () => null, setItem: () => {{}}, removeItem: () => {{}} }};
+    const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
+    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}}, hash: '' }} }};
+    const document = {{
+      documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }}, lang: 'zh-TW' }},
+      addEventListener: () => {{}},
+      getElementById: () => ({{
+        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }},
+        setAttribute: () => {{}},
+        addEventListener: () => {{}},
+        appendChild: () => {{}},
+        querySelectorAll: () => [],
+        style: {{}},
+        innerHTML: '',
+        innerText: '',
+        value: ''
+      }}),
+      querySelectorAll: () => [],
+      createElement: () => ({{
+        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }},
+        setAttribute: () => {{}},
+        addEventListener: () => {{}},
+        appendChild: () => {{}},
+        querySelectorAll: () => [],
+        style: {{}},
+        innerHTML: '',
+        innerText: '',
+        value: ''
+      }})
+    }};
+    const setTimeout = (fn) => {{}};
+    const clearTimeout = () => {{}};
+    eval({read_expr});
+    return 'OK';
     """
-    proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', sw_test], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
-    if proc.returncode != 0:
-        print(f"❌ Syntax Error in sw.js:\n{proc.stderr.strip()}")
+    if shutil.which('osascript'):
+        app_test = app_test.replace("return 'OK';", "'OK';")
+    rc, _, err, engine = run_js_snippet(app_test, base_dir)
+    if rc != 0:
+        print(f"❌ Syntax Error in app.js ({engine}):\n{err}")
+        return False
+    print(f"   ✅ app.js parsed and executed cleanly with 0 syntax errors ({engine}).")
+
+    sw_test = f"""
+    const self = {{
+      addEventListener: () => {{}},
+      skipWaiting: () => {{}},
+      clients: {{ claim: () => {{}} }}
+    }};
+    const caches = {{ open: () => Promise.resolve(), keys: () => Promise.resolve([]) }};
+    eval({sw_read_expr});
+    return 'OK';
+    """
+    if shutil.which('osascript'):
+        sw_test = sw_test.replace("return 'OK';", "'OK';")
+    rc, _, err, _ = run_js_snippet(sw_test, base_dir)
+    if rc != 0:
+        print(f"❌ Syntax Error in sw.js:\n{err}")
         return False
     print("   ✅ sw.js parsed cleanly.")
     return True
 
 def check_dom_ids():
-    print("🔍 [2/7] Checking DOM ID bindings between app.js and index.html...")
+    print("🔍 [2/7] Checking DOM bindings, onclick handlers, CSS classes & PWA assets...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app_path = os.path.join(base_dir, 'app.js')
     html_path = os.path.join(base_dir, 'index.html')
+    sw_path = os.path.join(base_dir, 'sw.js')
+    manifest_path = os.path.join(base_dir, 'manifest.json')
 
     with open(app_path) as f:
         app_js = f.read()
@@ -88,47 +125,73 @@ def check_dom_ids():
         html = f.read()
 
     ids_in_js = set(re.findall(r'document\.getElementById\([\'\"]([a-zA-Z0-9_-]+)[\'\"]\)', app_js))
-    
-    # Also capture string literal ID maps in i18n
-    # e.g. 'app-subtitle': 'appSubtitle'
-    i18n_map_ids = set(re.findall(r"\'([a-zA-Z0-9_-]+)\'\s*:\s*\'[a-zA-Z0-9_-]+\'", app_js))
-    # Filter to known plausible DOM element IDs
-    known_possible = {'app-subtitle', 'demo-banner-tag', 'demo-banner-text', 'banner-reset-text',
-                      'monthly-credits-title', 'monthly-progress-title', 'annual-value-title',
-                      'category-breakdown-title', 'donut-center-title', 'donut-center-sub',
-                      'loyalty-card-title', 'tab-label-credits', 'tab-label-cards', 'tab-label-loyalty',
-                      'tab-label-advisor', 'mob-label-credits', 'mob-label-cards', 'mob-label-loyalty',
-                      'mob-label-advisor', 'period-all-btn', 'period-monthly-btn', 'period-semiannual-btn',
-                      'period-annual-btn', 'fnc-section-title', 'fnc-section-desc', 'add-fnc-btn-label',
-                      'advisor-heading', 'advisor-subheading', 'cat-label-dining', 'cat-label-flights',
-                      'cat-label-hotels', 'cat-label-office', 'cat-label-grocery', 'cat-label-gas',
-                      'cat-label-foreign', 'cat-label-catchall', 'settings-modal-title', 'palette-section-label',
-                      'backup-section-label', 'backup-section-desc', 'export-json-label', 'import-json-label',
-                      'reset-factory-btn', 'fnc-modal-title', 'fnc-name-label', 'fnc-issuer-label',
-                      'fnc-points-label', 'fnc-expire-label', 'cancel-fnc-btn', 'save-fnc-btn',
-                      'manage-cards-btn-label', 'manage-cards-modal-title', 'manage-cards-modal-sub',
-                      'manage-cards-demo-btn', 'chase-524-title', 'chase-524-desc',
-                      'card-date-modal-title', 'card-date-year-label', 'card-date-month-label',
-                      'card-date-renew-label', 'card-date-hint-title', 'card-date-hint-desc',
-                      'clear-card-date-btn', 'cancel-card-date-btn', 'save-card-date-btn',
-                      'gdrive-section-title', 'gdrive-section-desc', 'gdrive-client-id-label',
-                      'gdrive-save-client-id-btn', 'gdrive-help-btn', 'gdrive-backup-label',
-                      'gdrive-restore-label', 'gdrive-auto-sync-label', 'gdrive-toggle-config-label',
-                      'gdrive-signout-btn', 'gdrive-help-title', 'confirm-gdrive-help-btn',
-                      'pwa-update-text', 'pwa-update-btn'}
-    
-    all_needed_ids = ids_in_js.union(i18n_map_ids.intersection(known_possible))
+
+    # Dynamically extract all DOM IDs mapped inside applyLanguage()'s `const map = { ... }`
+    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', app_js, re.DOTALL)
+    i18n_map_ids = set(re.findall(r"'([a-zA-Z0-9_-]+)'\s*:\s*'[a-zA-Z0-9_-]+'", map_match.group(1))) if map_match else set()
+
+    all_needed_ids = ids_in_js.union(i18n_map_ids)
     ids_in_html = set(re.findall(r'id=[\'\"]([a-zA-Z0-9_-]+)[\'\"]', html))
 
     missing = all_needed_ids - ids_in_html
     if missing:
         print(f"❌ Missing element IDs in index.html: {missing}")
         return False
-    print(f"   ✅ All {len(all_needed_ids)} referenced DOM element IDs are verified in index.html.")
+
+    # Check inline onclick="..." function calls exist in app.js
+    defined_fns = set(re.findall(r'(?:async\s+)?function\s+([a-zA-Z0-9_]+)\s*\(', app_js))
+    missing_onclick = []
+    for fname, content in [('index.html', html), ('app.js', app_js)]:
+        for m in re.finditer(r'onclick=[\"\']([^\"\']+)[\"\']', content):
+            expr = m.group(1)
+            for cm in re.finditer(r'(?<![.\w])([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', expr):
+                fn_name = cm.group(1)
+                if fn_name not in ('if', 'for', 'while', 'switch', 'catch') and fn_name not in defined_fns:
+                    missing_onclick.append((fname, fn_name))
+    if missing_onclick:
+        print(f"❌ Undefined inline onclick handlers detected: {missing_onclick}")
+        return False
+
+    # Check for non-existent Tailwind slate-*50 utility classes
+    invalid_slate = []
+    for fname, content in [('index.html', html), ('app.js', app_js)]:
+        hits = re.findall(r'\bslate-(?:650|750|850)\b', content)
+        if hits:
+            invalid_slate.append((fname, sorted(set(hits))))
+    if invalid_slate:
+        print(f"❌ Non-existent Tailwind slate-*50 classes detected: {invalid_slate}")
+        return False
+
+    # Verify sw.js ASSETS and manifest.json icon files exist on disk
+    with open(sw_path) as f:
+        sw_js = f.read()
+    assets_match = re.search(r'const ASSETS\s*=\s*\[(.*?)\];', sw_js, re.DOTALL)
+    sw_assets = re.findall(r"['\"]([^'\"]+)['\"]", assets_match.group(1)) if assets_match else []
+    missing_assets = []
+    for asset in sw_assets:
+        rel = asset[2:] if asset.startswith('./') else asset
+        if rel in ('', '/'):
+            continue
+        if not os.path.exists(os.path.join(base_dir, rel)):
+            missing_assets.append(f"sw.js:{asset}")
+
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+    for icon in manifest.get('icons', []):
+        src = icon.get('src', '')
+        rel = src[2:] if src.startswith('./') else src
+        if rel and not os.path.exists(os.path.join(base_dir, rel)):
+            missing_assets.append(f"manifest.json:{src}")
+
+    if missing_assets:
+        print(f"❌ Missing PWA asset files on disk: {missing_assets}")
+        return False
+
+    print(f"   ✅ {len(all_needed_ids)} DOM IDs, inline onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
 def check_i18n_symmetry():
-    print("🔍 [3/7] Validating bilingual dictionary symmetry (en vs zh-TW)...")
+    print("🔍 [3/7] Validating bilingual dictionary symmetry & t() key references...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     app_path = os.path.join(base_dir, 'app.js')
 
@@ -159,7 +222,16 @@ def check_i18n_symmetry():
         print(f"❌ Keys missing in en: {missing_in_en}")
         return False
 
-    print(f"   ✅ Both 'en' and 'zh-TW' dictionaries are 100% symmetric ({len(en_keys)} keys each).")
+    # Verify every t('key') call & applyLanguage map key exists in I18N
+    t_calls = set(re.findall(r"\bt\(\s*'([a-zA-Z0-9_]+)'\s*\)", app_js))
+    map_match = re.search(r'function applyLanguage\([^)]*\)\s*\{.*?const map\s*=\s*\{(.*?)\};', app_js, re.DOTALL)
+    map_vals = set(re.findall(r":\s*'([a-zA-Z0-9_]+)'", map_match.group(1))) if map_match else set()
+    undefined_keys = (t_calls | map_vals) - en_keys
+    if undefined_keys:
+        print(f"❌ Referenced i18n keys missing from I18N dictionary: {undefined_keys}")
+        return False
+
+    print(f"   ✅ Both 'en' and 'zh-TW' dictionaries are 100% symmetric ({len(en_keys)} keys, {len(t_calls | map_vals)} refs verified).")
     return True
 
 def check_card_portfolio():
@@ -247,6 +319,15 @@ def check_privacy_guardrails():
 
 def run_jsc_in_app_env(eval_body):
     base_dir = os.path.dirname(os.path.abspath(__file__))
+    read_expr = (
+        "$.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js"
+        if shutil.which('osascript')
+        else "__readFile('app.js')"
+    )
+    return_stmt = "eval(appCode + \"\\n; \" + " + json.dumps(eval_body) + ");"
+    if not shutil.which('osascript'):
+        return_stmt = "return " + return_stmt
+
     js_code = f"""
     const storage = {{}};
     const localStorage = {{
@@ -255,44 +336,82 @@ def run_jsc_in_app_env(eval_body):
       removeItem: (k) => {{ delete storage[k]; }},
       clear: () => {{ Object.keys(storage).forEach(k => delete storage[k]); }}
     }};
-    const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
-    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}} }} }};
-    const document = {{
-      documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }} }},
-      addEventListener: () => {{}},
-      getElementById: () => ({{
-        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }},
-        setAttribute: () => {{}},
-        addEventListener: () => {{}},
-        appendChild: () => {{}},
-        querySelectorAll: () => [],
-        style: {{}},
-        innerHTML: '',
-        innerText: '',
-        value: ''
-      }}),
-      querySelectorAll: () => [],
-      createElement: () => ({{
-        classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }},
-        setAttribute: () => {{}},
-        addEventListener: () => {{}},
-        appendChild: () => {{}},
-        querySelectorAll: () => [],
-        style: {{}},
-        innerHTML: '',
-        innerText: '',
-        value: ''
-      }})
+    const sessionStorage = {{
+      _s: {{}},
+      getItem: (k) => sessionStorage._s[k] !== undefined ? sessionStorage._s[k] : null,
+      setItem: (k, v) => {{ sessionStorage._s[k] = String(v); }}
     }};
+    const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
+    const window = {{
+      addEventListener: () => {{}},
+      innerWidth: 1024,
+      matchMedia: () => ({{ matches: false }}),
+      location: {{ reload: () => {{}}, hash: '' }},
+      scrollTo: () => {{}}
+    }};
+    const domNodes = {{}};
+    const docListeners = {{}};
+    function makeMockNode(id) {{
+      const classes = new Set();
+      return {{
+        id: id || '',
+        children: [],
+        className: '',
+        disabled: false,
+        checked: false,
+        classList: {{
+          add: (...c) => c.forEach(x => classes.add(x)),
+          remove: (...c) => c.forEach(x => classes.delete(x)),
+          toggle: (c) => classes.has(c) ? classes.delete(c) : classes.add(c),
+          contains: (c) => classes.has(c)
+        }},
+        setAttribute: () => {{}},
+        addEventListener: () => {{}},
+        appendChild: function(child) {{
+          this.children.push(child);
+          if (child && child.innerHTML) this.innerHTML += child.innerHTML;
+        }},
+        remove: () => {{}},
+        scrollIntoView: () => {{}},
+        focus: () => {{}},
+        click: () => {{}},
+        reset: () => {{}},
+        querySelectorAll: () => [],
+        style: {{}},
+        innerHTML: '',
+        innerText: '',
+        title: '',
+        placeholder: '',
+        value: ''
+      }};
+    }}
+    const document = {{
+      documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }}, lang: 'zh-TW' }},
+      head: {{ appendChild: () => {{}} }},
+      body: {{ appendChild: () => {{}} }},
+      addEventListener: (evt, fn) => {{
+        if (!docListeners[evt]) docListeners[evt] = [];
+        docListeners[evt].push(fn);
+      }},
+      getElementById: (id) => {{
+        if (!domNodes[id]) domNodes[id] = makeMockNode(id);
+        return domNodes[id];
+      }},
+      querySelectorAll: () => [],
+      createElement: () => makeMockNode('')
+    }};
+    const alert = () => {{}};
+    const confirm = () => true;
     const setTimeout = (fn) => {{}};
-    const appCode = $.NSString.stringWithContentsOfFileEncodingError('app.js', $.NSUTF8StringEncoding, null).js;
-    eval(appCode + "\\n; " + {json.dumps(eval_body)});
+    const clearTimeout = () => {{}};
+    const appCode = {read_expr};
+    {return_stmt}
     """
-    proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', js_code], capture_output=True, text=True, cwd=base_dir)
-    return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+    rc, out, err, _ = run_js_snippet(js_code, base_dir)
+    return rc, out, err
 
 def check_data_integrity():
-    print("🔍 [6/7] Validating data schema, foreign keys & perk groups...")
+    print("🔍 [6/7] Validating data schema, foreign keys, perk groups & advisor rules...")
     eval_code = """
     (function() {
       const errors = [];
@@ -313,6 +432,9 @@ def check_data_integrity():
             if (!p.title || !p.title.en || !p.title["zh-TW"]) errors.push("Card " + c.id + " perk #" + idx + " missing bilingual title");
             if (p.group && !validPerkGroups.has(p.group)) {
               errors.push("Card " + c.id + " perk has unknown group: " + p.group);
+            }
+            if (p.creditId && !PRESET_CREDITS.some(cr => cr.id === p.creditId && cr.cardId === c.id)) {
+              errors.push("Card " + c.id + " perk creditId '" + p.creditId + "' invalid or mismatched");
             }
           });
         }
@@ -353,17 +475,40 @@ def check_data_integrity():
         if (!g.tip || !g.tip.en || !g.tip["zh-TW"]) errors.push("Perk group " + gid + " missing bilingual tip");
       });
 
+      // 4. Advisor Rules schema & foreign keys
+      Object.keys(ADVISOR_RULES).forEach(catKey => {
+        const rule = ADVISOR_RULES[catKey];
+        if (!rule.title || !rule.title.en || !rule.title["zh-TW"]) {
+          errors.push("Advisor rule " + catKey + " missing bilingual title");
+        }
+        ['domestic', 'overseas'].forEach(mode => {
+          const mData = rule[mode];
+          if (!mData) return;
+          (mData.candidateCards || []).forEach(cid => {
+            if (!cardIds.has(cid)) errors.push("Advisor " + catKey + "." + mode + " references unknown card: " + cid);
+            const cObj = mData.cards && mData.cards[cid];
+            if (!cObj || !cObj.mult || !cObj.badge || !cObj.badge.en || !cObj.badge["zh-TW"] || !cObj.note || !cObj.note.en || !cObj.note["zh-TW"]) {
+              errors.push("Advisor " + catKey + "." + mode + ".cards[" + cid + "] incomplete bilingual schema");
+            }
+          });
+          (mData.ftfTraps || []).forEach(trap => {
+            if (!cardIds.has(trap.id)) errors.push("Advisor " + catKey + "." + mode + " ftfTraps unknown card: " + trap.id);
+          });
+        });
+      });
+
       return JSON.stringify({
         errors: errors,
         cardsCount: PRESET_CARDS.length,
         creditsCount: PRESET_CREDITS.length,
-        groupsCount: Object.keys(DUPLICATE_PERK_GROUPS).length
+        groupsCount: Object.keys(DUPLICATE_PERK_GROUPS).length,
+        advisorCatsCount: Object.keys(ADVISOR_RULES).length
       });
     })()
     """
     rc, out, err = run_jsc_in_app_env(eval_code)
     if rc != 0:
-        print(f"❌ Execution Error in check_data_integrity:\\n{err}")
+        print(f"❌ Execution Error in check_data_integrity:\n{err}")
         return False
 
     try:
@@ -377,7 +522,7 @@ def check_data_integrity():
             print(f"❌ {e}")
         return False
 
-    print(f"   ✅ All {res['creditsCount']} credits foreign keys verified, {res['cardsCount']} cards & {res['groupsCount']} perk groups schema valid.")
+    print(f"   ✅ {res['creditsCount']} credits, {res['cardsCount']} cards, {res['groupsCount']} perk groups & {res['advisorCatsCount']} advisor categories verified.")
     return True
 
 def check_business_logic_simulation():
@@ -688,6 +833,123 @@ def check_business_logic_simulation():
         renderCards();
       } catch (e) {
         errors.push("renderCards crashed during view mode test: " + e.message);
+      }
+
+      // 10. Security & Consistency Checks (XSS escaping, strict state validation, Donut muted filtering, local date parsing)
+      const xssPayload = '<img src=x onerror="alert(1)">&\\'';
+      const escaped = escapeHtml(xssPayload);
+      if (escaped.includes('<') || escaped.includes('>') || escaped.includes('"')) {
+        errors.push("escapeHtml failed to sanitize HTML characters: " + escaped);
+      }
+
+      let strictRejected = false;
+      try {
+        normalizeAppState({ foo: 'bar' }, true);
+      } catch (e) {
+        strictRejected = true;
+      }
+      if (!strictRejected) {
+        errors.push("normalizeAppState(..., true) failed to reject unrelated JSON object");
+      }
+
+      const localParsed = parseLocalYmd('2026-11-19');
+      if (!localParsed || localParsed.getFullYear() !== 2026 || localParsed.getMonth() !== 10 || localParsed.getDate() !== 19) {
+        errors.push("parseLocalYmd failed to parse local YYYY-MM-DD");
+      }
+
+      // Verify computeAnnualUtilization respects pre-opening periods and Donut DOM output excludes muted credits
+      appState = normalizeAppState({ ownedCards: { 'csp': true }, mutedCredits: {} }, false);
+      renderDonutChart();
+      const donutValBefore = document.getElementById('donut-center-val').innerText;
+      const utilBeforeMute = computeAnnualUtilization(PRESET_CREDITS.filter(c => isCardOwned(c.cardId) && !isCreditMuted(c.id)), 2026, 11);
+      muteCredit('csp-doordash');
+      const donutValAfter = document.getElementById('donut-center-val').innerText;
+      const utilAfterMute = computeAnnualUtilization(PRESET_CREDITS.filter(c => isCardOwned(c.cardId) && !isCreditMuted(c.id)), 2026, 11);
+      if (utilAfterMute.totalAnnualPerks >= utilBeforeMute.totalAnnualPerks) {
+        errors.push("computeAnnualUtilization did not decrease after muting csp-doordash");
+      }
+      if (donutValBefore !== '$220' || donutValAfter !== '$100') {
+        errors.push("renderDonutChart() DOM value mismatch on mute: before=" + donutValBefore + ", after=" + donutValAfter);
+      }
+      unmuteCredit('csp-doordash');
+
+      // 11. Mid-year openedMonth expiration check across quarterly & semiannual credits
+      appState = normalizeAppState({
+        ownedCards: { 'ihg-premier': true },
+        cardMeta: { 'ihg-premier': { openedYear: 2026, openedMonth: 8, renewMonth: 8 } }
+      }, false);
+      const augUtil = computeAnnualUtilization(PRESET_CREDITS.filter(c => isCardOwned(c.cardId)), 2026, 11);
+      if (augUtil.totalExpiredAnnualValue !== 25) {
+        errors.push("Expected $25 expired (Q3 only, not Q1/Q2/H1) for IHG Premier opened Aug 2026 viewed in Nov 2026, got " + augUtil.totalExpiredAnnualValue);
+      }
+      appState.cardMeta['ihg-premier'].openedMonth = 10;
+      const octUtil = computeAnnualUtilization(PRESET_CREDITS.filter(c => isCardOwned(c.cardId)), 2026, 11);
+      if (octUtil.totalExpiredAnnualValue !== 0) {
+        errors.push("Expected $0 expired for IHG Premier opened Oct 2026 viewed in Nov 2026, got " + octUtil.totalExpiredAnnualValue);
+      }
+
+      // 12. Rendered XSS Escaping in Cards & FNCs + Auto-FNC grantYear & Chase 5/24 DOM Badge
+      appState = normalizeAppState({
+        ownedCards: { 'csp': true, 'bonvoy-brilliant': true },
+        cardMeta: {
+          'csp': { openedYear: 2026, openedMonth: 1, retentionStatus: 'keep', retentionNote: '<script>xss()</script>' },
+          'bonvoy-brilliant': { renewMonth: (today.getMonth() + 2 <= 12) ? today.getMonth() + 2 : 12 }
+        },
+        fncs: [{
+          id: 'fnc-xss-test',
+          name: '<img src=x onerror=alert(1)>',
+          issuer: 'Marriott',
+          points: '<b>85k</b>',
+          expireDate: '2027-06-15',
+          used: false
+        }]
+      }, false);
+      renderCards();
+      renderFncs();
+      renderChase524();
+      const cardsHtml = document.getElementById('cards-list-container').innerHTML;
+      const fncsHtml = document.getElementById('fnc-cards-container').innerHTML;
+      if (cardsHtml.includes('<script>xss()')) {
+        errors.push("renderCards() failed to escape retentionNote XSS payload");
+      }
+      if (fncsHtml.includes('<img src=x') || fncsHtml.includes('<b>85k</b>')) {
+        errors.push("renderFncs() failed to escape FNC XSS payload");
+      }
+      if (!document.getElementById('chase-524-badge').innerText.startsWith('1 / 24')) {
+        errors.push("renderChase524() badge mismatch: " + document.getElementById('chase-524-badge').innerText);
+      }
+      if (today.getMonth() + 1 < 12) {
+        const expectedPreRenewYear = today.getFullYear();
+        if (!fncsHtml.includes(expectedPreRenewYear + '-')) {
+          errors.push("Auto-derived FNC grantYear did not shift to prior cycle before renewMonth");
+        }
+      }
+
+      // 13. Google Drive button unlock on missing GIS / token clear & full init() smoke test
+      const backupBtnNode = document.getElementById('gdrive-backup-btn');
+      const restoreBtnNode = document.getElementById('gdrive-restore-btn');
+      backupBtnNode.disabled = false;
+      restoreBtnNode.disabled = false;
+      gdriveToken = 'stale-token';
+      gdriveTokenExpiresAt = 0;
+      backupToGoogleDrive(false);
+      restoreFromGoogleDrive();
+      if (backupBtnNode.disabled || restoreBtnNode.disabled) {
+        errors.push("Google Drive buttons remained disabled after GIS-unavailable error");
+      }
+      clearStaleDriveToken();
+      if (gdriveToken !== null) {
+        errors.push("clearStaleDriveToken() failed to clear gdriveToken");
+      }
+
+      try {
+        init();
+        applyLanguage('en');
+        if (document.documentElement.lang !== 'en') errors.push("applyLanguage('en') did not set html lang");
+        applyLanguage('zh-TW');
+        if (document.documentElement.lang !== 'zh-TW') errors.push("applyLanguage('zh-TW') did not set html lang");
+      } catch (e) {
+        errors.push("init() / applyLanguage() crashed: " + e.message);
       }
 
       return JSON.stringify({

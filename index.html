@@ -182,7 +182,7 @@
   </header>
 
   <!-- Overview Info Banner (Slim & Dismissible) -->
-  <div id="demo-mode-banner" class="bg-slate-900/95 dark:bg-slate-850/95 text-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-700/60 shadow-xs transition-all duration-200">
+  <div id="demo-mode-banner" class="bg-slate-900/95 dark:bg-slate-900 text-slate-100 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-700/60 shadow-xs transition-all duration-200">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 text-[11px] sm:text-xs">
       <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
         <span id="demo-banner-tag" class="px-1.5 py-0.5 rounded-full bg-white/20 font-bold text-[9px] sm:text-[10px] tracking-wide uppercase shrink-0">未設定持卡</span>
@@ -374,11 +374,11 @@
 
       <!-- Collapsible Muted Perks Section -->
       <div id="muted-credits-section" class="hidden mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
-        <button id="toggle-muted-section-btn" type="button" class="w-full flex items-center justify-between py-2.5 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer">
+        <button id="toggle-muted-section-btn" type="button" class="w-full flex items-center justify-between py-2.5 px-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800 transition text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer">
           <span class="flex items-center gap-2">
             <span>🔕</span>
             <span id="muted-section-title">已停用福利 (Muted Perks)</span>
-            <span id="muted-section-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">0</span>
+            <span id="muted-section-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">0</span>
           </span>
           <span id="muted-section-chevron" class="text-slate-400 transition-transform duration-200 text-[11px]">▼</span>
         </button>
@@ -718,7 +718,7 @@
   </nav>
 
   <!-- Modal: Add Free Night Certificate (FNC) -->
-  <div id="fnc-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+  <div id="fnc-modal" role="dialog" aria-modal="true" aria-labelledby="fnc-modal-title" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <h3 id="fnc-modal-title" class="text-base font-bold text-slate-900 dark:text-white">新增免費住宿券 (FNC)</h3>
@@ -737,10 +737,10 @@
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" id="fnc-issuer-label">常客計畫</label>
             <select id="fnc-issuer-input" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500">
-              <option value="Marriott">萬豪 Marriott Bonvoy</option>
-              <option value="IHG">洲際 IHG One Rewards</option>
-              <option value="Hyatt">凱悅 World of Hyatt</option>
-              <option value="Hilton">希爾頓 Hilton Honors</option>
+              <option id="fnc-issuer-opt-marriott" value="Marriott">萬豪 Marriott Bonvoy</option>
+              <option id="fnc-issuer-opt-ihg" value="IHG">洲際 IHG One Rewards</option>
+              <option id="fnc-issuer-opt-hyatt" value="Hyatt">凱悅 World of Hyatt</option>
+              <option id="fnc-issuer-opt-hilton" value="Hilton">希爾頓 Hilton Honors</option>
             </select>
           </div>
           <div>
@@ -763,7 +763,7 @@
   </div>
 
   <!-- Modal: Settings & Backup -->
-  <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+  <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <h3 id="settings-modal-title" class="text-base font-bold text-slate-900 dark:text-white">設定與資料管理</h3>
@@ -870,15 +870,15 @@
 
       <!-- Reset Month Status & Banner Control -->
       <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">折抵進度與提醒設定</label>
+        <label id="settings-progress-section-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300">折抵進度與提醒設定</label>
         <div class="grid grid-cols-2 gap-2">
           <button id="settings-reset-month-btn" type="button" class="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition border border-indigo-200 dark:border-indigo-800/40 flex items-center justify-center gap-1">
             <span>🔄</span>
-            <span>重置本月折抵</span>
+            <span id="settings-reset-month-label">重置本月折抵</span>
           </button>
           <button id="restore-banner-btn" type="button" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700/60 flex items-center justify-center gap-1">
             <span>🔔</span>
-            <span>顯示提醒橫條</span>
+            <span id="restore-banner-label">顯示提醒橫條</span>
           </button>
         </div>
       </div>
@@ -893,7 +893,7 @@
   </div>
 
   <!-- Modal: Annual Value Breakdown -->
-  <div id="annual-breakdown-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
+  <div id="annual-breakdown-modal" role="dialog" aria-modal="true" aria-labelledby="annual-modal-title" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col">
       <!-- Modal Header -->
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -920,7 +920,7 @@
               已持有卡片全年權益折抵總和
             </div>
             <div class="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 flex items-baseline">
-              <span>+$</span><span id="annual-modal-total-amount">0</span><span class="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">/年</span>
+              <span>+$</span><span id="annual-modal-total-amount">0</span><span id="annual-modal-unit-label" class="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">/年</span>
             </div>
           </div>
           <div class="text-right">
@@ -946,7 +946,7 @@
   </div>
 
   <!-- Modal: Manage Owned Cards -->
-  <div id="manage-cards-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
+  <div id="manage-cards-modal" role="dialog" aria-modal="true" aria-labelledby="manage-cards-modal-title" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div>
@@ -993,7 +993,7 @@
   </div>
 
   <!-- Modal: Google Drive Setup Help -->
-  <div id="gdrive-help-modal" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden" style="z-index: 90;">
+  <div id="gdrive-help-modal" role="dialog" aria-modal="true" aria-labelledby="gdrive-help-title" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden" style="z-index: 90;">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <h3 id="gdrive-help-title" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1042,7 +1042,7 @@
   </div>
 
   <!-- Modal: Perk Actions (Skip This Month / Permanent Mute) -->
-  <div id="perk-action-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
+  <div id="perk-action-modal" role="dialog" aria-modal="true" aria-labelledby="perk-action-modal-title" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
     <div class="relative z-[101] bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4" style="z-index: 101;">
       <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="min-w-0 pr-2">
@@ -1095,7 +1095,7 @@
   </div>
 
   <!-- Modal: Card Dates (Opened Year/Month, Renewal Month) -->
-  <div id="card-date-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
+  <div id="card-date-modal" role="dialog" aria-modal="true" aria-labelledby="card-date-modal-title" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 hidden" style="z-index: 100;">
     <div class="relative z-[101] bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" style="z-index: 101;">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="min-w-0 pr-2">
