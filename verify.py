@@ -1081,7 +1081,7 @@ def check_drive_async_with_node():
       if (url.includes('alt=media')) return { ok: true, status: 200, json: async () => ({ ownedCards: { csp: true }, fncs: [] }) };
       return { ok: true, status: 200, json: async () => ({}) };
     };
-    eval(fs.readFileSync('app.js', 'utf8'));
+    const asyncTestTail = `
     (async () => {
       const errors = [];
       gdriveToken = 'valid-token';
@@ -1112,6 +1112,8 @@ def check_drive_async_with_node():
       if (errors.length) { console.error(errors.join('\\n')); process.exit(1); }
       console.log('   ✅ Async Google Drive fetch suite (POST, PATCH, Restore, 401 token clear) passed.');
     })();
+    `;
+    eval(fs.readFileSync('app.js', 'utf8') + '\\n;' + asyncTestTail);
     """
     proc = subprocess.run(['node', '-e', node_test], capture_output=True, text=True, cwd=base_dir)
     if proc.returncode != 0:
