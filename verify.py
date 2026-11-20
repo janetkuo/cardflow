@@ -70,7 +70,7 @@ def check_esm_graph(base_dir):
 
 def run_js_snippet(js_body, base_dir):
     if shutil.which('osascript'):
-        proc = subprocess.run(['osascript', '-l', 'JavaScript', '-e', js_body], capture_output=True, text=True, cwd=base_dir)
+        proc = subprocess.run(['osascript', '-l', 'JavaScript', '-'], input=js_body, capture_output=True, text=True, cwd=base_dir)
         return proc.returncode, proc.stdout.strip(), proc.stderr.strip(), 'osascript'
     if shutil.which('node'):
         node_wrapper = f"""
@@ -81,7 +81,7 @@ def run_js_snippet(js_body, base_dir):
         }})();
         if (__res !== undefined) process.stdout.write(String(__res));
         """
-        proc = subprocess.run(['node', '-e', node_wrapper], capture_output=True, text=True, cwd=base_dir)
+        proc = subprocess.run(['node', '-'], input=node_wrapper, capture_output=True, text=True, cwd=base_dir)
         return proc.returncode, proc.stdout.strip(), proc.stderr.strip(), 'node'
     return 1, '', 'Neither osascript nor node is available to execute JavaScript checks', 'none'
 
@@ -1223,7 +1223,7 @@ def check_drive_async_with_node():
     }};
     eval({json.dumps(bundled_js)} + "\\n;" + {json.dumps(async_test_tail)});
     """
-    proc = subprocess.run(['node', '-e', node_test], capture_output=True, text=True, cwd=base_dir)
+    proc = subprocess.run(['node', '-'], input=node_test, capture_output=True, text=True, cwd=base_dir)
     if proc.returncode != 0:
         print(f"❌ Async Drive test failed:\n{proc.stderr.strip() or proc.stdout.strip()}")
         return False
