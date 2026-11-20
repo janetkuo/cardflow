@@ -5580,9 +5580,17 @@ const GDRIVE_CONNECTED_KEY = 'cardflow_gdrive_connected_v1';
 const GDRIVE_AUTO_SYNC_KEY = 'cardflow_gdrive_auto_sync_v1';
 const GDRIVE_LAST_SYNC_KEY = 'cardflow_gdrive_last_sync_v1';
 
-let gdriveToken = localStorage.getItem(GDRIVE_TOKEN_KEY) || null;
-let gdriveTokenExpiresAt = parseInt(localStorage.getItem(GDRIVE_TOKEN_EXPIRES_KEY) || '0', 10);
+let gdriveToken = null;
+let gdriveTokenExpiresAt = 0;
 let gdriveTokenClient = null;
+
+// Clean up any legacy OAuth tokens previously persisted in localStorage
+try {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(GDRIVE_TOKEN_KEY);
+    localStorage.removeItem(GDRIVE_TOKEN_EXPIRES_KEY);
+  }
+} catch (_) {}
 
 function getGoogleClientId() {
   const custom = (localStorage.getItem(GDRIVE_CLIENT_ID_KEY) || '').trim();
@@ -5697,8 +5705,6 @@ function requestGoogleDriveToken(onSuccess, onError) {
           gdriveToken = resp.access_token;
           const expiresInSec = parseInt(resp.expires_in, 10) || 3599;
           gdriveTokenExpiresAt = Date.now() + expiresInSec * 1000;
-          localStorage.setItem(GDRIVE_TOKEN_KEY, gdriveToken);
-          localStorage.setItem(GDRIVE_TOKEN_EXPIRES_KEY, String(gdriveTokenExpiresAt));
           localStorage.setItem(GDRIVE_CONNECTED_KEY, 'true');
           fetchGoogleDriveUserInfo(gdriveToken);
           updateDriveUI();
@@ -5753,7 +5759,7 @@ async function backupToGoogleDrive(isSilent = false) {
       isDriveBackupInFlight = true;
       try {
         const searchRes = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
+          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&orderBy=modifiedTime%20desc&fields=files(id,name,modifiedTime)`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         await assertDriveResponseOk(searchRes);
@@ -5834,7 +5840,7 @@ async function restoreFromGoogleDrive() {
     async (token) => {
       try {
         const searchRes = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name,modifiedTime)`,
+          `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&orderBy=modifiedTime%20desc&fields=files(id,name,modifiedTime)`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         await assertDriveResponseOk(searchRes);

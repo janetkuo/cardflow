@@ -942,6 +942,65 @@ def check_business_logic_simulation():
         errors.push("clearStaleDriveToken() failed to clear gdriveToken");
       }
 
+      // 14. OAuth Token memory-only invariant (must NOT persist access token to localStorage)
+      localStorage.setItem(GDRIVE_TOKEN_KEY, 'legacy-token');
+      window.google = {
+        accounts: {
+          oauth2: {
+            initTokenClient: (cfg) => ({
+              requestAccessToken: () => cfg.callback({ access_token: 'mem-only-token', expires_in: 3600 })
+            })
+          }
+        }
+      };
+      let receivedToken = null;
+      requestGoogleDriveToken((tok) => { receivedToken = tok; });
+      if (receivedToken !== 'mem-only-token' || gdriveToken !== 'mem-only-token') {
+        errors.push("requestGoogleDriveToken did not store token in memory");
+      }
+      if (localStorage.getItem(GDRIVE_TOKEN_KEY) !== 'legacy-token' && localStorage.getItem(GDRIVE_TOKEN_KEY) === 'mem-only-token') {
+        errors.push("requestGoogleDriveToken persisted access token to localStorage");
+      }
+      if (localStorage.getItem(GDRIVE_TOKEN_EXPIRES_KEY) !== null) {
+        errors.push("requestGoogleDriveToken persisted token expiry to localStorage");
+      }
+      clearStaleDriveToken();
+      if (localStorage.getItem(GDRIVE_TOKEN_KEY) !== null) {
+        errors.push("clearStaleDriveToken failed to remove legacy token from localStorage");
+      }
+      delete window.google;
+
+      // 15. Cross-year isolation & resetCurrentMonth() key scoping
+      selectedYear = 2026;
+      selectedMonth = 11;
+      const activeMKey = getMonthKey(); // '2026-11'
+      appState = normalizeAppState({
+        ownedCards: { 'csp': true },
+        creditsClaimed: {
+          ['csp-doordash_' + activeMKey]: true,
+          'csp-doordash_2026-10': true,
+          'csp-hotel_2026': true,
+          'csp-hotel_2027': true
+        },
+        skippedCredits: {
+          ['csp-doordash_' + activeMKey]: true,
+          'csp-doordash_2026-10': true
+        }
+      }, false);
+      resetCurrentMonth();
+      if (appState.creditsClaimed['csp-doordash_' + activeMKey] || appState.skippedCredits['csp-doordash_' + activeMKey]) {
+        errors.push("resetCurrentMonth() failed to clear active month claimed/skipped state");
+      }
+      if (!appState.creditsClaimed['csp-doordash_2026-10'] || !appState.skippedCredits['csp-doordash_2026-10'] || !appState.creditsClaimed['csp-hotel_2026'] || !appState.creditsClaimed['csp-hotel_2027']) {
+        errors.push("resetCurrentMonth() polluted other months or annual credits");
+      }
+      const cspCredits = PRESET_CREDITS.filter(c => c.cardId === 'csp');
+      const util2026 = computeAnnualUtilization(cspCredits, 2026, 11);
+      const util2027 = computeAnnualUtilization(cspCredits, 2027, 1);
+      if (util2026.totalClaimedAnnualValue !== 110 || util2027.totalClaimedAnnualValue !== 100) {
+        errors.push("Cross-year utilization isolation failed: 2026=" + util2026.totalClaimedAnnualValue + ", 2027=" + util2027.totalClaimedAnnualValue);
+      }
+
       try {
         init();
         applyLanguage('en');
@@ -978,6 +1037,88 @@ def check_business_logic_simulation():
         return False
 
     print(f"   ✅ Value conservation (${res['expectedSum']:.2f}/yr), Mute/Skip isolation, 12-mo simulation & Backup/Restore round-trip (7/7 dims) passed.")
+
+    if shutil.which('node'):
+        if not check_drive_async_with_node():
+            return False
+    return True
+
+def check_drive_async_with_node():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    node_test = """
+    const fs = require('fs');
+    const storage = {};
+    const localStorage = {
+      getItem: (k) => storage[k] !== undefined ? storage[k] : null,
+      setItem: (k, v) => { storage[k] = String(v); },
+      removeItem: (k) => { delete storage[k]; },
+      clear: () => { Object.keys(storage).forEach(k => delete storage[k]); }
+    };
+    const sessionStorage = { _s: {}, getItem: (k) => sessionStorage._s[k] ?? null, setItem: (k, v) => { sessionStorage._s[k] = String(v); } };
+    const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
+    const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} };
+    const makeNode = (id = '') => ({ id, children: [], className: '', disabled: false, checked: false, classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true }, setAttribute: () => {}, addEventListener: () => {}, appendChild: () => {}, remove: () => {}, scrollIntoView: () => {}, focus: () => {}, click: () => {}, reset: () => {}, querySelectorAll: () => [], style: {}, innerHTML: '', innerText: '', title: '', placeholder: '', value: '' });
+    const domNodes = {};
+    const document = {
+      documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} }, lang: 'zh-TW' },
+      head: { appendChild: () => {} }, body: { appendChild: () => {} },
+      addEventListener: () => {},
+      getElementById: (id) => (domNodes[id] ||= makeNode(id)),
+      querySelectorAll: () => [],
+      createElement: () => makeNode('')
+    };
+    const alert = () => {};
+    const confirm = () => true;
+    const fetchCalls = [];
+    let nextMode = 'post';
+    const fetch = async (url, opts = {}) => {
+      fetchCalls.push({ url, method: opts.method || 'GET' });
+      if (url.includes('/drive/v3/about')) return { ok: true, status: 200, json: async () => ({ user: { emailAddress: 'test@example.com' } }) };
+      if (url.includes('/drive/v3/files?') && nextMode === '401') return { ok: false, status: 401, json: async () => ({ error: { message: 'Unauthorized' } }) };
+      if (url.includes('/drive/v3/files?') && nextMode === 'post') return { ok: true, status: 200, json: async () => ({ files: [] }) };
+      if (url.includes('/drive/v3/files?') && (nextMode === 'patch' || nextMode === 'restore')) return { ok: true, status: 200, json: async () => ({ files: [{ id: 'file-1', name: 'cardflow_backup.json', modifiedTime: '2026-11-19T00:00:00Z' }] }) };
+      if (url.includes('uploadType=multipart') || url.includes('uploadType=media')) return { ok: true, status: 200, json: async () => ({ id: 'file-1' }) };
+      if (url.includes('alt=media')) return { ok: true, status: 200, json: async () => ({ ownedCards: { csp: true }, fncs: [] }) };
+      return { ok: true, status: 200, json: async () => ({}) };
+    };
+    eval(fs.readFileSync('app.js', 'utf8'));
+    (async () => {
+      const errors = [];
+      gdriveToken = 'valid-token';
+      gdriveTokenExpiresAt = Date.now() + 3600000;
+      nextMode = 'post';
+      await backupToGoogleDrive(false);
+      await new Promise(r => setTimeout(r, 20));
+      if (!fetchCalls.some(c => c.url.includes('orderBy=modifiedTime%20desc'))) errors.push('Drive search missing orderBy=modifiedTime desc');
+      if (!fetchCalls.some(c => c.method === 'POST' && c.url.includes('uploadType=multipart'))) errors.push('Expected POST multipart upload when no existing file');
+
+      nextMode = 'patch';
+      await backupToGoogleDrive(false);
+      await new Promise(r => setTimeout(r, 20));
+      if (!fetchCalls.some(c => c.method === 'PATCH' && c.url.includes('uploadType=media'))) errors.push('Expected PATCH media upload when file exists');
+
+      nextMode = 'restore';
+      appState = normalizeAppState(null, false);
+      await restoreFromGoogleDrive();
+      await new Promise(r => setTimeout(r, 20));
+      if (!appState.ownedCards.csp) errors.push('restoreFromGoogleDrive did not restore ownedCards.csp');
+
+      nextMode = '401';
+      await backupToGoogleDrive(false);
+      await new Promise(r => setTimeout(r, 20));
+      if (gdriveToken !== null) errors.push('401 response did not clear gdriveToken');
+      if (document.getElementById('gdrive-backup-btn').disabled) errors.push('Backup button stayed disabled after 401');
+
+      if (errors.length) { console.error(errors.join('\\n')); process.exit(1); }
+      console.log('   ✅ Async Google Drive fetch suite (POST, PATCH, Restore, 401 token clear) passed.');
+    })();
+    """
+    proc = subprocess.run(['node', '-e', node_test], capture_output=True, text=True, cwd=base_dir)
+    if proc.returncode != 0:
+        print(f"❌ Async Drive test failed:\n{proc.stderr.strip() or proc.stdout.strip()}")
+        return False
+    if proc.stdout.strip():
+        print(proc.stdout.strip())
     return True
 
 def main():
