@@ -1078,43 +1078,7 @@ def check_business_logic_simulation():
 
 def check_drive_async_with_node():
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    node_test = """
-    const fs = require('fs');
-    const storage = {};
-    const localStorage = {
-      getItem: (k) => storage[k] !== undefined ? storage[k] : null,
-      setItem: (k, v) => { storage[k] = String(v); },
-      removeItem: (k) => { delete storage[k]; },
-      clear: () => { Object.keys(storage).forEach(k => delete storage[k]); }
-    };
-    const sessionStorage = { _s: {}, getItem: (k) => sessionStorage._s[k] ?? null, setItem: (k, v) => { sessionStorage._s[k] = String(v); } };
-    const navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
-    const window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} };
-    const makeNode = (id = '') => ({ id, children: [], className: '', disabled: false, checked: false, classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true }, setAttribute: () => {}, addEventListener: () => {}, appendChild: () => {}, remove: () => {}, scrollIntoView: () => {}, focus: () => {}, click: () => {}, reset: () => {}, querySelectorAll: () => [], style: {}, innerHTML: '', innerText: '', title: '', placeholder: '', value: '' });
-    const domNodes = {};
-    const document = {
-      documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} }, lang: 'zh-TW' },
-      head: { appendChild: () => {} }, body: { appendChild: () => {} },
-      addEventListener: () => {},
-      getElementById: (id) => (domNodes[id] ||= makeNode(id)),
-      querySelectorAll: () => [],
-      createElement: () => makeNode('')
-    };
-    const alert = () => {};
-    const confirm = () => true;
-    const fetchCalls = [];
-    let nextMode = 'post';
-    const fetch = async (url, opts = {}) => {
-      fetchCalls.push({ url, method: opts.method || 'GET' });
-      if (url.includes('/drive/v3/about')) return { ok: true, status: 200, json: async () => ({ user: { emailAddress: 'test@example.com' } }) };
-      if (url.includes('/drive/v3/files?') && nextMode === '401') return { ok: false, status: 401, json: async () => ({ error: { message: 'Unauthorized' } }) };
-      if (url.includes('/drive/v3/files?') && nextMode === 'post') return { ok: true, status: 200, json: async () => ({ files: [] }) };
-      if (url.includes('/drive/v3/files?') && (nextMode === 'patch' || nextMode === 'restore')) return { ok: true, status: 200, json: async () => ({ files: [{ id: 'file-1', name: 'cardflow_backup.json', modifiedTime: '2026-11-19T00:00:00Z' }] }) };
-      if (url.includes('uploadType=multipart') || url.includes('uploadType=media')) return { ok: true, status: 200, json: async () => ({ id: 'file-1' }) };
-      if (url.includes('alt=media')) return { ok: true, status: 200, json: async () => ({ ownedCards: { csp: true }, fncs: [] }) };
-      return { ok: true, status: 200, json: async () => ({}) };
-    };
-    const asyncTestTail = `
+    async_test_tail = """
     (async () => {
       const errors = [];
       gdriveToken = 'valid-token';
@@ -1143,11 +1107,47 @@ def check_drive_async_with_node():
       if (gdriveToken !== null) errors.push('401 response did not clear gdriveToken');
       if (document.getElementById('gdrive-backup-btn').disabled) errors.push('Backup button stayed disabled after 401');
 
-      if (errors.length) { console.error(errors.join('\\n')); process.exit(1); }
+      if (errors.length) { console.error(errors.join(' | ')); process.exit(1); }
       console.log('   ✅ Async Google Drive fetch suite (POST, PATCH, Restore, 401 token clear) passed.');
     })();
-    `;
-    eval(fs.readFileSync('app.js', 'utf8') + '\\n;' + asyncTestTail);
+    """
+    node_test = f"""
+    const fs = require('fs');
+    const storage = {{}};
+    const localStorage = {{
+      getItem: (k) => storage[k] !== undefined ? storage[k] : null,
+      setItem: (k, v) => {{ storage[k] = String(v); }},
+      removeItem: (k) => {{ delete storage[k]; }},
+      clear: () => {{ Object.keys(storage).forEach(k => delete storage[k]); }}
+    }};
+    const sessionStorage = {{ _s: {{}}, getItem: (k) => sessionStorage._s[k] ?? null, setItem: (k, v) => {{ sessionStorage._s[k] = String(v); }} }};
+    const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
+    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}}, hash: '' }}, scrollTo: () => {{}} }};
+    const makeNode = (id = '') => ({{ id, children: [], className: '', disabled: false, checked: false, classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }}, setAttribute: () => {{}}, addEventListener: () => {{}}, appendChild: () => {{}}, remove: () => {{}}, scrollIntoView: () => {{}}, focus: () => {{}}, click: () => {{}}, reset: () => {{}}, querySelectorAll: () => [], style: {{}}, innerHTML: '', innerText: '', title: '', placeholder: '', value: '' }});
+    const domNodes = {{}};
+    const document = {{
+      documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }}, lang: 'zh-TW' }},
+      head: {{ appendChild: () => {{}} }}, body: {{ appendChild: () => {{}} }},
+      addEventListener: () => {{}},
+      getElementById: (id) => (domNodes[id] ||= makeNode(id)),
+      querySelectorAll: () => [],
+      createElement: () => makeNode('')
+    }};
+    const alert = () => {{}};
+    const confirm = () => true;
+    const fetchCalls = [];
+    let nextMode = 'post';
+    const fetch = async (url, opts = {{}}) => {{
+      fetchCalls.push({{ url, method: opts.method || 'GET' }});
+      if (url.includes('/drive/v3/about')) return {{ ok: true, status: 200, json: async () => ({{ user: {{ emailAddress: 'test@example.com' }} }}) }};
+      if (url.includes('/drive/v3/files?') && nextMode === '401') return {{ ok: false, status: 401, json: async () => ({{ error: {{ message: 'Unauthorized' }} }}) }};
+      if (url.includes('/drive/v3/files?') && nextMode === 'post') return {{ ok: true, status: 200, json: async () => ({{ files: [] }}) }};
+      if (url.includes('/drive/v3/files?') && (nextMode === 'patch' || nextMode === 'restore')) return {{ ok: true, status: 200, json: async () => ({{ files: [{{ id: 'file-1', name: 'cardflow_backup.json', modifiedTime: '2026-11-19T00:00:00Z' }}] }}) }};
+      if (url.includes('uploadType=multipart') || url.includes('uploadType=media')) return {{ ok: true, status: 200, json: async () => ({{ id: 'file-1' }}) }};
+      if (url.includes('alt=media')) return {{ ok: true, status: 200, json: async () => ({{ ownedCards: {{ csp: true }}, fncs: [] }}) }};
+      return {{ ok: true, status: 200, json: async () => ({{}}) }};
+    }};
+    eval(fs.readFileSync('app.js', 'utf8') + "\\n;" + {json.dumps(async_test_tail)});
     """
     proc = subprocess.run(['node', '-e', node_test], capture_output=True, text=True, cwd=base_dir)
     if proc.returncode != 0:
