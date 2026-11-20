@@ -187,6 +187,10 @@ def check_dom_ids():
         print(f"❌ Missing PWA asset files on disk: {missing_assets}")
         return False
 
+    if 'user-scalable=no' in html:
+        print("❌ Viewport meta tag disables pinch-zoom (user-scalable=no)")
+        return False
+
     print(f"   ✅ {len(all_needed_ids)} DOM IDs, inline onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
@@ -999,6 +1003,26 @@ def check_business_logic_simulation():
       const util2027 = computeAnnualUtilization(cspCredits, 2027, 1);
       if (util2026.totalClaimedAnnualValue !== 110 || util2027.totalClaimedAnnualValue !== 100) {
         errors.push("Cross-year utilization isolation failed: 2026=" + util2026.totalClaimedAnnualValue + ", 2027=" + util2027.totalClaimedAnnualValue);
+      }
+
+      // 16. Modal open-state guard & focus restoration
+      MODAL_IDS.forEach(mid => document.getElementById(mid).classList.add('hidden'));
+      if (hasOpenModal()) {
+        errors.push("hasOpenModal() returned true when all modals are hidden");
+      }
+      let triggerFocused = false;
+      document.activeElement = { focus: () => { triggerFocused = true; } };
+      const settingsEl = document.getElementById('settings-modal');
+      openModalEl(settingsEl);
+      if (!hasOpenModal()) {
+        errors.push("hasOpenModal() returned false when settings-modal is open");
+      }
+      closeModalEl(settingsEl);
+      if (hasOpenModal()) {
+        errors.push("hasOpenModal() returned true after closing settings-modal");
+      }
+      if (!triggerFocused) {
+        errors.push("closeModalEl() failed to restore focus to trigger element");
       }
 
       try {

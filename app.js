@@ -1602,6 +1602,54 @@ function updateBannerText() {
   }
 }
 
+// Shared Modal Focus & Open-State Helpers
+const MODAL_IDS = [
+  'perk-action-modal',
+  'card-date-modal',
+  'gdrive-help-modal',
+  'annual-breakdown-modal',
+  'manage-cards-modal',
+  'fnc-modal',
+  'settings-modal'
+];
+const modalFocusStack = [];
+
+function hasOpenModal() {
+  return MODAL_IDS.some(id => {
+    const m = document.getElementById(id);
+    return Boolean(m && !m.classList.contains('hidden'));
+  });
+}
+
+function openModalEl(modalEl) {
+  if (!modalEl) return;
+  const triggerEl = (typeof document !== 'undefined' && document.activeElement) ? document.activeElement : null;
+  if (modalEl.classList.contains('hidden')) {
+    modalFocusStack.push({ modalEl, triggerEl });
+  }
+  modalEl.classList.remove('hidden');
+  if (typeof modalEl.querySelector === 'function') {
+    const firstFocusable = modalEl.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable && typeof firstFocusable.focus === 'function') {
+      firstFocusable.focus();
+    }
+  }
+}
+
+function closeModalEl(modalEl) {
+  if (!modalEl) return;
+  modalEl.classList.add('hidden');
+  for (let i = modalFocusStack.length - 1; i >= 0; i--) {
+    if (modalFocusStack[i].modalEl === modalEl) {
+      const [{ triggerEl }] = modalFocusStack.splice(i, 1);
+      if (triggerEl && typeof triggerEl.focus === 'function') {
+        triggerEl.focus();
+      }
+      break;
+    }
+  }
+}
+
 // Card Date Modal Logic
 let activeCardDateId = null;
 
@@ -1680,12 +1728,12 @@ function openCardDateModal(cardId) {
     noteInput.placeholder = t('cardDateNotePlaceholder');
   }
 
-  modal.classList.remove('hidden');
+  openModalEl(modal);
 }
 
 function closeCardDateModal() {
   const modal = document.getElementById('card-date-modal');
-  if (modal) modal.classList.add('hidden');
+  closeModalEl(modal);
   activeCardDateId = null;
 }
 
@@ -1759,26 +1807,26 @@ function openManageCardsModal() {
   const modal = document.getElementById('manage-cards-modal');
   if (modal) {
     renderManageCardsChecklist();
-    modal.classList.remove('hidden');
+    openModalEl(modal);
   }
 }
 
 function closeManageCardsModal() {
   const modal = document.getElementById('manage-cards-modal');
-  if (modal) modal.classList.add('hidden');
+  closeModalEl(modal);
 }
 
 function openAnnualBreakdownModal() {
   const modal = document.getElementById('annual-breakdown-modal');
   if (modal) {
     renderAnnualBreakdownModal();
-    modal.classList.remove('hidden');
+    openModalEl(modal);
   }
 }
 
 function closeAnnualBreakdownModal() {
   const modal = document.getElementById('annual-breakdown-modal');
-  if (modal) modal.classList.add('hidden');
+  closeModalEl(modal);
 }
 
 function switchPeriodFromModal(p) {
@@ -3294,12 +3342,12 @@ function openPerkActionModal(creditId, stateKey) {
   if (muteTitleEl) muteTitleEl.innerText = t('perkActionMutePermanent');
   if (muteSubEl) muteSubEl.innerText = t('perkActionMuteDesc');
 
-  modal.classList.remove('hidden');
+  openModalEl(modal);
 }
 
 function closePerkActionModal() {
   const modal = document.getElementById('perk-action-modal');
-  if (modal) modal.classList.add('hidden');
+  closeModalEl(modal);
   activePerkActionCreditId = null;
   activePerkActionStateKey = null;
 }
@@ -5870,7 +5918,7 @@ async function restoreFromGoogleDrive() {
           saveState(true);
           applyLanguage(currentLang);
           alert(t('gdriveRestoreSuccess'));
-          document.getElementById('settings-modal')?.classList.add('hidden');
+          document.getElementById('settings-modal') && closeModalEl(document.getElementById('settings-modal'));
         }
       } catch (err) {
         console.error('Drive restore error:', err);
@@ -5909,17 +5957,17 @@ function setupModals() {
   const cancelFncBtn = document.getElementById('cancel-fnc-btn');
   const fncForm = document.getElementById('fnc-form');
 
-  if (openFncBtn && fncModal) openFncBtn.onclick = () => fncModal.classList.remove('hidden');
-  if (closeFncBtn && fncModal) closeFncBtn.onclick = () => fncModal.classList.add('hidden');
-  if (cancelFncBtn && fncModal) cancelFncBtn.onclick = () => fncModal.classList.add('hidden');
+  if (openFncBtn && fncModal) openFncBtn.onclick = () => openModalEl(fncModal);
+  if (closeFncBtn && fncModal) closeFncBtn.onclick = () => closeModalEl(fncModal);
+  if (cancelFncBtn && fncModal) cancelFncBtn.onclick = () => closeModalEl(fncModal);
   if (fncModal) {
     fncModal.addEventListener('click', (e) => {
-      if (e.target === fncModal) fncModal.classList.add('hidden');
+      if (e.target === fncModal) closeModalEl(fncModal);
     });
   }
 
   const fab = document.getElementById('floating-add-btn');
-  if (fab && fncModal) fab.onclick = () => fncModal.classList.remove('hidden');
+  if (fab && fncModal) fab.onclick = () => openModalEl(fncModal);
 
   if (fncForm) {
     fncForm.onsubmit = e => {
@@ -5939,7 +5987,7 @@ function setupModals() {
       });
       saveState();
       renderFncs();
-      if (fncModal) fncModal.classList.add('hidden');
+      if (fncModal) closeModalEl(fncModal);
       fncForm.reset();
     };
   }
@@ -5948,11 +5996,11 @@ function setupModals() {
   const openSettingsBtn = document.getElementById('open-settings-btn');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
 
-  if (openSettingsBtn && settingsModal) openSettingsBtn.onclick = () => settingsModal.classList.remove('hidden');
-  if (closeSettingsBtn && settingsModal) closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+  if (openSettingsBtn && settingsModal) openSettingsBtn.onclick = () => openModalEl(settingsModal);
+  if (closeSettingsBtn && settingsModal) closeSettingsBtn.onclick = () => closeModalEl(settingsModal);
   if (settingsModal) {
     settingsModal.addEventListener('click', (e) => {
-      if (e.target === settingsModal) settingsModal.classList.add('hidden');
+      if (e.target === settingsModal) closeModalEl(settingsModal);
     });
   }
 
@@ -5984,7 +6032,7 @@ function setupModals() {
           saveState();
           applyLanguage(currentLang);
           alert(currentLang === 'zh-TW' ? '備份資料還原成功！' : 'Data restored successfully!');
-          if (settingsModal) settingsModal.classList.add('hidden');
+          if (settingsModal) closeModalEl(settingsModal);
         } catch (err) {
           alert(t('invalidBackupFile'));
         } finally {
@@ -6014,7 +6062,7 @@ function setupModals() {
         };
         saveState();
         renderAllViews();
-        settingsModal.classList.add('hidden');
+        closeModalEl(settingsModal);
         showToast(currentLang === 'zh-TW' ? '已成功清除資料並恢復初始狀態' : 'All data reset to initial state');
       }
     };
@@ -6134,12 +6182,12 @@ function setupModals() {
   const closeGdriveHelpBtn = document.getElementById('close-gdrive-help-btn');
   const confirmGdriveHelpBtn = document.getElementById('confirm-gdrive-help-btn');
 
-  if (gdriveHelpBtn && gdriveHelpModal) gdriveHelpBtn.onclick = () => gdriveHelpModal.classList.remove('hidden');
-  if (closeGdriveHelpBtn && gdriveHelpModal) closeGdriveHelpBtn.onclick = () => gdriveHelpModal.classList.add('hidden');
-  if (confirmGdriveHelpBtn && gdriveHelpModal) confirmGdriveHelpBtn.onclick = () => gdriveHelpModal.classList.add('hidden');
+  if (gdriveHelpBtn && gdriveHelpModal) gdriveHelpBtn.onclick = () => openModalEl(gdriveHelpModal);
+  if (closeGdriveHelpBtn && gdriveHelpModal) closeGdriveHelpBtn.onclick = () => closeModalEl(gdriveHelpModal);
+  if (confirmGdriveHelpBtn && gdriveHelpModal) confirmGdriveHelpBtn.onclick = () => closeModalEl(gdriveHelpModal);
   if (gdriveHelpModal) {
     gdriveHelpModal.addEventListener('click', (e) => {
-      if (e.target === gdriveHelpModal) gdriveHelpModal.classList.add('hidden');
+      if (e.target === gdriveHelpModal) closeModalEl(gdriveHelpModal);
     });
   }
 
@@ -6149,11 +6197,11 @@ function setupModals() {
     const modalClosers = [
       ['perk-action-modal', closePerkActionModal],
       ['card-date-modal', closeCardDateModal],
-      ['gdrive-help-modal', () => gdriveHelpModal?.classList.add('hidden')],
+      ['gdrive-help-modal', () => closeModalEl(gdriveHelpModal)],
       ['annual-breakdown-modal', closeAnnualBreakdownModal],
       ['manage-cards-modal', closeManageCardsModal],
-      ['fnc-modal', () => fncModal?.classList.add('hidden')],
-      ['settings-modal', () => settingsModal?.classList.add('hidden')]
+      ['fnc-modal', () => closeModalEl(fncModal)],
+      ['settings-modal', () => closeModalEl(settingsModal)]
     ];
     for (const [id, closeFn] of modalClosers) {
       const m = document.getElementById(id);
@@ -6333,13 +6381,8 @@ if ('serviceWorker' in navigator) {
         hadController = true;
         return;
       }
-      // Check if user is actively entering an unsaved certificate
-      const fncModal = document.getElementById('fnc-modal');
-      const isFncModalOpen = fncModal && !fncModal.classList.contains('hidden');
-      const fncName = document.getElementById('fnc-name-input') ? document.getElementById('fnc-name-input').value.trim() : '';
-      const isDirty = isFncModalOpen && Boolean(fncName);
-
-      if (isDirty) {
+      // Defer reload with update banner whenever any modal is open
+      if (hasOpenModal()) {
         showPwaUpdateBanner();
       } else {
         triggerPwaReload();
