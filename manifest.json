@@ -1,7 +1,7 @@
 {
   "name": "CardFlow - Smart Credit Card & Loyalty Tracker",
   "short_name": "CardFlow",
-  "description": "Modern dual-pane credit card benefits and loyalty tracker PWA",
+  "description": "Responsive foldable-friendly credit card benefits and loyalty tracker PWA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0F172A",
