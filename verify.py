@@ -191,6 +191,11 @@ def check_dom_ids():
         print("❌ Viewport meta tag disables pinch-zoom (user-scalable=no)")
         return False
 
+    native_dialogs = re.findall(r'(?<![.\w])(?:alert|confirm)\s*\(', app_js)
+    if native_dialogs:
+        print(f"❌ Native blocking alert/confirm calls detected in app.js: {len(native_dialogs)}")
+        return False
+
     print(f"   ✅ {len(all_needed_ids)} DOM IDs, inline onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
@@ -992,6 +997,10 @@ def check_business_logic_simulation():
         }
       }, false);
       resetCurrentMonth();
+      if (document.getElementById('confirm-modal').classList.contains('hidden')) {
+        errors.push("resetCurrentMonth() did not open confirm-modal");
+      }
+      document.getElementById('confirm-modal-ok-btn').onclick();
       if (appState.creditsClaimed['csp-doordash_' + activeMKey] || appState.skippedCredits['csp-doordash_' + activeMKey]) {
         errors.push("resetCurrentMonth() failed to clear active month claimed/skipped state");
       }
@@ -1125,6 +1134,7 @@ def check_drive_async_with_node():
       appState = normalizeAppState(null, false);
       await restoreFromGoogleDrive();
       await new Promise(r => setTimeout(r, 20));
+      document.getElementById('confirm-modal-ok-btn').onclick();
       if (!appState.ownedCards.csp) errors.push('restoreFromGoogleDrive did not restore ownedCards.csp');
 
       nextMode = '401';

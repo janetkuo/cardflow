@@ -459,7 +459,14 @@ const I18N = {
     fncIssuerHilton: 'Hilton Honors',
     fncNamePlaceholder: 'e.g. Marriott 85k Free Night Award (Brilliant)',
     fncPointsPlaceholder: 'e.g. 85,000 pts',
-    invalidBackupFile: 'Invalid CardFlow backup JSON file.'
+    invalidBackupFile: 'Invalid CardFlow backup JSON file.',
+    confirmTitleDefault: 'Confirm Action',
+    confirmBtnProceed: 'Confirm',
+    confirmResetMonthTitle: 'Reset Active Month',
+    confirmResetMonthDesc: 'Reset all claimed and skipped credits for the active month?',
+    confirmFactoryResetTitle: 'Clear All Local Data',
+    confirmDriveRestoreTitle: 'Restore from Google Drive',
+    toastMonthReset: 'Active month credits reset.'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -829,7 +836,14 @@ const I18N = {
     fncIssuerHilton: '希爾頓 Hilton Honors',
     fncNamePlaceholder: '例如: 萬豪 85,000 分免費住宿券 (Brilliant)',
     fncPointsPlaceholder: '例如: 85,000 點',
-    invalidBackupFile: '無效的 CardFlow 備份 JSON 檔案。'
+    invalidBackupFile: '無效的 CardFlow 備份 JSON 檔案。',
+    confirmTitleDefault: '請確認操作',
+    confirmBtnProceed: '確認',
+    confirmResetMonthTitle: '重置本月折抵狀態',
+    confirmResetMonthDesc: '確定要重置本月份的所有折抵與略過狀態嗎？',
+    confirmFactoryResetTitle: '清除所有本機資料',
+    confirmDriveRestoreTitle: '從 Google Drive 還原',
+    toastMonthReset: '已重置本月折抵狀態'
   }
 };
 
@@ -1575,15 +1589,21 @@ function loadDemoStarterPack() {
   showToast(t('toastDemoLoaded'));
 }
 
-function showToast(message) {
+let toastTimer = null;
+
+function showToast(message, durationMs = 2500) {
   const toast = document.getElementById('toast-message');
   if (!toast) return;
   toast.innerText = message;
   toast.classList.remove('opacity-0');
   if (typeof setTimeout === 'function') {
-    setTimeout(() => {
+    if (typeof clearTimeout === 'function' && toastTimer) {
+      clearTimeout(toastTimer);
+    }
+    toastTimer = setTimeout(() => {
       toast.classList.add('opacity-0');
-    }, 2500);
+      toastTimer = null;
+    }, durationMs);
   }
 }
 
@@ -1604,6 +1624,7 @@ function updateBannerText() {
 
 // Shared Modal Focus & Open-State Helpers
 const MODAL_IDS = [
+  'confirm-modal',
   'perk-action-modal',
   'card-date-modal',
   'gdrive-help-modal',
@@ -1613,6 +1634,42 @@ const MODAL_IDS = [
   'settings-modal'
 ];
 const modalFocusStack = [];
+let pendingConfirmHandler = null;
+
+function closeConfirmDialog() {
+  pendingConfirmHandler = null;
+  const modal = document.getElementById('confirm-modal');
+  closeModalEl(modal);
+}
+
+function showConfirmDialog({ title, message, confirmLabel, dangerous = false, onConfirm }) {
+  const modal = document.getElementById('confirm-modal');
+  const titleEl = document.getElementById('confirm-modal-title');
+  const descEl = document.getElementById('confirm-modal-desc');
+  const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+  const okBtn = document.getElementById('confirm-modal-ok-btn');
+  if (!modal || !okBtn) {
+    if (typeof onConfirm === 'function') onConfirm();
+    return;
+  }
+
+  if (titleEl) titleEl.innerText = title || t('confirmTitleDefault');
+  if (descEl) descEl.innerText = message || '';
+  if (cancelBtn) cancelBtn.innerText = t('btnCancel');
+  okBtn.innerText = confirmLabel || t('confirmBtnProceed');
+  okBtn.className = dangerous
+    ? 'px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition cursor-pointer'
+    : 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition cursor-pointer';
+
+  pendingConfirmHandler = typeof onConfirm === 'function' ? onConfirm : null;
+  okBtn.onclick = () => {
+    const handler = pendingConfirmHandler;
+    closeConfirmDialog();
+    if (handler) handler();
+  };
+
+  openModalEl(modal);
+}
 
 function hasOpenModal() {
   return MODAL_IDS.some(id => {
@@ -2389,7 +2446,8 @@ function applyLanguage(lang) {
     'fnc-issuer-opt-marriott': 'fncIssuerMarriott',
     'fnc-issuer-opt-ihg': 'fncIssuerIhg',
     'fnc-issuer-opt-hyatt': 'fncIssuerHyatt',
-    'fnc-issuer-opt-hilton': 'fncIssuerHilton'
+    'fnc-issuer-opt-hilton': 'fncIssuerHilton',
+    'confirm-modal-cancel-btn': 'btnCancel'
   };
 
   Object.entries(map).forEach(([id, i18nKey]) => {
@@ -3396,20 +3454,29 @@ function toggleCreditClaim(key) {
   renderCredits();
 }
 
-function resetCurrentMonth() {
-  if (confirm(currentLang === 'zh-TW' ? '確定要重置本月份的所有折抵狀態嗎？' : 'Reset all claimed credits for the active month?')) {
-    const mKey = getMonthKey();
-    Object.keys(appState.creditsClaimed).forEach(k => {
-      if (k.includes(mKey)) delete appState.creditsClaimed[k];
+function performResetCurrentMonth() {
+  const mKey = getMonthKey();
+  Object.keys(appState.creditsClaimed).forEach(k => {
+    if (k.includes(mKey)) delete appState.creditsClaimed[k];
+  });
+  if (appState.skippedCredits) {
+    Object.keys(appState.skippedCredits).forEach(k => {
+      if (k.includes(mKey)) delete appState.skippedCredits[k];
     });
-    if (appState.skippedCredits) {
-      Object.keys(appState.skippedCredits).forEach(k => {
-        if (k.includes(mKey)) delete appState.skippedCredits[k];
-      });
-    }
-    saveState();
-    renderCredits();
   }
+  saveState();
+  renderCredits();
+  showToast(t('toastMonthReset'));
+}
+
+function resetCurrentMonth() {
+  showConfirmDialog({
+    title: t('confirmResetMonthTitle'),
+    message: t('confirmResetMonthDesc'),
+    confirmLabel: t('confirmBtnProceed'),
+    dangerous: false,
+    onConfirm: performResetCurrentMonth
+  });
 }
 
 // --- 10. RENDER CARDS GRID ---
@@ -5726,7 +5793,7 @@ function requestGoogleDriveToken(onSuccess, onError) {
 
   const clientId = getGoogleClientId();
   if (!clientId) {
-    alert(t('gdriveNoClientIdPrompt'));
+    showToast(t('gdriveNoClientIdPrompt'), 3500);
     const input = document.getElementById('gdrive-client-id-input');
     if (input) input.focus();
     notifyError(new Error('Missing Client ID'));
@@ -5739,7 +5806,7 @@ function requestGoogleDriveToken(onSuccess, onError) {
   }
 
   if (typeof window === 'undefined' || typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.oauth2) {
-    alert(currentLang === 'zh-TW' ? 'Google 服務腳本尚未載入完成，請檢查網路連線或重新整理頁面。' : 'Google Identity Services library not yet loaded. Please check your internet connection.');
+    showToast(currentLang === 'zh-TW' ? 'Google 服務腳本尚未載入完成，請檢查網路連線或重新整理頁面。' : 'Google Identity Services library not yet loaded. Please check your internet connection.', 3500);
     notifyError(new Error('GIS not loaded'));
     return;
   }
@@ -5761,7 +5828,7 @@ function requestGoogleDriveToken(onSuccess, onError) {
           const errCode = resp?.error || 'oauth_cancelled';
           console.error('Google OAuth error:', resp);
           if (resp && resp.error && resp.error !== 'popup_closed_by_user') {
-            alert((currentLang === 'zh-TW' ? 'Google 登入失敗: ' : 'Google Sign-in failed: ') + (resp.error_description || resp.error));
+            showToast((currentLang === 'zh-TW' ? 'Google 登入失敗: ' : 'Google Sign-in failed: ') + (resp.error_description || resp.error), 3500);
           }
           notifyError(new Error(errCode));
         }
@@ -5775,7 +5842,7 @@ function requestGoogleDriveToken(onSuccess, onError) {
     gdriveTokenClient.requestAccessToken({ prompt: '' });
   } catch (err) {
     console.error('Token Client init failed:', err);
-    alert((currentLang === 'zh-TW' ? '初始化 Google 登入失敗: ' : 'Failed to init Google Sign-in: ') + err.message);
+    showToast((currentLang === 'zh-TW' ? '初始化 Google 登入失敗: ' : 'Failed to init Google Sign-in: ') + err.message, 3500);
     notifyError(err);
   }
 }
@@ -5862,12 +5929,12 @@ async function backupToGoogleDrive(isSilent = false) {
         updateDriveUI();
 
         if (!isSilent) {
-          alert(t('gdriveBackupSuccess'));
+          showToast(t('gdriveBackupSuccess'));
         }
       } catch (err) {
         console.error('Drive backup error:', err);
         if (!isSilent) {
-          alert((currentLang === 'zh-TW' ? '備份至 Google Drive 失敗: ' : 'Backup to Google Drive failed: ') + err.message);
+          showToast((currentLang === 'zh-TW' ? '備份至 Google Drive 失敗: ' : 'Backup to Google Drive failed: ') + err.message, 3500);
         }
       } finally {
         isDriveBackupInFlight = false;
@@ -5896,7 +5963,7 @@ async function restoreFromGoogleDrive() {
         const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
 
         if (!existingFile) {
-          alert(t('gdriveNoBackupFound'));
+          showToast(t('gdriveNoBackupFound'), 3500);
           return;
         }
 
@@ -5913,16 +5980,23 @@ async function restoreFromGoogleDrive() {
           ? `找到雲端備份（更新時間: ${modTimeStr}），確定要還原覆蓋目前資料嗎？`
           : `Found cloud backup (modified: ${modTimeStr}). Restore and overwrite current state?`;
 
-        if (confirm(confirmMsg)) {
-          appState = normalized;
-          saveState(true);
-          applyLanguage(currentLang);
-          alert(t('gdriveRestoreSuccess'));
-          document.getElementById('settings-modal') && closeModalEl(document.getElementById('settings-modal'));
-        }
+        showConfirmDialog({
+          title: t('confirmDriveRestoreTitle'),
+          message: confirmMsg,
+          confirmLabel: t('confirmBtnProceed'),
+          dangerous: false,
+          onConfirm: () => {
+            appState = normalized;
+            saveState(true);
+            applyLanguage(currentLang);
+            showToast(t('gdriveRestoreSuccess'));
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal) closeModalEl(settingsModal);
+          }
+        });
       } catch (err) {
         console.error('Drive restore error:', err);
-        alert((currentLang === 'zh-TW' ? '從 Google Drive 還原失敗: ' : 'Restore from Google Drive failed: ') + err.message);
+        showToast((currentLang === 'zh-TW' ? '從 Google Drive 還原失敗: ' : 'Restore from Google Drive failed: ') + err.message, 3500);
       } finally {
         if (restoreBtn) restoreBtn.disabled = false;
       }
@@ -6031,10 +6105,10 @@ function setupModals() {
           appState = normalizeAppState(parsed, true);
           saveState();
           applyLanguage(currentLang);
-          alert(currentLang === 'zh-TW' ? '備份資料還原成功！' : 'Data restored successfully!');
+          showToast(currentLang === 'zh-TW' ? '備份資料還原成功！' : 'Data restored successfully!');
           if (settingsModal) closeModalEl(settingsModal);
         } catch (err) {
-          alert(t('invalidBackupFile'));
+          showToast(t('invalidBackupFile'), 3500);
         } finally {
           fileInput.value = '';
         }
@@ -6049,22 +6123,20 @@ function setupModals() {
       const confirmMsg = currentLang === 'zh-TW'
         ? '確定要清除所有本機資料（已選卡片、折抵進度與房券），重設為初始狀態嗎？此動作無法復原。'
         : 'Are you sure you want to clear all data (cards, claimed credits, and awards) and reset to initial state? This cannot be undone.';
-      if (confirm(confirmMsg)) {
-        localStorage.removeItem(STATE_KEY);
-        appState = {
-          ownedCards: {},
-          cardMeta: {},
-          creditsClaimed: {},
-          mutedCredits: {},
-          skippedCredits: {},
-          fncs: [],
-          fncsClaimed: {}
-        };
-        saveState();
-        renderAllViews();
-        closeModalEl(settingsModal);
-        showToast(currentLang === 'zh-TW' ? '已成功清除資料並恢復初始狀態' : 'All data reset to initial state');
-      }
+      showConfirmDialog({
+        title: t('confirmFactoryResetTitle'),
+        message: confirmMsg,
+        confirmLabel: t('confirmBtnProceed'),
+        dangerous: true,
+        onConfirm: () => {
+          localStorage.removeItem(STATE_KEY);
+          appState = normalizeAppState(null, false);
+          saveState();
+          renderAllViews();
+          closeModalEl(settingsModal);
+          showToast(currentLang === 'zh-TW' ? '已成功清除資料並恢復初始狀態' : 'All data reset to initial state');
+        }
+      });
     };
   }
 
@@ -6191,10 +6263,23 @@ function setupModals() {
     });
   }
 
+  // Confirm Dialog Bindings
+  const confirmModal = document.getElementById('confirm-modal');
+  const closeConfirmBtn = document.getElementById('close-confirm-modal-btn');
+  const cancelConfirmBtn = document.getElementById('confirm-modal-cancel-btn');
+  if (closeConfirmBtn) closeConfirmBtn.onclick = closeConfirmDialog;
+  if (cancelConfirmBtn) cancelConfirmBtn.onclick = closeConfirmDialog;
+  if (confirmModal) {
+    confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) closeConfirmDialog();
+    });
+  }
+
   // Global Escape key to close topmost open modal
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const modalClosers = [
+      ['confirm-modal', closeConfirmDialog],
       ['perk-action-modal', closePerkActionModal],
       ['card-date-modal', closeCardDateModal],
       ['gdrive-help-modal', () => closeModalEl(gdriveHelpModal)],
@@ -6224,7 +6309,7 @@ function setupModals() {
     saveClientIdBtn.onclick = () => {
       const val = clientIdInput.value.trim();
       localStorage.setItem(GDRIVE_CLIENT_ID_KEY, val);
-      alert(currentLang === 'zh-TW' ? 'Google OAuth Client ID 已儲存！' : 'Google OAuth Client ID saved!');
+      showToast(currentLang === 'zh-TW' ? 'Google OAuth Client ID 已儲存！' : 'Google OAuth Client ID saved!');
       updateDriveUI();
     };
   }
@@ -6258,7 +6343,7 @@ function setupModals() {
       localStorage.removeItem(GDRIVE_USER_EMAIL_KEY);
       localStorage.removeItem(GDRIVE_CONNECTED_KEY);
       updateDriveUI();
-      alert(currentLang === 'zh-TW' ? '已登出 Google 帳號' : 'Signed out of Google account');
+      showToast(currentLang === 'zh-TW' ? '已登出 Google 帳號' : 'Signed out of Google account');
     };
   }
 }
@@ -6291,7 +6376,7 @@ function init() {
   document.getElementById('restore-banner-btn')?.addEventListener('click', () => {
     if (bannerEl) bannerEl.classList.remove('hidden');
     localStorage.removeItem(BANNER_KEY);
-    alert(currentLang === 'zh-TW' ? '已恢復顯示頂部提醒橫條。' : 'Top notification banner restored.');
+    showToast(currentLang === 'zh-TW' ? '已恢復顯示頂部提醒橫條。' : 'Top notification banner restored.');
   });
 
   document.getElementById('banner-reset-month-btn')?.addEventListener('click', resetCurrentMonth);
