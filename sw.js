@@ -1,8 +1,9 @@
 // CardFlow Service Worker - Offline Caching & Instant Network-First Updates
-const CACHE_NAME = 'cardflow-tracker-v17';
+const CACHE_NAME = 'cardflow-tracker-v18';
 const ASSETS = [
   './',
   './index.html',
+  './styles.css',
   './app.js',
   './manifest.json',
   './icon.svg',
@@ -59,11 +60,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isNavigation = event.request.mode === 'navigate';
-  const isCoreScript = isSameOrigin && url.pathname.endsWith('app.js');
+  const isCoreAsset = isSameOrigin && (url.pathname.endsWith('app.js') || url.pathname.endsWith('styles.css'));
 
-  // Strategy 1: Network-First for Navigation (HTML) & core app logic (app.js)
+  // Strategy 1: Network-First for Navigation (HTML), core app logic (app.js) & prebuilt styles (styles.css)
   // Ensures updates appear immediately upon refreshing without requiring two reloads
-  if (isNavigation || isCoreScript) {
+  if (isNavigation || isCoreAsset) {
     event.respondWith(
       fetchWithTimeout(event.request, 2500)
         .then((networkResponse) => {

@@ -1,0 +1,100 @@
+@import "tailwindcss";
+@source "../index.html";
+@source "../app.js";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+
+  --color-indigo-50: rgb(var(--pf-primary-rgb) / 0.12);
+  --color-indigo-100: #F1F5F9;
+  --color-indigo-200: rgb(var(--pf-primary-rgb) / 0.35);
+  --color-indigo-300: rgb(var(--pf-primary-rgb) / 0.5);
+  --color-indigo-400: rgb(var(--pf-primary-rgb) / 0.7);
+  --color-indigo-500: rgb(var(--pf-primary-rgb));
+  --color-indigo-600: rgb(var(--pf-primary-rgb));
+  --color-indigo-700: rgb(var(--pf-primary-dark-rgb));
+  --color-indigo-800: rgb(var(--pf-primary-dark-rgb) / 0.85);
+  --color-indigo-900: rgb(var(--pf-primary-dark-rgb) / 0.95);
+  --color-indigo-950: rgb(var(--pf-primary-dark-rgb) / 0.4);
+
+  --color-emerald-200: #A7F3D0;
+  --color-emerald-300: #6EE7B7;
+  --color-emerald-400: #34D399;
+  --color-emerald-500: var(--pf-income);
+  --color-emerald-600: rgb(var(--pf-income-rgb) / 0.9);
+
+  --color-rose-200: #FECDD3;
+  --color-rose-300: #FDA4AF;
+  --color-rose-400: #FB7185;
+  --color-rose-500: var(--pf-expense);
+  --color-rose-600: rgb(var(--pf-expense-rgb) / 0.9);
+
+  --color-pocket-primary: var(--pf-primary, #4EB896);
+  --color-pocket-income: var(--pf-income, #3BBF8F);
+  --color-pocket-expense: var(--pf-expense, #F47B89);
+  --color-pocket-card: #ffffff;
+  --color-pocket-darkcard: #1e293b;
+}
+
+:root {
+  --pf-primary: #4EB896;
+  --pf-primary-rgb: 78 184 150;
+  --pf-primary-dark: #3DA080;
+  --pf-primary-dark-rgb: 61 160 128;
+  --pf-income: #3BBF8F;
+  --pf-income-rgb: 59 191 143;
+  --pf-expense: #F47B89;
+  --pf-expense-rgb: 244 123 137;
+  --pf-bg-light: #F3F7F5;
+  --pf-bg-dark: #17201D;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  background-color: var(--pf-bg-light, #F3F7F5);
+  transition: background-color 0.25s ease;
+}
+
+html.dark body {
+  background-color: var(--pf-bg-dark, #17201D);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.donut-slice {
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+  transform-origin: 100px 100px;
+  cursor: pointer;
+}
+
+.donut-slice:hover {
+  opacity: 0.85;
+  filter: drop-shadow(0 0 5px rgba(78, 184, 150, 0.4));
+  transform: scale(1.03);
+}
+
+.palette-btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.palette-btn:hover {
+  transform: translateY(-1px);
+}
+
+.palette-btn:active {
+  transform: scale(0.97);
+}
+
+#app-subtitle {
+  white-space: nowrap !important;
+}

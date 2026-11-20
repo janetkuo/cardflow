@@ -196,6 +196,13 @@ def check_dom_ids():
         print(f"❌ Native blocking alert/confirm calls detected in app.js: {len(native_dialogs)}")
         return False
 
+    if 'cdn.tailwindcss.com' in html:
+        print("❌ Runtime Tailwind CDN still present in index.html; use prebuilt styles.css for offline PWA")
+        return False
+    if './styles.css' not in html or './styles.css' not in sw_assets:
+        print("❌ Prebuilt ./styles.css must be linked in index.html and cached in sw.js ASSETS")
+        return False
+
     print(f"   ✅ {len(all_needed_ids)} DOM IDs, inline onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
