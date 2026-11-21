@@ -409,7 +409,13 @@ export const I18N = {
     libraryBenchmarkPrefix: 'Library benchmark: ',
     ftfTrapsTitle: 'Foreign Transaction Fee (FTF) Traps',
     ftfTrapsDesc: 'The following cards charge foreign transaction fees. Never swipe them outside the US:',
-    annualNoPerksInPeriod: 'No perks active in this period'
+    annualNoPerksInPeriod: 'No perks active in this period',
+    yearOptionFormat: '{y}',
+    monthOptionNames: 'Jan (1),Feb (2),Mar (3),Apr (4),May (5),Jun (6),Jul (7),Aug (8),Sep (9),Oct (10),Nov (11),Dec (12)',
+    formulaMonthly: '{amt}/mo × 12 mos',
+    formulaQuarterly: '{amt}/qtr × 4 qtrs',
+    formulaSemiannual: '{amt}/cycle × 2 cycles',
+    formulaAnnual: '{amt}/yr × 1 cycle'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -811,7 +817,13 @@ export const I18N = {
     libraryBenchmarkPrefix: '全卡庫提供卡片：',
     ftfTrapsTitle: '海外交易手續費 (FTF) 避雷指南',
     ftfTrapsDesc: '以下卡片出國或刷外幣會額外收取手續費，請務必收進皮夾避免刷卡倒賠：',
-    annualNoPerksInPeriod: '目前無此週期之權益'
+    annualNoPerksInPeriod: '目前無此週期之權益',
+    yearOptionFormat: '{y} 年',
+    monthOptionNames: '1 月,2 月,3 月,4 月,5 月,6 月,7 月,8 月,9 月,10 月,11 月,12 月',
+    formulaMonthly: '{amt}/月 × 12 個月',
+    formulaQuarterly: '{amt}/季 × 4 季',
+    formulaSemiannual: '{amt}/半年 × 2 次',
+    formulaAnnual: '{amt}/年 × 1 次'
   }
 };
 

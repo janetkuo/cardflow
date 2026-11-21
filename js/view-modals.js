@@ -1,6 +1,6 @@
 // CardFlow Modals & Portfolio Actions: Manage Cards, Card Dates/Decisions, Demo Pack & Annual Breakdown
 
-import { currentLang, t, pickText } from './i18n.js';
+import { t, pickText } from './i18n.js';
 import { PRESET_CARDS, PRESET_CREDITS } from './data.js';
 import {
   selectedYear, selectedMonth, appState, saveState,
@@ -61,6 +61,17 @@ export function loadDemoStarterPack() {
   showToast(t('toastDemoLoaded'));
 }
 
+function buildMonthSelectOptionsHtml(defaultLabelKey, selectedMonthNum, extraZeroHtml = '') {
+  const monthNames = t('monthOptionNames').split(',');
+  let html = `<option value="">${t(defaultLabelKey)}</option>${extraZeroHtml}`;
+  for (let m = 1; m <= 12; m++) {
+    const selected = Number(selectedMonthNum) === m ? 'selected' : '';
+    const mText = monthNames[m - 1] || String(m);
+    html += `<option value="${m}" ${selected}>${mText}</option>`;
+  }
+  return html;
+}
+
 export function openCardDateModal(cardId) {
   const modal = document.getElementById('card-date-modal');
   const card = PRESET_CARDS.find(c => c.id === cardId);
@@ -80,9 +91,10 @@ export function openCardDateModal(cardId) {
   if (yearSelect) {
     let yearOptions = `<option value="">${t('cardDateYearSelectDefault')}</option>`;
     const curYear = new Date().getFullYear();
+    const yearFmt = t('yearOptionFormat');
     for (let y = curYear + 1; y >= 2015; y--) {
       const selected = meta.openedYear === y ? 'selected' : '';
-      yearOptions += `<option value="${y}" ${selected}>${y}${currentLang === 'zh-TW' ? ' 年' : ''}</option>`;
+      yearOptions += `<option value="${y}" ${selected}>${yearFmt.replace('{y}', y)}</option>`;
     }
     yearSelect.innerHTML = yearOptions;
     yearSelect.value = meta.openedYear ? String(meta.openedYear) : '';
@@ -90,30 +102,16 @@ export function openCardDateModal(cardId) {
 
   const monthSelect = document.getElementById('card-date-month-select');
   if (monthSelect) {
-    let monthOptions = `<option value="">${t('cardDateMonthSelectDefault')}</option>`;
-    const monthNamesEn = ['Jan (1)', 'Feb (2)', 'Mar (3)', 'Apr (4)', 'May (5)', 'Jun (6)', 'Jul (7)', 'Aug (8)', 'Sep (9)', 'Oct (10)', 'Nov (11)', 'Dec (12)'];
-    for (let m = 1; m <= 12; m++) {
-      const selected = meta.openedMonth === m ? 'selected' : '';
-      const mText = currentLang === 'zh-TW' ? `${m} 月` : monthNamesEn[m - 1];
-      monthOptions += `<option value="${m}" ${selected}>${mText}</option>`;
-    }
-    monthSelect.innerHTML = monthOptions;
+    monthSelect.innerHTML = buildMonthSelectOptionsHtml('cardDateMonthSelectDefault', meta.openedMonth);
     monthSelect.value = meta.openedMonth ? String(meta.openedMonth) : '';
   }
 
   const renewSelect = document.getElementById('card-date-renew-select');
   if (renewSelect) {
-    let renewOptions = `<option value="">${t('cardDateRenewSelectDefault')}</option>`;
-    if (card.annualFee === 0) {
-      renewOptions += `<option value="0" ${meta.renewMonth === 0 || meta.renewMonth === 'No AF' ? 'selected' : ''}>${t('cardDateRenewNoAf')}</option>`;
-    }
-    const monthNamesEn = ['Jan (1)', 'Feb (2)', 'Mar (3)', 'Apr (4)', 'May (5)', 'Jun (6)', 'Jul (7)', 'Aug (8)', 'Sep (9)', 'Oct (10)', 'Nov (11)', 'Dec (12)'];
-    for (let m = 1; m <= 12; m++) {
-      const selected = Number(meta.renewMonth) === m ? 'selected' : '';
-      const mText = currentLang === 'zh-TW' ? `${m} 月` : monthNamesEn[m - 1];
-      renewOptions += `<option value="${m}" ${selected}>${mText}</option>`;
-    }
-    renewSelect.innerHTML = renewOptions;
+    const noAfOption = card.annualFee === 0
+      ? `<option value="0" ${meta.renewMonth === 0 || meta.renewMonth === 'No AF' ? 'selected' : ''}>${t('cardDateRenewNoAf')}</option>`
+      : '';
+    renewSelect.innerHTML = buildMonthSelectOptionsHtml('cardDateRenewSelectDefault', meta.renewMonth, noAfOption);
     renewSelect.value = (meta.renewMonth !== undefined && meta.renewMonth !== null) ? String(meta.renewMonth) : '';
   }
 
@@ -223,72 +221,11 @@ export function closeAnnualBreakdownModal() {
   closeModalEl(modal);
 }
 
-export function renderAnnualBreakdownModal() {
-  const container = document.getElementById('annual-breakdown-content');
-  const totalAmountEl = document.getElementById('annual-modal-total-amount');
-  const cardsCountEl = document.getElementById('annual-modal-cards-count');
-  if (!container) return;
-
-  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId) && !isCreditMuted(item.id));
-  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
-
-  if (cardsCountEl) {
-    cardsCountEl.innerText = `${ownedCount} ${t('cardsCountBadgeSuffix')}`;
-  }
-
-  // Calculate stats for all 4 periods
-  const monthlyCredits = ownedCredits.filter(c => c.period === 'monthly');
-  const qtrCredits = ownedCredits.filter(c => c.period === 'quarterly');
-  const semiCredits = ownedCredits.filter(c => c.period === 'semiannual');
-  const annualCredits = ownedCredits.filter(c => c.period === 'annual');
-
-  const monthlyFace = monthlyCredits.reduce((acc, c) => acc + c.amount, 0);
-  const monthlyAnnual = monthlyFace * 12;
-
-  const qtrFace = qtrCredits.reduce((acc, c) => acc + c.amount, 0);
-  const qtrAnnual = qtrFace * 4;
-
-  const semiFace = semiCredits.reduce((acc, c) => acc + c.amount, 0);
-  const semiAnnual = semiFace * 2;
-
-  const annualFace = annualCredits.reduce((acc, c) => acc + c.amount, 0);
-  const annualAnnual = annualFace;
-
-  const totalAnnual = monthlyAnnual + qtrAnnual + semiAnnual + annualAnnual;
-
-  if (totalAmountEl) {
-    totalAmountEl.innerText = Math.round(totalAnnual).toLocaleString();
-  }
-
-  if (ownedCount === 0 || ownedCredits.length === 0) {
-    container.innerHTML = `
-      <div class="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
-        <div class="text-3xl">🎴</div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-          ${t('annualModalNoCardsDesc')}
-        </p>
-        <button data-action="close-annual-and-open-manage" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
-          ➕ ${t('btnSelectCards')}
-        </button>
-      </div>
-    `;
-    return;
-  }
-
-  const fmt = (n) => n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`;
-  const pct = (part) => totalAnnual > 0 ? ((part / totalAnnual) * 100).toFixed(1) : '0';
-
-  // Calculate annual utilization metrics (Claimed vs Expired vs Remaining)
-  const {
-    totalClaimedAnnualValue,
-    totalExpiredAnnualValue,
-    remainingValue,
-    claimedPct,
-    expiredPct,
-    remainingPct
-  } = computeAnnualUtilization(ownedCredits, selectedYear, selectedMonth);
-
-  const utilizationCardHtml = `
+function buildAnnualUtilizationStripHtml({
+  totalClaimedAnnualValue, totalExpiredAnnualValue, remainingValue,
+  claimedPct, expiredPct, remainingPct
+}) {
+  return `
     <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-900 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2.5">
       <div class="flex items-center justify-between text-xs font-bold">
         <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
@@ -309,12 +246,15 @@ export function renderAnnualBreakdownModal() {
       </div>
     </div>
   `;
+}
 
+function buildAnnualNetAfStripHtml(totalClaimedAnnualValue) {
   const totalAnnualFees = PRESET_CARDS.filter(c => isCardOwned(c.id)).reduce((acc, c) => acc + c.annualFee, 0);
   const netDiff = totalAnnualFees - totalClaimedAnnualValue;
   const isBrokenEven = totalClaimedAnnualValue >= totalAnnualFees;
+  const pctNum = totalAnnualFees > 0 ? Math.round((totalClaimedAnnualValue / totalAnnualFees) * 100) : 100;
 
-  const netAfModalHtml = `
+  return `
     <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-50 to-emerald-500/10 dark:from-indigo-950/40 dark:via-slate-900 dark:to-emerald-950/30 border border-indigo-200/60 dark:border-indigo-800/50 space-y-2">
       <div class="flex items-center justify-between text-xs font-bold">
         <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
@@ -326,116 +266,123 @@ export function renderAnnualBreakdownModal() {
         </span>
       </div>
       <div class="w-full bg-black/20 dark:bg-black/40 rounded-full h-2 overflow-hidden flex shadow-inner">
-        <div class="${isBrokenEven ? 'bg-emerald-500' : 'bg-indigo-600'} h-full transition-all duration-500" style="width: ${totalAnnualFees > 0 ? Math.min(100, Math.round((totalClaimedAnnualValue / totalAnnualFees) * 100)) : 100}%"></div>
+        <div class="${isBrokenEven ? 'bg-emerald-500' : 'bg-indigo-600'} h-full transition-all duration-500" style="width: ${Math.min(100, pctNum)}%"></div>
       </div>
       <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <span>${t('annualFeeLabel')}: $${totalAnnualFees.toLocaleString()} · ${t('statClaimedPrefix')}: $${Math.round(totalClaimedAnnualValue).toLocaleString()}</span>
-        <span>${t('netAFProgress')} ${totalAnnualFees > 0 ? Math.round((totalClaimedAnnualValue / totalAnnualFees) * 100) : 100}%</span>
+        <span>${t('netAFProgress')} ${pctNum}%</span>
       </div>
     </div>
   `;
+}
 
-  const sections = [
-    {
-      id: 'monthly',
-      title: t('periodMonthly'),
-      icon: '📅',
-      colorBadge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60',
-      formulaText: currentLang === 'zh-TW' ? `${fmt(monthlyFace)}/月 × 12 個月` : `${fmt(monthlyFace)}/mo × 12 mos`,
-      annualVal: monthlyAnnual,
-      share: pct(monthlyAnnual),
-      items: monthlyCredits,
-      filterTarget: 'monthly'
-    },
-    {
-      id: 'quarterly',
-      title: t('periodQuarterly'),
-      icon: '⏳',
-      colorBadge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60',
-      formulaText: currentLang === 'zh-TW' ? `${fmt(qtrFace)}/季 × 4 季` : `${fmt(qtrFace)}/qtr × 4 qtrs`,
-      annualVal: qtrAnnual,
-      share: pct(qtrAnnual),
-      items: qtrCredits,
-      filterTarget: 'quarterly'
-    },
-    {
-      id: 'semiannual',
-      title: t('periodSemiAnnualLabel'),
-      icon: '🌓',
-      colorBadge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60',
-      formulaText: currentLang === 'zh-TW' ? `${fmt(semiFace)}/半年 × 2 次` : `${fmt(semiFace)}/cycle × 2 cycles`,
-      annualVal: semiAnnual,
-      share: pct(semiAnnual),
-      items: semiCredits,
-      filterTarget: 'semiannual'
-    },
-    {
-      id: 'annual',
-      title: t('periodAnnual'),
-      icon: '🎁',
-      colorBadge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60',
-      formulaText: currentLang === 'zh-TW' ? `${fmt(annualFace)}/年 × 1 次` : `${fmt(annualFace)}/yr × 1 cycle`,
-      annualVal: annualAnnual,
-      share: pct(annualAnnual),
-      items: annualCredits,
-      filterTarget: 'annual'
-    }
-  ];
+function buildAnnualPeriodSectionCardHtml(sec, fmt) {
+  const itemsHtml = sec.items.length > 0
+    ? sec.items.map(it => `
+        <div class="flex items-center justify-between text-[11px] py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-0">
+          <span class="truncate text-slate-700 dark:text-slate-300 font-medium mr-2">
+            ${pickText(it.title)} <span class="text-slate-400 text-[10px]">(${pickText(it.card)})</span>
+          </span>
+          <span class="shrink-0 font-bold text-slate-800 dark:text-slate-200">
+            +${fmt(it.amount)}
+          </span>
+        </div>
+      `).join('')
+    : `<div class="text-[11px] text-slate-400 py-1 italic">${t('annualNoPerksInPeriod')}</div>`;
 
-  container.innerHTML = utilizationCardHtml + netAfModalHtml + sections.map(sec => {
-    const itemsHtml = sec.items.length > 0
-      ? sec.items.map(it => {
-          const tText = pickText(it.title);
-          const cText = pickText(it.card);
-          return `
-            <div class="flex items-center justify-between text-[11px] py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-0">
-              <span class="truncate text-slate-700 dark:text-slate-300 font-medium mr-2">
-                ${tText} <span class="text-slate-400 text-[10px]">(${cText})</span>
-              </span>
-              <span class="shrink-0 font-bold text-slate-800 dark:text-slate-200">
-                +${fmt(it.amount)}
-              </span>
-            </div>
-          `;
-        }).join('')
-      : `<div class="text-[11px] text-slate-400 py-1 italic">${t('annualNoPerksInPeriod')}</div>`;
-
-    return `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-base">${sec.icon}</span>
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${sec.title}</span>
-            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${sec.colorBadge}">
-              ${sec.share}% ${t('shareUnit')}
-            </span>
-          </div>
-          <div class="text-right shrink-0">
-            <div class="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-              +$${Math.round(sec.annualVal).toLocaleString()} ${t('perYearUnit')}
-            </div>
+  return `
+    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-base">${sec.icon}</span>
+          <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${sec.title}</span>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${sec.colorBadge}">
+            ${sec.share}% ${t('shareUnit')}
+          </span>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+            +$${Math.round(sec.annualVal).toLocaleString()} ${t('perYearUnit')}
           </div>
         </div>
+      </div>
 
-        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-          <span>${t('formulaLabel')}: ${sec.formulaText}</span>
-          <span class="font-bold text-slate-700 dark:text-slate-300">${sec.items.length} ${t('itemsUnit')}</span>
+      <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+        <span>${t('formulaLabel')}: ${sec.formulaText}</span>
+        <span class="font-bold text-slate-700 dark:text-slate-300">${sec.items.length} ${t('itemsUnit')}</span>
+      </div>
+
+      <div class="space-y-0.5 pt-0.5">${itemsHtml}</div>
+
+      ${sec.items.length > 0 ? `
+        <div class="pt-1 text-right">
+          <button data-action="switch-period-from-modal" data-period="${sec.filterTarget}" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition inline-flex items-center gap-1 cursor-pointer">
+            <span>${t('viewThisPeriodPerks')}</span>
+          </button>
         </div>
+      ` : ''}
+    </div>
+  `;
+}
 
-        <div class="space-y-0.5 pt-0.5">
-          ${itemsHtml}
-        </div>
+const ANNUAL_SECTION_SPECS = [
+  { id: 'monthly', titleKey: 'periodMonthly', formulaKey: 'formulaMonthly', mult: 12, icon: '📅', colorBadge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60' },
+  { id: 'quarterly', titleKey: 'periodQuarterly', formulaKey: 'formulaQuarterly', mult: 4, icon: '⏳', colorBadge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/60' },
+  { id: 'semiannual', titleKey: 'periodSemiAnnualLabel', formulaKey: 'formulaSemiannual', mult: 2, icon: '🌓', colorBadge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60' },
+  { id: 'annual', titleKey: 'periodAnnual', formulaKey: 'formulaAnnual', mult: 1, icon: '🎁', colorBadge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60' }
+];
 
-        ${sec.items.length > 0 ? `
-          <div class="pt-1 text-right">
-            <button data-action="switch-period-from-modal" data-period="${sec.filterTarget}" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition inline-flex items-center gap-1 cursor-pointer">
-              <span>${t('viewThisPeriodPerks')}</span>
-            </button>
-          </div>
-        ` : ''}
+export function renderAnnualBreakdownModal() {
+  const container = document.getElementById('annual-breakdown-content');
+  const totalAmountEl = document.getElementById('annual-modal-total-amount');
+  const cardsCountEl = document.getElementById('annual-modal-cards-count');
+  if (!container) return;
+
+  const ownedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId) && !isCreditMuted(item.id));
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+  if (cardsCountEl) cardsCountEl.innerText = `${ownedCount} ${t('cardsCountBadgeSuffix')}`;
+
+  const fmt = (n) => n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`;
+  const rawSections = ANNUAL_SECTION_SPECS.map(spec => {
+    const items = ownedCredits.filter(c => c.period === spec.id);
+    const face = items.reduce((acc, c) => acc + c.amount, 0);
+    return { ...spec, items, face, annualVal: face * spec.mult };
+  });
+  const totalAnnual = rawSections.reduce((acc, s) => acc + s.annualVal, 0);
+
+  if (totalAmountEl) totalAmountEl.innerText = Math.round(totalAnnual).toLocaleString();
+
+  if (ownedCount === 0 || ownedCredits.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="text-3xl">🎴</div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          ${t('annualModalNoCardsDesc')}
+        </p>
+        <button data-action="close-annual-and-open-manage" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+          ➕ ${t('btnSelectCards')}
+        </button>
       </div>
     `;
-  }).join('');
+    return;
+  }
+
+  const utilization = computeAnnualUtilization(ownedCredits, selectedYear, selectedMonth);
+  const sectionsHtml = rawSections.map(s => buildAnnualPeriodSectionCardHtml({
+    title: t(s.titleKey),
+    icon: s.icon,
+    colorBadge: s.colorBadge,
+    formulaText: t(s.formulaKey).replace('{amt}', fmt(s.face)),
+    annualVal: s.annualVal,
+    share: totalAnnual > 0 ? ((s.annualVal / totalAnnual) * 100).toFixed(1) : '0',
+    items: s.items,
+    filterTarget: s.id
+  }, fmt)).join('');
+
+  container.innerHTML =
+    buildAnnualUtilizationStripHtml(utilization) +
+    buildAnnualNetAfStripHtml(utilization.totalClaimedAnnualValue) +
+    sectionsHtml;
 }
 
 export function renderManageCardsChecklist() {
