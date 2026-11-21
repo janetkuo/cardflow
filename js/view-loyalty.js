@@ -1,6 +1,6 @@
 // CardFlow Loyalty Subview: FNC Tracker, Loyalty Statuses & Transfer Cheat Sheet
 
-import { currentLang, t, pickText } from './i18n.js';
+import { t, pickText } from './i18n.js';
 import {
   today, selectedYear, appState, saveState,
   escapeHtml, parseLocalYmd, isCardOwned
@@ -150,80 +150,77 @@ export function renderLoyaltyStatusCards() {
   }).join('');
 }
 
+const TRANSFER_PARTNER_GUIDES = [
+  {
+    boxClass: 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/60 dark:border-blue-900/40',
+    titleClass: 'text-blue-700 dark:text-blue-300',
+    pillClass: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+    tipClass: 'text-indigo-600 dark:text-indigo-400',
+    title: { 'zh-TW': 'Chase Ultimate Rewards (UR 點數)', en: 'Chase Ultimate Rewards (UR)' },
+    cards: { 'zh-TW': 'CSP + CFU + CIC + CIU', en: 'CSP + CFU + CIC + CIU' },
+    partnersLabel: { 'zh-TW': '推薦兌換夥伴:', en: 'Top Redemptions:' },
+    partners: {
+      'zh-TW': '聯合航空 United、加拿大航空 Aeroplan、法荷航 Flying Blue、凱悅 World of Hyatt（現行比率 4:3）。',
+      en: 'United Airlines, Air Canada Aeroplan, Flying Blue, World of Hyatt (4:3 ratio).'
+    },
+    tipLabel: { 'zh-TW': '💡 歸戶技巧:', en: '💡 Combine Points:' },
+    tip: {
+      'zh-TW': '在轉點前，務必先將免年費卡（Ink Cash、CFU、CIU）累積的 UR 點數合併至升級後的 CSP 藍寶石卡，即可解鎖 1:1 航空哩程轉點特權！',
+      en: 'Move all UR points from Ink Cash & CFU to CSP before initiating 1:1 partner transfers!'
+    }
+  },
+  {
+    boxClass: 'bg-sky-50/50 dark:bg-sky-950/20 border-sky-200/60 dark:border-sky-900/40',
+    titleClass: 'text-sky-700 dark:text-sky-300',
+    pillClass: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300',
+    tipClass: 'text-sky-600 dark:text-sky-400',
+    title: { 'zh-TW': 'Amex Membership Rewards (MR 點數)', en: 'Amex Membership Rewards (MR)' },
+    cards: { 'zh-TW': '商業大白 + 商業金卡 + BBP + ED', en: 'Biz Plat + Biz Gold + BBP + ED' },
+    partnersLabel: { 'zh-TW': '推薦兌換夥伴:', en: 'Top Redemptions:' },
+    partners: {
+      'zh-TW': '全日空 ANA（美日往返商務艙神卡）、加拿大航空 Aeroplan、維珍航空 Virgin Atlantic、國泰亞洲萬里通。',
+      en: 'All Nippon Airways (ANA) roundtrip business, Aeroplan, Virgin Atlantic, Delta.'
+    },
+    tipLabel: { 'zh-TW': '💡 35% 點數回饋開票:', en: '💡 35% Pay with Points:' },
+    tip: {
+      'zh-TW': '商業大白享有「Pay with Points」開機票退還 35% 點數特權（滿 5,000 點起觸發，1 點價值高達 1.54 美分）！免年費的 BBP 更是永久保留手頭 MR 點數的無敵防線。',
+      en: 'Biz Plat unlocks 35% points back on Amex Travel flights (min 5k pts, 1pt = 1.54¢)! BBP preserves MR points with $0 annual fee.'
+    }
+  },
+  {
+    boxClass: 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-900/40',
+    titleClass: 'text-emerald-700 dark:text-emerald-300',
+    pillClass: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
+    tipClass: 'text-emerald-600 dark:text-emerald-400',
+    title: { 'zh-TW': 'Capital One 哩程', en: 'Capital One Miles' },
+    cards: { 'zh-TW': 'Venture X', en: 'Venture X' },
+    partnersLabel: { 'zh-TW': '推薦兌換夥伴:', en: 'Top Redemptions:' },
+    partners: {
+      'zh-TW': '土耳其航空 Miles&Smiles（換夏威夷極佳）、哥倫比亞航空 Avianca LifeMiles（星空聯盟免手續費）、英國航空 Avios。',
+      en: 'Turkish Airlines Miles&Smiles, Avianca LifeMiles, British Airways Avios, Singapore Airlines.'
+    },
+    tipLabel: { 'zh-TW': '💡 旅遊消費一鍵抵扣:', en: '💡 Purchase Eraser:' },
+    tip: {
+      'zh-TW': '過去 90 天內的任何機票、火車或飯店消費，均能以 1 哩 = 1 美分的比例直接折抵帳單，毫無使用限制！',
+      en: 'Instantly redeem at 1.0 ¢/mile against any travel purchase made within the last 90 days.'
+    }
+  }
+];
+
 export function renderTransferCheatSheet() {
   const container = document.getElementById('transfer-cheat-list');
   if (!container) return;
 
-  if (currentLang === 'zh-TW') {
-    container.innerHTML = `
-      <!-- Chase UR -->
-      <div class="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Chase Ultimate Rewards (UR 點數)</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold">CSP + CFU + CIC + CIU</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>推薦兌換夥伴:</strong> 聯合航空 United、加拿大航空 Aeroplan、法荷航 Flying Blue、凱悅 World of Hyatt（現行比率 4:3）。<br>
-          <span class="text-indigo-600 dark:text-indigo-400 font-medium">💡 歸戶技巧:</span> 在轉點前，務必先將免年費卡（Ink Cash、CFU、CIU）累積的 UR 點數合併至升級後的 CSP 藍寶石卡，即可解鎖 1:1 航空哩程轉點特權！
-        </p>
+  container.innerHTML = TRANSFER_PARTNER_GUIDES.map(g => `
+    <div class="p-3.5 rounded-2xl border ${g.boxClass}">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold ${g.titleClass}">${pickText(g.title)}</span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${g.pillClass}">${pickText(g.cards)}</span>
       </div>
-
-      <!-- Amex MR -->
-      <div class="p-3.5 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-sky-700 dark:text-sky-300">Amex Membership Rewards (MR 點數)</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 font-semibold">商業大白 + 商業金卡 + BBP + ED</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>推薦兌換夥伴:</strong> 全日空 ANA（美日往返商務艙神卡）、加拿大航空 Aeroplan、維珍航空 Virgin Atlantic、國泰亞洲萬里通。<br>
-          <span class="text-sky-600 dark:text-sky-400 font-medium">💡 35% 點數回饋開票:</span> 商業大白享有「Pay with Points」開機票退還 35% 點數特權（滿 5,000 點起觸發，1 點價值高達 1.54 美分）！免年費的 BBP 更是永久保留手頭 MR 點數的無敵防線。
-        </p>
-      </div>
-
-      <!-- Capital One Miles -->
-      <div class="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">Capital One 哩程</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-semibold">Venture X</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>推薦兌換夥伴:</strong> 土耳其航空 Miles&Smiles（換夏威夷極佳）、哥倫比亞航空 Avianca LifeMiles（星空聯盟免手續費）、英國航空 Avios。<br>
-          <span class="text-emerald-600 dark:text-emerald-400 font-medium">💡 旅遊消費一鍵抵扣:</span> 過去 90 天內的任何機票、火車或飯店消費，均能以 1 哩 = 1 美分的比例直接折抵帳單，毫無使用限制！
-        </p>
-      </div>
-    `;
-  } else {
-    container.innerHTML = `
-      <div class="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Chase Ultimate Rewards (UR)</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold">CSP + CFU + CIC + CIU</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>Top Redemptions:</strong> United Airlines, Air Canada Aeroplan, Flying Blue, World of Hyatt (4:3 ratio).<br>
-          <span class="text-indigo-600 dark:text-indigo-400 font-medium">💡 Combine Points:</span> Move all UR points from Ink Cash & CFU to CSP before initiating 1:1 partner transfers!
-        </p>
-      </div>
-      <div class="p-3.5 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-sky-700 dark:text-sky-300">Amex Membership Rewards (MR)</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 font-semibold">Biz Plat + Biz Gold + BBP + ED</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>Top Redemptions:</strong> All Nippon Airways (ANA) roundtrip business, Aeroplan, Virgin Atlantic, Delta.<br>
-          <span class="text-sky-600 dark:text-sky-400 font-medium">💡 35% Pay with Points:</span> Biz Plat unlocks 35% points back on Amex Travel flights (min 5k pts, 1pt = 1.54¢)! BBP preserves MR points with $0 annual fee.
-        </p>
-      </div>
-      <div class="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">Capital One Miles</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-semibold">Venture X</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          <strong>Top Redemptions:</strong> Turkish Airlines Miles&Smiles, Avianca LifeMiles, British Airways Avios, Singapore Airlines.<br>
-          <span class="text-emerald-600 dark:text-emerald-400 font-medium">💡 Purchase Eraser:</span> Instantly redeem at 1.0 ¢/mile against any travel purchase made within the last 90 days.
-        </p>
-      </div>
-    `;
-  }
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <strong>${pickText(g.partnersLabel)}</strong> ${pickText(g.partners)}<br>
+        <span class="font-medium ${g.tipClass}">${pickText(g.tipLabel)}</span> ${pickText(g.tip)}
+      </p>
+    </div>
+  `).join('');
 }

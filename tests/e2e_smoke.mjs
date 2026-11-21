@@ -218,7 +218,36 @@ async function run() {
     const afterReset = parseFloat(await page.locator('#monthly-remaining-val').innerText());
     assert.equal(afterReset, beforeRemaining, 'Expected Reset Month to restore full monthly remaining balance');
 
-    // 7. Service Worker registration & offline reload verification
+    // 7. Mobile / Folded Phone (375x812) responsive layout & bottom nav check
+    await page.setViewportSize({ width: 375, height: 812 });
+    const screenModeLabel = await page.locator('#screen-mode-text').innerText();
+    assert.ok(screenModeLabel.includes('Folded'), `Expected Folded indicator at 375px, got ${screenModeLabel}`);
+
+    const mobileTabs = [
+      ['#mob-nav-credits', '#subview-credits'],
+      ['#mob-nav-cards', '#subview-cards'],
+      ['#mob-nav-loyalty', '#subview-loyalty'],
+      ['#mob-nav-advisor', '#subview-advisor']
+    ];
+    for (const [navSel, viewSel] of mobileTabs) {
+      await page.locator(navSel).click();
+      await page.waitForSelector(`${viewSel}:not(.hidden)`);
+      const overflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(overflowPx <= 0, `Horizontal overflow (${overflowPx}px) detected on ${viewSel} at 375px viewport`);
+    }
+
+    await page.locator('#open-settings-btn').click();
+    await page.waitForSelector('#settings-modal:not(.hidden)');
+    const modalOverflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(modalOverflowPx <= 0, `Horizontal overflow (${modalOverflowPx}px) detected with #settings-modal open at 375px`);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#settings-modal', { state: 'hidden' });
+
+    await page.locator('#mob-nav-credits').click();
+    await page.waitForSelector('#subview-credits:not(.hidden)');
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    // 8. Service Worker registration & offline reload verification
     const swReady = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) return false;
       const reg = await Promise.race([
