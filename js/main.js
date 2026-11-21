@@ -3,7 +3,7 @@
 import { currentLang, t } from './i18n.js';
 import {
   STATE_KEY, BANNER_KEY, VALID_SUBVIEWS,
-  currentTheme, currentPalette,
+  currentTheme, currentPalette, appState,
   setAppState, normalizeAppState, loadState, saveState, getLocalDateStr, registerAutoSyncHandler
 } from './state.js';
 import { showToast, hasOpenModal, openModalEl, closeModalEl, showConfirmDialog, closeConfirmDialog } from './ui-core.js';
@@ -19,7 +19,8 @@ import {
   openManageCardsModal, closeManageCardsModal,
   openAnnualBreakdownModal, closeAnnualBreakdownModal, switchPeriodFromModal,
   setCreditsViewMode, setPeriodFilter, toggleMutedCreditsSection,
-  openPerkActionModal, closePerkActionModal, toggleCreditSkip, muteCredit, unmuteCredit, toggleCreditClaim,
+  openPerkActionModal, closePerkActionModal, skipActivePerk, muteActivePerk,
+  toggleCreditSkip, muteCredit, unmuteCredit, toggleCreditClaim,
   setOwnershipFilter, setCardsViewMode, toggleCardDetailExpand, toggleCardOwnership,
   jumpToCredit, jumpToLoyalty, toggleFncStatus,
   setAdvisorMode, selectAdvisorCategory, getActiveTab, switchSubView, initFoldScreenObserver,
@@ -216,20 +217,10 @@ export function setupModals() {
   if (closePerkActionBtn) closePerkActionBtn.onclick = closePerkActionModal;
   if (cancelPerkActionBtn) cancelPerkActionBtn.onclick = closePerkActionModal;
   if (perkActionSkipBtn) {
-    perkActionSkipBtn.onclick = () => {
-      if (activePerkActionStateKey) {
-        toggleCreditSkip(activePerkActionStateKey);
-        closePerkActionModal();
-      }
-    };
+    perkActionSkipBtn.onclick = skipActivePerk;
   }
   if (perkActionMuteBtn) {
-    perkActionMuteBtn.onclick = () => {
-      if (activePerkActionCreditId) {
-        muteCredit(activePerkActionCreditId);
-        closePerkActionModal();
-      }
-    };
+    perkActionMuteBtn.onclick = muteActivePerk;
   }
   if (perkActionModal) {
     perkActionModal.addEventListener('click', (e) => {
@@ -432,7 +423,13 @@ export function init() {
   switchSubView(initialTab, shouldUpdateHash);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}
 
 // --- 21. SERVICE WORKER & PWA AUTO-UPDATE (POCKETFLOW PARITY) ---
 if ('serviceWorker' in navigator) {
@@ -468,7 +465,7 @@ if ('serviceWorker' in navigator) {
     });
   }
 
-  window.addEventListener('load', () => {
+  const registerPwaServiceWorker = () => {
     // updateViaCache: 'none' bypasses HTTP caching for sw.js byte checks
     navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
       // Actively check for SW updates when page loads
@@ -498,15 +495,26 @@ if ('serviceWorker' in navigator) {
     }).catch(err => {
       console.log('SW registration note:', err);
     });
-  });
+  };
 
-  // Bind update button
-  document.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'complete') {
+    registerPwaServiceWorker();
+  } else {
+    window.addEventListener('load', registerPwaServiceWorker);
+  }
+
+  // Bind update button immediately if DOM is ready, or on DOMContentLoaded
+  const bindPwaUpdateBtn = () => {
     const updateBtn = document.getElementById('pwa-update-btn');
     if (updateBtn) {
       updateBtn.addEventListener('click', triggerPwaReload);
     }
-  });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindPwaUpdateBtn);
+  } else {
+    bindPwaUpdateBtn();
+  }
 }
 
 // Expose inline event handler functions on window for HTML onclick bindings

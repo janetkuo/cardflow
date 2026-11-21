@@ -46,10 +46,15 @@ def build_bundled_js(base_dir):
 
 def check_esm_graph(base_dir):
     exports = {}
+    all_defs = {}
     module_srcs = load_all_modules_source(base_dir)
     for rel, src in module_srcs:
         exports[rel] = set(re.findall(r'^export\s+(?:async\s+)?(?:function|const|let)\s+([a-zA-Z0-9_]+)', src, re.MULTILINE))
+        defs = set(re.findall(r'^(?:export\s+)?(?:async\s+)?function\s+([a-zA-Z0-9_]+)', src, re.MULTILINE))
+        defs |= set(re.findall(r'^(?:export\s+)?(?:const|let|var)\s+([a-zA-Z0-9_]+)', src, re.MULTILINE))
+        all_defs[rel] = defs
 
+    union_defs = set().union(*all_defs.values())
     errors = []
     for rel, src in module_srcs:
         imported = set()
@@ -66,6 +71,30 @@ def check_esm_graph(base_dir):
         for name in imported:
             if re.search(rf'(?<![.\w]){name}\s*=(?!=)', src):
                 errors.append(f"{rel} assigns directly to imported ESM binding '{name}'")
+
+        # Detect cross-module symbols used without being imported or defined locally
+        body = re.sub(r'^import\s+[\s\S]*?from\s+[\'"][^\'"]+[\'"];\s*\n?', '', src, flags=re.MULTILINE)
+        body_clean = re.sub(r'//.*', '', body)
+        local = all_defs[rel] | imported
+        for sym in sorted(union_defs):
+            if sym in local:
+                continue
+            for m in re.finditer(rf'(?<![.\w\'"]){sym}(?![\w\':])', body_clean):
+                line_start = body_clean.rfind('\n', 0, m.start()) + 1
+                line_end = body_clean.find('\n', m.end())
+                if line_end == -1:
+                    line_end = len(body_clean)
+                line = body_clean[line_start:line_end].strip()
+                if sym in ('init', 'today', 't') and ('"' in line or "'" in line or '`' in line):
+                    no_q = re.sub(r"'[^']*'|\"[^\"]*\"|`[^`]*`", '', line)
+                    if not re.search(rf'(?<![.\w]){sym}(?!\w)', no_q):
+                        continue
+                errors.append(f"{rel} uses '{sym}' without importing it ({line})")
+                break
+
+    main_src = dict(module_srcs).get('js/main.js', '')
+    if 'document.readyState' not in main_src:
+        errors.append("js/main.js must check document.readyState before deferring init() to DOMContentLoaded")
     return errors
 
 def run_js_snippet(js_body, base_dir):
@@ -104,10 +133,14 @@ def check_js_syntax():
 
     app_test = f"""
     const localStorage = {{ getItem: () => null, setItem: () => {{}}, removeItem: () => {{}} }};
+    const sessionStorage = {{ getItem: () => null, setItem: () => {{}} }};
     const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
-    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}}, hash: '' }} }};
+    const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}}, hash: '' }}, scrollTo: () => {{}} }};
     const document = {{
+      readyState: 'interactive',
       documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }}, lang: 'zh-TW' }},
+      head: {{ appendChild: () => {{}} }},
+      body: {{ appendChild: () => {{}} }},
       addEventListener: () => {{}},
       getElementById: () => ({{
         classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }},
@@ -1147,8 +1180,61 @@ def check_business_logic_simulation():
     print(f"   ✅ Value conservation (${res['expectedSum']:.2f}/yr), Mute/Skip isolation, 12-mo simulation & Backup/Restore round-trip (7/7 dims) passed.")
 
     if shutil.which('node'):
+        if not check_native_esm_boot_with_node():
+            return False
         if not check_drive_async_with_node():
             return False
+    return True
+
+def check_native_esm_boot_with_node():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    esm_boot = """
+    const storage = {};
+    globalThis.localStorage = {
+      getItem: (k) => storage[k] !== undefined ? storage[k] : null,
+      setItem: (k, v) => { storage[k] = String(v); },
+      removeItem: (k) => { delete storage[k]; },
+      clear: () => { Object.keys(storage).forEach(k => delete storage[k]); }
+    };
+    globalThis.sessionStorage = { _s: {}, getItem: (k) => globalThis.sessionStorage._s[k] ?? null, setItem: (k, v) => { globalThis.sessionStorage._s[k] = String(v); } };
+    globalThis.navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
+    globalThis.window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} };
+    const makeNode = (id = '') => ({
+      id, children: [], className: '', disabled: false, checked: false,
+      classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true },
+      setAttribute: () => {}, addEventListener: () => {},
+      appendChild: function(c) { this.children.push(c); if (c && c.innerHTML) this.innerHTML += c.innerHTML; },
+      remove: () => {}, scrollIntoView: () => {}, focus: () => {}, click: () => {}, reset: () => {},
+      querySelectorAll: () => [], style: {}, innerHTML: '', innerText: '', title: '', placeholder: '', value: ''
+    });
+    const domNodes = {};
+    globalThis.document = {
+      readyState: 'interactive',
+      documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} }, lang: 'zh-TW' },
+      head: { appendChild: () => {} }, body: { appendChild: () => {} },
+      addEventListener: () => {},
+      getElementById: (id) => (domNodes[id] ||= makeNode(id)),
+      querySelectorAll: () => [],
+      createElement: () => makeNode('')
+    };
+    await import('./js/main.js');
+    const feed = globalThis.document.getElementById('credits-feed-container');
+    if (!feed.innerHTML || feed.innerHTML.trim().length < 20) {
+      console.error('Native ESM boot failed to populate #credits-feed-container immediately when readyState=interactive');
+      process.exit(1);
+    }
+    if (typeof globalThis.window.setCreditsViewMode !== 'function') {
+      console.error('Native ESM boot did not attach window.setCreditsViewMode');
+      process.exit(1);
+    }
+    console.log('   ✅ Native Node ESM boot (./js/main.js with readyState=interactive) populated feed immediately.');
+    """
+    proc = subprocess.run(['node', '--input-type=module', '-'], input=esm_boot, capture_output=True, text=True, cwd=base_dir)
+    if proc.returncode != 0:
+        print(f"❌ Native ESM boot test failed:\n{proc.stderr.strip() or proc.stdout.strip()}")
+        return False
+    if proc.stdout.strip():
+        print(proc.stdout.strip())
     return True
 
 def check_drive_async_with_node():

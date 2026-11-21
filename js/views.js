@@ -1,14 +1,14 @@
 // CardFlow UI Views, Charts, Filters & Action Handlers
 
 import { MORANDI_PALETTES, CREDIT_CATEGORY_META } from './palettes.js';
-import { currentLang, setCurrentLang, t } from './i18n.js';
+import { LANG_KEY, currentLang, setCurrentLang, t } from './i18n.js';
 import { DUPLICATE_PERK_GROUPS, PRESET_CARDS, PRESET_CREDITS, ADVISOR_RULES } from './data.js';
 import {
   THEME_KEY, PALETTE_KEY, ADVISOR_MODE_KEY, ACTIVE_TAB_KEY, VALID_SUBVIEWS,
   today, selectedYear, selectedMonth,
   currentTheme, setCurrentTheme, currentPalette, setCurrentPalette,
   appState, normalizeAppState, saveState,
-  escapeHtml, getMonthKey, isCreditMuted, isCreditSkipped, isCardOwned, getOwnedCardsInPerkGroup
+  escapeHtml, parseLocalYmd, getMonthKey, isCreditMuted, isCreditSkipped, isCardOwned, getOwnedCardsInPerkGroup
 } from './state.js';
 import {
   describeDonutArc, computeAnnualUtilization, getCreditUrgencyInfo,
@@ -1540,6 +1540,20 @@ export function closePerkActionModal() {
   closeModalEl(modal);
   activePerkActionCreditId = null;
   activePerkActionStateKey = null;
+}
+
+export function skipActivePerk() {
+  if (activePerkActionStateKey) {
+    toggleCreditSkip(activePerkActionStateKey);
+    closePerkActionModal();
+  }
+}
+
+export function muteActivePerk() {
+  if (activePerkActionCreditId) {
+    muteCredit(activePerkActionCreditId);
+    closePerkActionModal();
+  }
 }
 
 export function toggleCreditSkip(stateKey) {
