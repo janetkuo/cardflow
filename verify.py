@@ -397,7 +397,7 @@ def check_card_portfolio():
 def check_privacy_guardrails():
     print("🔍 [5/7] Scanning for privacy guardrail leaks (Generic Patterns)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    scanned_files = MODULE_FILES + ['index.html', 'sw.js', 'verify.py']
+    scanned_files = MODULE_FILES + ['index.html', 'sw.js', 'verify.py', 'tests/e2e_smoke.mjs']
 
     has_error = False
 

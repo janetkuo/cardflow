@@ -19,3 +19,21 @@ jobs:
           python-version: '3.12'
       - name: Run CardFlow verification suite
         run: python3 verify.py
+
+  e2e:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright Chromium in /tmp
+        run: |
+          npm install --prefix /tmp/pw playwright
+          /tmp/pw/node_modules/.bin/playwright install chromium
+      - name: Run Playwright E2E smoke suite
+        run: NODE_PATH=/tmp/pw/node_modules node tests/e2e_smoke.mjs
