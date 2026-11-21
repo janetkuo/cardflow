@@ -4,10 +4,10 @@ import { CREDIT_CATEGORY_META } from './palettes.js';
 import { t, pickText } from './i18n.js';
 import { DUPLICATE_PERK_GROUPS, PRESET_CARDS, PRESET_CREDITS, ADVISOR_RULES } from './data.js';
 import {
-  ADVISOR_MODE_KEY, today, appState,
+  ADVISOR_MODE_KEY, today,
   isCreditMuted, isCardOwned, getOwnedCardsInPerkGroup
 } from './state.js';
-import { describeDonutArc } from './logic.js';
+import { describeDonutArc, computeChase524Status, resolveAdvisorRecommendation } from './logic.js';
 
 export function renderDonutChart() {
   const svg = document.getElementById('donut-chart-svg');
@@ -177,10 +177,9 @@ export function renderChase524() {
   const detail = document.getElementById('chase-524-detail');
   if (!box || !badge || !detail) return;
 
-  const personalCardIds = PRESET_CARDS.filter(c => !c.isBusiness).map(c => c.id);
-  const ownedPersonalCards = personalCardIds.filter(id => isCardOwned(id));
+  const { ownedPersonalCount, cardsWithDates, in24Count, isSafe, recentCards } = computeChase524Status(today);
 
-  if (ownedPersonalCards.length === 0) {
+  if (ownedPersonalCount === 0) {
     badge.innerText = `0 / 24`;
     badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
     detail.innerHTML = `
@@ -193,31 +192,6 @@ export function renderChase524() {
     `;
     return;
   }
-
-  let cardsWithDates = 0;
-  let in24Count = 0;
-  const recentCards = [];
-
-  const curYear = today.getFullYear();
-  const curMonth = today.getMonth() + 1;
-
-  ownedPersonalCards.forEach(id => {
-    const meta = appState.cardMeta?.[id];
-    if (meta && meta.openedYear && meta.openedMonth) {
-      cardsWithDates++;
-      const monthsElapsed = (curYear - meta.openedYear) * 12 + (curMonth - meta.openedMonth);
-      if (monthsElapsed >= 0 && monthsElapsed < 24) {
-        in24Count++;
-        const cardObj = PRESET_CARDS.find(c => c.id === id);
-        const nick = cardObj ? pickText(cardObj.nickname) : id;
-        recentCards.push({
-          name: nick,
-          date: `${meta.openedYear}/${meta.openedMonth}`,
-          monthsLeft: 24 - monthsElapsed
-        });
-      }
-    }
-  });
 
   if (cardsWithDates === 0) {
     badge.innerText = `? / 24`;
@@ -233,7 +207,6 @@ export function renderChase524() {
     return;
   }
 
-  const isSafe = in24Count < 5;
   badge.innerText = `${in24Count} / 24 (${isSafe ? t('chase524Safe') : t('chase524Warning')})`;
   badge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${isSafe ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40'}`;
 
@@ -343,51 +316,9 @@ export function renderOverlapOptimizer() {
   }
 }
 
-export function selectAdvisorCategory(cat) {
-  if (cat === 'foreign') {
-    currentAdvisorMode = 'overseas';
-    try { localStorage.setItem(ADVISOR_MODE_KEY, 'overseas'); } catch (_) {}
-    updateAdvisorModeUI();
-    cat = (currentAdvisorCat === 'foreign' || !currentAdvisorCat) ? 'dining' : currentAdvisorCat;
-  }
-  currentAdvisorCat = cat;
-
-  document.querySelectorAll('.adv-cat-btn').forEach(btn => {
-    btn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
-  });
-
-  const activeBtn = document.getElementById(`adv-${cat}-btn`);
-  if (activeBtn) {
-    activeBtn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs';
-  }
-
-  updateAdvisorModeUI();
-
-  const rule = ADVISOR_RULES[cat] || ADVISOR_RULES.dining;
-  const box = document.getElementById('advisor-result-box');
-  if (!box || !rule) return;
-
-  const isOverseas = (currentAdvisorMode === 'overseas');
-  const modeData = (isOverseas && rule.overseas) ? rule.overseas : (rule.domestic || rule);
-
-  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
-
-  // Update advisor subheading dynamically
-  const subEl = document.getElementById('advisor-subheading');
-  if (subEl) {
-    if (ownedCount === 0) {
-      subEl.innerText = t('advisorSubheadingEmpty');
-    } else {
-      subEl.innerText = t('advisorSubheadingOwned').replace('{n}', ownedCount);
-    }
-  }
-
-  const candidateCards = modeData.candidateCards || [];
-  const ownedInCat = candidateCards.filter(id => isCardOwned(id));
-
-  let headerBannerHtml = '';
+function buildAdvisorHeaderBannerHtml(modeData, isOverseas, { ownedCount, ownedInCat, topCardId }) {
   if (ownedCount === 0) {
-    headerBannerHtml = `
+    return `
       <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-50/95 via-sky-50/80 to-blue-50/90 dark:from-blue-950/50 dark:via-slate-900/90 dark:to-blue-950/40 border border-blue-200/90 dark:border-blue-700/60 mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div class="flex items-start gap-3 min-w-0">
           <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/70 border border-blue-200/80 dark:border-blue-700/60 text-blue-600 dark:text-blue-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
@@ -414,69 +345,10 @@ export function selectAdvisorCategory(cat) {
         </div>
       </div>
     `;
-  } else if (ownedInCat.length > 0) {
-    let topCardId = ownedInCat[0];
-    if (isOverseas) {
-      const topNoFtf = ownedInCat.find(id => {
-        const c = PRESET_CARDS.find(card => card.id === id);
-        return c && c.noFtf;
-      });
-      if (topNoFtf) topCardId = topNoFtf;
-    }
-    const cardObj = PRESET_CARDS.find(c => c.id === topCardId);
-    const topMeta = modeData.cards[topCardId];
-    const topNick = cardObj ? pickText(cardObj.nickname) : topCardId;
+  }
 
-    const isFtfWarning = isOverseas && cardObj && !cardObj.noFtf;
-
-    if (isFtfWarning) {
-      headerBannerHtml = `
-        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-rose-50 dark:from-amber-950/40 dark:to-rose-950/30 border border-amber-300 dark:border-amber-700/60 mb-3 space-y-1 shadow-xs">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-              <span>⚠️</span>
-              <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
-            </span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-xs">
-              ⚠️ ${cardObj.ftfRate} FTF
-            </span>
-          </div>
-          <p class="text-[11px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
-            ${t('advisorOverseasFtfWarning')}
-          </p>
-        </div>
-      `;
-    } else {
-      const bannerBg = isOverseas
-        ? 'from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-amber-200 dark:border-amber-800/60'
-        : 'from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800/60';
-      const textTheme = isOverseas
-        ? 'text-amber-900 dark:text-amber-200'
-        : 'text-emerald-900 dark:text-emerald-200';
-      const badgeBg = isOverseas ? 'bg-amber-600' : 'bg-emerald-600';
-      const noteTheme = isOverseas
-        ? 'text-amber-800 dark:text-amber-300'
-        : 'text-emerald-800 dark:text-emerald-300';
-
-      headerBannerHtml = `
-        <div class="p-3.5 rounded-2xl bg-gradient-to-r ${bannerBg} border mb-3 space-y-1 shadow-xs">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-extrabold ${textTheme} flex items-center gap-1.5">
-              <span class="text-sm">${isOverseas ? '🌍' : '👑'}</span>
-              <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
-            </span>
-            <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold ${badgeBg} text-white shadow-xs">
-              ${topMeta ? topMeta.mult : (cardObj && cardObj.noFtf ? '0% FTF' : '')}
-            </span>
-          </div>
-          <p class="text-[11px] ${noteTheme} leading-relaxed">
-            ${topMeta ? pickText(topMeta.note) : ''}
-          </p>
-        </div>
-      `;
-    }
-  } else {
-    headerBannerHtml = `
+  if (ownedInCat.length === 0) {
+    return `
       <div class="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 mb-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
         <span class="text-base leading-none">ℹ️</span>
         <div class="text-[11px] leading-relaxed">
@@ -486,7 +358,56 @@ export function selectAdvisorCategory(cat) {
     `;
   }
 
-  const cardsListHtml = candidateCards.map(cId => {
+  const cardObj = PRESET_CARDS.find(c => c.id === topCardId);
+  const topMeta = modeData.cards[topCardId];
+  const topNick = cardObj ? pickText(cardObj.nickname) : topCardId;
+
+  if (isOverseas && cardObj && !cardObj.noFtf) {
+    return `
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-rose-50 dark:from-amber-950/40 dark:to-rose-950/30 border border-amber-300 dark:border-amber-700/60 mb-3 space-y-1 shadow-xs">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+            <span>⚠️</span>
+            <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
+          </span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-xs">
+            ⚠️ ${cardObj.ftfRate} FTF
+          </span>
+        </div>
+        <p class="text-[11px] text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+          ${t('advisorOverseasFtfWarning')}
+        </p>
+      </div>
+    `;
+  }
+
+  const bannerBg = isOverseas
+    ? 'from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-amber-200 dark:border-amber-800/60'
+    : 'from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800/60';
+  const textTheme = isOverseas ? 'text-amber-900 dark:text-amber-200' : 'text-emerald-900 dark:text-emerald-200';
+  const badgeBg = isOverseas ? 'bg-amber-600' : 'bg-emerald-600';
+  const noteTheme = isOverseas ? 'text-amber-800 dark:text-amber-300' : 'text-emerald-800 dark:text-emerald-300';
+
+  return `
+    <div class="p-3.5 rounded-2xl bg-gradient-to-r ${bannerBg} border mb-3 space-y-1 shadow-xs">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-extrabold ${textTheme} flex items-center gap-1.5">
+          <span class="text-sm">${isOverseas ? '🌍' : '👑'}</span>
+          <span>${t('advisorWalletPick')}: <strong>${topNick}</strong></span>
+        </span>
+        <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-extrabold ${badgeBg} text-white shadow-xs">
+          ${topMeta ? topMeta.mult : (cardObj && cardObj.noFtf ? '0% FTF' : '')}
+        </span>
+      </div>
+      <p class="text-[11px] ${noteTheme} leading-relaxed">
+        ${topMeta ? pickText(topMeta.note) : ''}
+      </p>
+    </div>
+  `;
+}
+
+function buildAdvisorCardsListHtml(modeData, candidateCards) {
+  return candidateCards.map(cId => {
     const cMeta = modeData.cards[cId];
     if (!cMeta) return '';
     const isOwned = isCardOwned(cId);
@@ -514,35 +435,75 @@ export function selectAdvisorCategory(cat) {
       </div>
     `;
   }).join('');
+}
 
-  let ftfTrapHtml = '';
-  if (modeData.ftfTraps && modeData.ftfTraps.length > 0) {
-    const trapCardsHtml = modeData.ftfTraps.map(trap => {
-      const isOwned = isCardOwned(trap.id);
-      const cardObj = PRESET_CARDS.find(c => c.id === trap.id);
-      const nick = cardObj ? pickText(cardObj.nickname) : trap.id;
-      return `
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] ${isOwned ? 'font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-200 border border-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200'}">
-          ${nick} (${trap.rate}) ${isOwned ? `· ${t('cardOwned')}` : ''}
-        </span>
-      `;
-    }).join(' ');
-
-    ftfTrapHtml = `
-      <div class="p-3 rounded-2xl bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 mt-2 space-y-1.5">
-        <div class="text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-          <span>⚠️</span>
-          <span>${t('ftfTrapsTitle')}</span>
-        </div>
-        <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-          ${t('ftfTrapsDesc')}
-        </p>
-        <div class="flex flex-wrap gap-1.5 pt-0.5">
-          ${trapCardsHtml}
-        </div>
-      </div>
+function buildFtfTrapHtml(modeData) {
+  if (!modeData.ftfTraps || modeData.ftfTraps.length === 0) return '';
+  const trapCardsHtml = modeData.ftfTraps.map(trap => {
+    const isOwned = isCardOwned(trap.id);
+    const cardObj = PRESET_CARDS.find(c => c.id === trap.id);
+    const nick = cardObj ? pickText(cardObj.nickname) : trap.id;
+    return `
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] ${isOwned ? 'font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-200 border border-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200'}">
+        ${nick} (${trap.rate}) ${isOwned ? `· ${t('cardOwned')}` : ''}
+      </span>
     `;
+  }).join(' ');
+
+  return `
+    <div class="p-3 rounded-2xl bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 mt-2 space-y-1.5">
+      <div class="text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+        <span>⚠️</span>
+        <span>${t('ftfTrapsTitle')}</span>
+      </div>
+      <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+        ${t('ftfTrapsDesc')}
+      </p>
+      <div class="flex flex-wrap gap-1.5 pt-0.5">
+        ${trapCardsHtml}
+      </div>
+    </div>
+  `;
+}
+
+export function selectAdvisorCategory(cat) {
+  if (cat === 'foreign') {
+    currentAdvisorMode = 'overseas';
+    try { localStorage.setItem(ADVISOR_MODE_KEY, 'overseas'); } catch (_) {}
+    updateAdvisorModeUI();
+    cat = (currentAdvisorCat === 'foreign' || !currentAdvisorCat) ? 'dining' : currentAdvisorCat;
   }
+  currentAdvisorCat = cat;
+
+  document.querySelectorAll('.adv-cat-btn').forEach(btn => {
+    btn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
+  });
+
+  const activeBtn = document.getElementById(`adv-${cat}-btn`);
+  if (activeBtn) {
+    activeBtn.className = 'adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs';
+  }
+
+  updateAdvisorModeUI();
+
+  const rule = ADVISOR_RULES[cat] || ADVISOR_RULES.dining;
+  const box = document.getElementById('advisor-result-box');
+  if (!box || !rule) return;
+
+  const isOverseas = (currentAdvisorMode === 'overseas');
+  const modeData = (isOverseas && rule.overseas) ? rule.overseas : (rule.domestic || rule);
+  const rec = resolveAdvisorRecommendation(modeData, isOverseas);
+
+  const subEl = document.getElementById('advisor-subheading');
+  if (subEl) {
+    subEl.innerText = rec.ownedCount === 0
+      ? t('advisorSubheadingEmpty')
+      : t('advisorSubheadingOwned').replace('{n}', rec.ownedCount);
+  }
+
+  const headerBannerHtml = buildAdvisorHeaderBannerHtml(modeData, isOverseas, rec);
+  const cardsListHtml = buildAdvisorCardsListHtml(modeData, rec.candidateCards);
+  const ftfTrapHtml = buildFtfTrapHtml(modeData);
 
   const catTitle = pickText(rule.title);
   const modeBadgeText = isOverseas ? t('advisorModeOverseasBadge') : t('advisorModeDomesticBadge');

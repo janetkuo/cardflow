@@ -1178,6 +1178,55 @@ def check_business_logic_simulation():
         errors.push("closeModalEl() failed to restore focus to trigger element");
       }
 
+      // 17. Pure view-logic helper unit tests (Chase 5/24 boundaries, Auto-FNC grantYear, Dashboard sorting, Advisor 0% FTF, Catalog filter)
+      appState = normalizeAppState({
+        ownedCards: { 'csp': true, 'cfu': true, 'amex-biz-plat': true, 'bonvoy-brilliant': true, 'venture-x': true, 'amex-bbp': true },
+        cardMeta: {
+          'csp': { openedYear: 2024, openedMonth: 12 }, // 23 mos elapsed at 2026-11 -> IN 5/24 (1 mo left)
+          'cfu': { openedYear: 2024, openedMonth: 11 }, // 24 mos elapsed at 2026-11 -> DROPPED off 5/24
+          'amex-biz-plat': { openedYear: 2026, openedMonth: 9 }, // business card -> EXCLUDED from 5/24
+          'bonvoy-brilliant': { openedYear: 2023, openedMonth: 6, renewMonth: 6 }
+        }
+      }, false);
+
+      const s524 = computeChase524Status(new Date(2026, 10, 15)); // Nov 2026
+      if (s524.in24Count !== 1 || s524.recentCards.length !== 1 || s524.recentCards[0].id !== 'csp' || s524.recentCards[0].monthsLeft !== 1) {
+        errors.push("computeChase524Status boundary failed: " + JSON.stringify(s524));
+      }
+
+      const fncBeforeRenew = deriveAutoFncs(2026, new Date(2026, 2, 15)); // Mar 2026 (< renewMonth 6)
+      if (fncBeforeRenew.length !== 1 || fncBeforeRenew[0].id !== 'auto_fnc_brilliant_2025' || fncBeforeRenew[0].expireDate !== '2026-06-28') {
+        errors.push("deriveAutoFncs before-renew failed: " + JSON.stringify(fncBeforeRenew));
+      }
+      const fncAfterRenew = deriveAutoFncs(2026, new Date(2026, 6, 15)); // Jul 2026 (>= renewMonth 6)
+      if (fncAfterRenew.length !== 1 || fncAfterRenew[0].id !== 'auto_fnc_brilliant_2026' || fncAfterRenew[0].expireDate !== '2027-06-28') {
+        errors.push("deriveAutoFncs after-renew failed: " + JSON.stringify(fncAfterRenew));
+      }
+
+      const catchallModeData = { candidateCards: ['amex-bbp', 'venture-x'] };
+      const domPick = resolveAdvisorRecommendation(catchallModeData, false);
+      const ovsPick = resolveAdvisorRecommendation(catchallModeData, true);
+      if (domPick.topCardId !== 'amex-bbp' || ovsPick.topCardId !== 'venture-x') {
+        errors.push("resolveAdvisorRecommendation FTF tiebreak failed: dom=" + domPick.topCardId + ", ovs=" + ovsPick.topCardId);
+      }
+
+      appState.creditsClaimed['csp-doordash_2026-11'] = true;
+      const dashNov = computeCreditDashboardData({
+        ownedCredits: PRESET_CREDITS.filter(c => isCardOwned(c.cardId)),
+        curYear: 2026,
+        curMonth: 11,
+        periodFilter: 'monthly',
+        viewMode: 'timeline'
+      });
+      if (dashNov.preparedItems.length < 2 || dashNov.preparedItems[0].isClaimed !== false || !dashNov.preparedItems[dashNov.preparedItems.length - 1].isClaimed) {
+        errors.push("computeCreditDashboardData failed to sort active before claimed");
+      }
+
+      const filteredC1 = filterCatalogCards({ ownershipFilter: 'owned', issuerFilter: 'CapitalOne', searchText: 'venture' });
+      if (filteredC1.length !== 1 || filteredC1[0].id !== 'venture-x') {
+        errors.push("filterCatalogCards failed: " + filteredC1.map(c => c.id).join(','));
+      }
+
       try {
         init();
         applyLanguage('en');

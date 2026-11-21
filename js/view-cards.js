@@ -7,7 +7,8 @@ import {
   escapeHtml, isCardOwned, getOwnedCardsInPerkGroup
 } from './state.js';
 import {
-  getCardClaimedValueThisYear, getDecisionBadgeInfo, findLinkedCredit
+  getCardClaimedValueThisYear, getDecisionBadgeInfo,
+  findLinkedCredit, filterCatalogCards
 } from './logic.js';
 
 let currentIssuerFilter = 'all';
@@ -52,123 +53,88 @@ export function toggleCardDetailExpand(cardId) {
   renderCards();
 }
 
-export function renderCards() {
-  const container = document.getElementById('cards-list-container');
-  if (!container) return;
-  container.innerHTML = '';
+function updateCardsFilterToolbar(ownedCount, unownedCount) {
+  const pillBase = 'card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer';
+  const activeCls = `${pillBase} bg-indigo-600 text-white shadow-xs`;
+  const idleCls = `${pillBase} text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white`;
 
-  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
-  const unownedCount = PRESET_CARDS.length - ownedCount;
-
-  // Update ownership filter pill buttons
   const allBtn = document.getElementById('card-filter-all-btn');
   const ownedBtn = document.getElementById('card-filter-owned-btn');
   const unownedBtn = document.getElementById('card-filter-unowned-btn');
 
   if (ownedBtn) {
     ownedBtn.innerText = `${t('filterOwned')} (${ownedCount})`;
-    ownedBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'owned' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
+    ownedBtn.className = currentOwnershipFilter === 'owned' ? activeCls : idleCls;
   }
   if (allBtn) {
     allBtn.innerText = `${t('filterAllCards')} (${PRESET_CARDS.length})`;
-    allBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
+    allBtn.className = currentOwnershipFilter === 'all' ? activeCls : idleCls;
   }
   if (unownedBtn) {
     unownedBtn.innerText = `${t('filterUnowned')} (${unownedCount})`;
-    unownedBtn.className = `card-ownership-filter-btn py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${currentOwnershipFilter === 'unowned' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
+    unownedBtn.className = currentOwnershipFilter === 'unowned' ? activeCls : idleCls;
   }
 
-  // Update view mode toggle buttons
   const compactBtn = document.getElementById('cards-view-compact-btn');
   const detailedBtn = document.getElementById('cards-view-detailed-btn');
   if (compactBtn && detailedBtn) {
-    if (currentCardsViewMode === 'compact') {
-      compactBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs';
-      detailedBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
-    } else {
-      detailedBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs';
-      compactBtn.className = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
-    }
+    const modeActive = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 bg-indigo-600 text-white shadow-xs';
+    const modeIdle = 'py-1 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+    compactBtn.className = currentCardsViewMode === 'compact' ? modeActive : modeIdle;
+    detailedBtn.className = currentCardsViewMode === 'compact' ? modeIdle : modeActive;
   }
 
   const tabLabelCards = document.getElementById('tab-label-cards');
-  if (tabLabelCards) {
-    tabLabelCards.innerText = `${t('tabCards')} (${ownedCount})`;
-  }
+  if (tabLabelCards) tabLabelCards.innerText = `${t('tabCards')} (${ownedCount})`;
   const mobLabelCards = document.getElementById('mob-label-cards');
-  if (mobLabelCards) {
-    mobLabelCards.innerText = t('tabCards');
-  }
+  if (mobLabelCards) mobLabelCards.innerText = t('tabCards');
+}
 
-  const searchVal = (document.getElementById('cards-search-input')?.value || '').toLowerCase().trim();
-
-  const filtered = PRESET_CARDS.filter(c => {
-    const isOwned = isCardOwned(c.id);
-    if (currentOwnershipFilter === 'owned' && !isOwned) return false;
-    if (currentOwnershipFilter === 'unowned' && isOwned) return false;
-    if (currentIssuerFilter !== 'all' && c.issuer !== currentIssuerFilter) return false;
-    if (searchVal) {
-      const nick = pickText(c.nickname);
-      const matchName = c.name.toLowerCase().includes(searchVal);
-      const matchNick = nick.toLowerCase().includes(searchVal);
-      const matchCat = c.categories.some(cat => {
-        const catName = pickText(cat.name);
-        return catName.toLowerCase().includes(searchVal) || cat.mult.toLowerCase().includes(searchVal);
-      });
-      const matchPerk = c.perks.some(p => {
-        const perkTitle = pickText(p.title);
-        return perkTitle.toLowerCase().includes(searchVal);
-      });
-      return matchName || matchNick || matchCat || matchPerk;
-    }
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    if (currentOwnershipFilter === 'owned' && ownedCount === 0) {
-      container.innerHTML = `
-        <div class="col-span-1 sm:col-span-2 p-8 rounded-3xl bg-slate-50/80 dark:bg-slate-900/60 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4">
-          <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-3xl">
-            🎴
-          </div>
-          <div class="max-w-md mx-auto space-y-1.5">
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">
-              ${t('noOwnedCardsTitle')}
-            </h3>
-            <p class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-              ${t('noOwnedCardsDesc')}
-            </p>
-          </div>
-          <div class="flex items-center justify-center gap-2.5 pt-1 flex-wrap">
-            <button data-action="open-manage-cards" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5">
-              <span>➕</span>
-              <span>${t('manageCardsBtnLabel')}</span>
-            </button>
-            <button data-action="load-demo-pack" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
-              <span>⚡</span>
-              <span>${t('btnLoadDemoPack')}</span>
-            </button>
-            <button data-action="set-ownership-filter" data-filter="all" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition cursor-pointer">
-              ${t('btnBrowseAllCards')}
-            </button>
-          </div>
+function renderCardsEmptyState(container, ownedCount) {
+  if (currentOwnershipFilter === 'owned' && ownedCount === 0) {
+    container.innerHTML = `
+      <div class="col-span-1 sm:col-span-2 p-8 rounded-3xl bg-slate-50/80 dark:bg-slate-900/60 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 dark:bg-indigo-400/10 flex items-center justify-center text-3xl">
+          🎴
         </div>
-      `;
-    } else {
-      container.innerHTML = `
-        <div class="col-span-1 sm:col-span-2 p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-          <div class="text-3xl mb-2">🔍</div>
-          <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${t('noMatchingCards')}</div>
+        <div class="max-w-md mx-auto space-y-1.5">
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">
+            ${t('noOwnedCardsTitle')}
+          </h3>
+          <p class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+            ${t('noOwnedCardsDesc')}
+          </p>
         </div>
-      `;
-    }
+        <div class="flex items-center justify-center gap-2.5 pt-1 flex-wrap">
+          <button data-action="open-manage-cards" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5">
+            <span>➕</span>
+            <span>${t('manageCardsBtnLabel')}</span>
+          </button>
+          <button data-action="load-demo-pack" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+            <span>⚡</span>
+            <span>${t('btnLoadDemoPack')}</span>
+          </button>
+          <button data-action="set-ownership-filter" data-filter="all" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition cursor-pointer">
+            ${t('btnBrowseAllCards')}
+          </button>
+        </div>
+      </div>
+    `;
     return;
   }
 
-  filtered.forEach(card => {
-    const isOwned = isCardOwned(card.id);
-    const el = document.createElement('div');
-    el.className = `p-4 sm:p-5 rounded-3xl transition flex flex-col justify-between ${isOwned ? 'bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'bg-slate-50/70 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 opacity-65 hover:opacity-100'}`;
+  container.innerHTML = `
+    <div class="col-span-1 sm:col-span-2 p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+      <div class="text-3xl mb-2">🔍</div>
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${t('noMatchingCards')}</div>
+    </div>
+  `;
+}
+
+function buildCatalogCardElement(card) {
+  const isOwned = isCardOwned(card.id);
+  const el = document.createElement('div');
+  el.className = `p-4 sm:p-5 rounded-3xl transition flex flex-col justify-between ${isOwned ? 'bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'bg-slate-50/70 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 opacity-65 hover:opacity-100'}`;
 
     const nick = pickText(card.nickname);
     const meta = appState.cardMeta?.[card.id];
@@ -503,6 +469,29 @@ export function renderCards() {
         ${detailsHtml}
       </div>
     `;
-    container.appendChild(el);
+  return el;
+}
+
+export function renderCards() {
+  const container = document.getElementById('cards-list-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+  const unownedCount = PRESET_CARDS.length - ownedCount;
+  updateCardsFilterToolbar(ownedCount, unownedCount);
+
+  const searchText = document.getElementById('cards-search-input')?.value || '';
+  const filtered = filterCatalogCards({
+    ownershipFilter: currentOwnershipFilter,
+    issuerFilter: currentIssuerFilter,
+    searchText
   });
+
+  if (filtered.length === 0) {
+    renderCardsEmptyState(container, ownedCount);
+    return;
+  }
+
+  filtered.forEach(card => container.appendChild(buildCatalogCardElement(card)));
 }

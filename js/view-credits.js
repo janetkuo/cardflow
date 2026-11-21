@@ -7,8 +7,7 @@ import {
   getMonthKey, isCreditMuted, isCreditSkipped, isCardOwned
 } from './state.js';
 import {
-  computeAnnualUtilization, getCreditUrgencyInfo,
-  getCreditCycleInfo, getCardClaimedValueThisYear
+  computeCreditDashboardData, getCreditCycleInfo, getCardClaimedValueThisYear
 } from './logic.js';
 import { showToast, openModalEl, closeModalEl, showConfirmDialog } from './ui-core.js';
 
@@ -226,217 +225,19 @@ export function setPeriodFilter(p) {
   renderCredits();
 }
 
-export function renderCredits() {
-  const container = document.getElementById('credits-feed-container');
-  if (!container) return;
-  container.innerHTML = '';
+const CADENCE_HINT_KEYS = {
+  monthly: 'creditsCadenceHintMonth',
+  quarterly: 'creditsCadenceHintQuarter',
+  semiannual: 'creditsCadenceHintHalf'
+};
 
-  const curYear = selectedYear;
-  const curMonth = selectedMonth;
-  const curQuarter = Math.ceil(curMonth / 3);
-  const curHalf = curMonth <= 6 ? 1 : 2;
-  const mKey = getMonthKey();
+const URGENCY_HINT_KEYS = {
+  monthly: 'creditsUrgencyHintMonth',
+  quarterly: 'creditsUrgencyHintQuarter',
+  semiannual: 'creditsUrgencyHintHalf'
+};
 
-  // Filter credits to owned cards only
-  const allOwnedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
-  const ownedCredits = allOwnedCredits.filter(item => !isCreditMuted(item.id));
-  const mutedOwnedCredits = allOwnedCredits.filter(item => isCreditMuted(item.id));
-  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
-
-  let monthlyUnclaimed = 0;
-  let monthlyClaimedCount = 0;
-  let totalMonthlyItems = 0;
-
-  // Pre-calculate urgency info for all active owned credits
-  const creditMetaList = ownedCredits.map(item => {
-    const urgency = getCreditUrgencyInfo(item, curYear, curMonth);
-    return { item, urgency };
-  });
-
-  // Calculate monthly pending metrics & annual utilization via shared helper
-  ownedCredits.forEach(c => {
-    const meta = appState.cardMeta?.[c.cardId];
-    const openedMonth = meta?.openedMonth ? Number(meta.openedMonth) : null;
-
-    if (c.period === 'monthly') {
-      totalMonthlyItems++;
-      const currentMonthClaimed = !!appState.creditsClaimed[`${c.id}_${mKey}`];
-      const currentMonthSkipped = isCreditSkipped(`${c.id}_${mKey}`);
-      if (currentMonthClaimed) {
-        monthlyClaimedCount++;
-      } else if (!currentMonthSkipped) {
-        monthlyUnclaimed += c.amount;
-      }
-    } else if (c.period === 'quarterly') {
-      if (curMonth % 3 === 0) {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_Q${curQuarter}`];
-        const isSk = isCreditSkipped(`${c.id}_${curYear}_Q${curQuarter}`);
-        totalMonthlyItems++;
-        if (isCl) {
-          monthlyClaimedCount++;
-        } else if (!isSk) {
-          monthlyUnclaimed += c.amount;
-        }
-      }
-    } else if (c.period === 'semiannual') {
-      if (curMonth % 6 === 0) {
-        const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}_H${curHalf}`];
-        const isSk = isCreditSkipped(`${c.id}_${curYear}_H${curHalf}`);
-        totalMonthlyItems++;
-        if (isCl) {
-          monthlyClaimedCount++;
-        } else if (!isSk) {
-          monthlyUnclaimed += c.amount;
-        }
-      }
-    } else {
-      const isCl = !!appState.creditsClaimed[`${c.id}_${curYear}`];
-      const isSk = isCreditSkipped(`${c.id}_${curYear}`);
-      const isAnnivThisMonth = openedMonth && openedMonth === curMonth;
-      if (curMonth === 12 || isAnnivThisMonth) {
-        totalMonthlyItems++;
-        if (isCl) {
-          monthlyClaimedCount++;
-        } else if (!isSk) {
-          monthlyUnclaimed += c.amount;
-        }
-      }
-    }
-  });
-
-  const {
-    totalAnnualPerks,
-    totalClaimedAnnualValue,
-    totalExpiredAnnualValue,
-    remainingValue,
-    claimedPct,
-    expiredPct,
-    remainingPct
-  } = computeAnnualUtilization(ownedCredits, curYear, curMonth);
-
-  // Calculate items matching each tab for badge counts (timeline vs pure cadence mode)
-  const monthItems = creditMetaList.filter(({ urgency }) => urgency.isDueThisMonth);
-  const quarterItems = creditMetaList.filter(({ item }) => {
-    if (item.period === 'monthly' || item.period === 'quarterly') return true;
-    if (item.period === 'semiannual' && (curQuarter === 2 || curQuarter === 4)) return true;
-    if (item.period === 'annual') {
-      if (item.cycleType === 'anniversary') {
-        const annivMonth = appState.cardMeta?.[item.cardId]?.openedMonth ? Number(appState.cardMeta[item.cardId].openedMonth) : null;
-        if (annivMonth) return Math.ceil(annivMonth / 3) === curQuarter;
-      }
-      return curQuarter === 4;
-    }
-    return false;
-  });
-  const halfItems = creditMetaList.filter(({ item }) => {
-    if (item.period === 'monthly' || item.period === 'quarterly' || item.period === 'semiannual') return true;
-    if (item.period === 'annual') {
-      if (item.cycleType === 'anniversary') {
-        const annivMonth = appState.cardMeta?.[item.cardId]?.openedMonth ? Number(appState.cardMeta[item.cardId].openedMonth) : null;
-        if (annivMonth) return (annivMonth <= 6 ? 1 : 2) === curHalf;
-      }
-      return curHalf === 2;
-    }
-    return false;
-  });
-  const yearItems = creditMetaList;
-
-  const monthCadenceItems = creditMetaList.filter(({ item }) => item.period === 'monthly');
-  const quarterCadenceItems = creditMetaList.filter(({ item }) => item.period === 'quarterly');
-  const halfCadenceItems = creditMetaList.filter(({ item }) => item.period === 'semiannual');
-  const yearCadenceItems = creditMetaList.filter(({ item }) => item.period === 'annual');
-
-  const isCadenceMode = currentCreditsViewMode === 'cadence';
-
-  // Update Period Tab Badges & Labels
-  const badgeMonth = document.getElementById('badge-period-month');
-  if (badgeMonth) badgeMonth.innerText = `(${isCadenceMode ? monthCadenceItems.length : monthItems.length})`;
-
-  const badgeQuarter = document.getElementById('badge-period-quarter');
-  if (badgeQuarter) badgeQuarter.innerText = `(${isCadenceMode ? quarterCadenceItems.length : quarterItems.length})`;
-
-  const badgeHalf = document.getElementById('badge-period-half');
-  if (badgeHalf) badgeHalf.innerText = `(${isCadenceMode ? halfCadenceItems.length : halfItems.length})`;
-
-  const badgeYear = document.getElementById('badge-period-year');
-  if (badgeYear) badgeYear.innerText = `(${isCadenceMode ? yearCadenceItems.length : yearItems.length})`;
-
-  const labelMonth = document.getElementById('label-period-month');
-  if (labelMonth) labelMonth.innerText = t('periodTabMonth');
-
-  const labelQuarter = document.getElementById('label-period-quarter');
-  if (labelQuarter) labelQuarter.innerText = isCadenceMode ? t('periodQuarterlyLabel') : t('periodTabQuarter');
-
-  const labelHalf = document.getElementById('label-period-half');
-  if (labelHalf) {
-    if (isCadenceMode) {
-      labelHalf.innerText = t('periodSemiAnnualLabel');
-    } else {
-      labelHalf.innerText = curMonth <= 6 ? t('periodTabHalfH1') : t('periodTabHalfH2');
-    }
-  }
-
-  const labelYear = document.getElementById('label-period-year');
-  if (labelYear) labelYear.innerText = t('periodTabYear');
-
-  // Determine items to display based on active period filter and view mode
-  let displayMetaList = monthItems;
-  if (isCadenceMode) {
-    if (currentPeriodFilter === 'quarterly') {
-      displayMetaList = quarterCadenceItems;
-    } else if (currentPeriodFilter === 'semiannual') {
-      displayMetaList = halfCadenceItems;
-    } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
-      displayMetaList = yearCadenceItems;
-    } else {
-      displayMetaList = monthCadenceItems;
-    }
-  } else {
-    if (currentPeriodFilter === 'quarterly') {
-      displayMetaList = quarterItems;
-    } else if (currentPeriodFilter === 'semiannual') {
-      displayMetaList = halfItems;
-    } else if (currentPeriodFilter === 'annual' || currentPeriodFilter === 'all') {
-      displayMetaList = yearItems;
-    } else {
-      displayMetaList = monthItems;
-    }
-  }
-
-  // Determine stateKey and claim status for each item
-  const preparedItems = displayMetaList.map(({ item, urgency }) => {
-    let stateKey = '';
-    if (item.period === 'monthly') {
-      stateKey = `${item.id}_${mKey}`;
-    } else if (item.period === 'semiannual') {
-      stateKey = `${item.id}_${curYear}_H${curHalf}`;
-    } else if (item.period === 'quarterly') {
-      stateKey = `${item.id}_${curYear}_Q${curQuarter}`;
-    } else {
-      stateKey = `${item.id}_${curYear}`;
-    }
-    const isClaimed = !!appState.creditsClaimed[stateKey];
-    const isSkipped = isCreditSkipped(stateKey);
-    return { item, urgency, stateKey, isClaimed, isSkipped };
-  });
-
-  // Sort items: Unclaimed active first, then by urgencyOrder, then by amount desc
-  preparedItems.sort((a, b) => {
-    const aActive = !a.isClaimed && !a.isSkipped;
-    const bActive = !b.isClaimed && !b.isSkipped;
-    if (aActive !== bActive) {
-      return aActive ? -1 : 1;
-    }
-    if (a.isClaimed !== b.isClaimed) {
-      return a.isClaimed ? 1 : -1;
-    }
-    if (a.urgency.urgencyOrder !== b.urgency.urgencyOrder) {
-      return a.urgency.urgencyOrder - b.urgency.urgencyOrder;
-    }
-    return b.item.amount - a.item.amount;
-  });
-
-  // Empty state handling
+function renderCreditsEmptyState(container, ownedCount) {
   if (ownedCount === 0) {
     container.innerHTML = `
       <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-white to-emerald-50/40 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 text-center space-y-4 shadow-xs">
@@ -470,177 +271,192 @@ export function renderCredits() {
         </div>
       </div>
     `;
-  } else if (preparedItems.length === 0) {
-    container.innerHTML = `
-      <div class="p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-        <div class="text-3xl mb-2">💳</div>
-        <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${t('noCreditsDue')}</div>
-        <div class="text-[11px] text-slate-400 mt-1">${t('noCreditsDueSub')}</div>
-      </div>
-    `;
-  } else {
-    preparedItems.forEach(({ item, urgency, stateKey, isClaimed, isSkipped }) => {
-      const titleText = pickText(item.title);
-      const cardText = pickText(item.card);
-      const tipText = pickText(item.tip);
-
-      let cycleBadgeHtml = '';
-      if (isClaimed) {
-        cycleBadgeHtml = `
-          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50 shrink-0">
-            ✓ ${t('claimedThisCycle')}
-          </span>
-        `;
-      } else if (!isSkipped) {
-        const cycleInfo = getCreditCycleInfo(item, curYear, curMonth);
-        const badgeBg = cycleInfo.isExpiringImminent
-          ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/60 font-bold'
-          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium';
-        const icon = cycleInfo.isExpiringImminent ? '⏳' : (cycleInfo.isAnniversary ? '📅' : '🗓️');
-
-        cycleBadgeHtml = `
-          <span class="px-1.5 py-0.5 rounded-md text-[10px] ${badgeBg} flex items-center gap-1 shrink-0" title="${cycleInfo.cycleText}">
-            <span>${icon}</span>
-            <span>${cycleInfo.cycleText}</span>
-          </span>
-        `;
-      }
-
-      let urgencyBadgeHtml = '';
-      if (urgency.isExpiringSoon && !isSkipped) {
-        urgencyBadgeHtml = `
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center gap-1 shrink-0 ${isClaimed ? 'opacity-70' : 'animate-pulse shadow-2xs'}">
-            <span>⏰</span>
-            <span>${urgency.urgencyBadgeText}</span>
-          </span>
-        `;
-      }
-
-      let skippedBadgeHtml = '';
-      if (isSkipped) {
-        skippedBadgeHtml = `
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">
-            ⏭️ ${t('skippedThisCycle')}
-          </span>
-        `;
-      }
-
-      const cardEl = document.createElement('div');
-      cardEl.id = `credit-item-${item.id}`;
-      let cardBgClass = 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800';
-      if (isClaimed) {
-        cardBgClass = 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60';
-      } else if (isSkipped) {
-        cardBgClass = 'bg-slate-50/50 dark:bg-slate-900/40 border-dashed border-slate-200 dark:border-slate-800 opacity-70';
-      }
-      cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${cardBgClass}`;
-
-      let statusSubText = isClaimed ? t('claimedThisMonth') : t('readyToClaim');
-      if (isSkipped) {
-        statusSubText = t('statusSkipped');
-      } else if (!isClaimed && urgency.isExpiringSoon) {
-        statusSubText = t('expiresThisMo');
-      }
-
-      let checkBtnHtml = '';
-      if (isClaimed) {
-        checkBtnHtml = `
-          <button data-action="toggle-credit-claim" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer bg-indigo-600 border-indigo-600 text-white">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-          </button>
-        `;
-      } else if (isSkipped) {
-        checkBtnHtml = `
-          <button data-action="toggle-credit-skip" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400" title="${t('perkActionUnskipThisCycle')}">
-            <span class="text-xs">⏭</span>
-          </button>
-        `;
-      } else {
-        checkBtnHtml = `
-          <button data-action="toggle-credit-claim" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500">
-          </button>
-        `;
-      }
-
-      cardEl.innerHTML = `
-        <div class="flex items-center gap-3 min-w-0">
-          ${checkBtnHtml}
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs sm:text-sm font-bold ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : isSkipped ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${titleText}</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
-              ${urgencyBadgeHtml}
-              ${cycleBadgeHtml}
-              ${skippedBadgeHtml}
-            </div>
-            <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <div class="text-right">
-            <div class="text-xs sm:text-sm font-extrabold ${isClaimed || isSkipped ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">+$${item.amount.toFixed(2)}</div>
-            <div class="text-[10px] ${urgency.isExpiringSoon && !isClaimed && !isSkipped ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400'} mt-0.5">${statusSubText}</div>
-          </div>
-          <button data-action="open-perk-action" data-credit-id="${item.id}" data-state-key="${stateKey}" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer" title="${t('managePerkActionTitle')}">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="10" cy="16" r="2"/></svg>
-          </button>
-        </div>
-      `;
-      container.appendChild(cardEl);
-    });
+    return;
   }
 
-  // Update Hero Card Monthly Metrics
+  container.innerHTML = `
+    <div class="p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+      <div class="text-3xl mb-2">💳</div>
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${t('noCreditsDue')}</div>
+      <div class="text-[11px] text-slate-400 mt-1">${t('noCreditsDueSub')}</div>
+    </div>
+  `;
+}
+
+function buildCreditFeedItemElement({ item, urgency, stateKey, isClaimed, isSkipped }, curYear, curMonth) {
+  const titleText = pickText(item.title);
+  const cardText = pickText(item.card);
+  const tipText = pickText(item.tip);
+
+  let cycleBadgeHtml = '';
+  if (isClaimed) {
+    cycleBadgeHtml = `
+      <span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50 shrink-0">
+        ✓ ${t('claimedThisCycle')}
+      </span>
+    `;
+  } else if (!isSkipped) {
+    const cycleInfo = getCreditCycleInfo(item, curYear, curMonth);
+    const badgeBg = cycleInfo.isExpiringImminent
+      ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/60 font-bold'
+      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 font-medium';
+    const icon = cycleInfo.isExpiringImminent ? '⏳' : (cycleInfo.isAnniversary ? '📅' : '🗓️');
+
+    cycleBadgeHtml = `
+      <span class="px-1.5 py-0.5 rounded-md text-[10px] ${badgeBg} flex items-center gap-1 shrink-0" title="${cycleInfo.cycleText}">
+        <span>${icon}</span>
+        <span>${cycleInfo.cycleText}</span>
+      </span>
+    `;
+  }
+
+  const urgencyBadgeHtml = (urgency.isExpiringSoon && !isSkipped)
+    ? `
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 flex items-center gap-1 shrink-0 ${isClaimed ? 'opacity-70' : 'animate-pulse shadow-2xs'}">
+        <span>⏰</span>
+        <span>${urgency.urgencyBadgeText}</span>
+      </span>
+    `
+    : '';
+
+  const skippedBadgeHtml = isSkipped
+    ? `
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shrink-0">
+        ⏭️ ${t('skippedThisCycle')}
+      </span>
+    `
+    : '';
+
+  const cardEl = document.createElement('div');
+  cardEl.id = `credit-item-${item.id}`;
+  let cardBgClass = 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-800';
+  if (isClaimed) {
+    cardBgClass = 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-60';
+  } else if (isSkipped) {
+    cardBgClass = 'bg-slate-50/50 dark:bg-slate-900/40 border-dashed border-slate-200 dark:border-slate-800 opacity-70';
+  }
+  cardEl.className = `p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${cardBgClass}`;
+
+  let statusSubText = isClaimed ? t('claimedThisMonth') : t('readyToClaim');
+  if (isSkipped) {
+    statusSubText = t('statusSkipped');
+  } else if (!isClaimed && urgency.isExpiringSoon) {
+    statusSubText = t('expiresThisMo');
+  }
+
+  let checkBtnHtml = '';
+  if (isClaimed) {
+    checkBtnHtml = `
+      <button data-action="toggle-credit-claim" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer bg-indigo-600 border-indigo-600 text-white">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+      </button>
+    `;
+  } else if (isSkipped) {
+    checkBtnHtml = `
+      <button data-action="toggle-credit-skip" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400" title="${t('perkActionUnskipThisCycle')}">
+        <span class="text-xs">⏭</span>
+      </button>
+    `;
+  } else {
+    checkBtnHtml = `
+      <button data-action="toggle-credit-claim" data-state-key="${stateKey}" class="w-6 h-6 rounded-xl border flex items-center justify-center transition shrink-0 cursor-pointer border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-500">
+      </button>
+    `;
+  }
+
+  cardEl.innerHTML = `
+    <div class="flex items-center gap-3 min-w-0">
+      ${checkBtnHtml}
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs sm:text-sm font-bold ${isClaimed ? 'line-through text-slate-400 dark:text-slate-500' : isSkipped ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}">${titleText}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">${cardText}</span>
+          ${urgencyBadgeHtml}
+          ${cycleBadgeHtml}
+          ${skippedBadgeHtml}
+        </div>
+        <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tipText}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="text-right">
+        <div class="text-xs sm:text-sm font-extrabold ${isClaimed || isSkipped ? 'text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}">+$${item.amount.toFixed(2)}</div>
+        <div class="text-[10px] ${urgency.isExpiringSoon && !isClaimed && !isSkipped ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-400'} mt-0.5">${statusSubText}</div>
+      </div>
+      <button data-action="open-perk-action" data-credit-id="${item.id}" data-state-key="${stateKey}" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer" title="${t('managePerkActionTitle')}">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="4" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="10" cy="16" r="2"/></svg>
+      </button>
+    </div>
+  `;
+  return cardEl;
+}
+
+function updateCreditsDashboardSummary({
+  ownedCount, monthlyUnclaimed, monthlyClaimedCount, totalMonthlyItems,
+  utilization, counts, displayCount, isCadenceMode, curMonth
+}) {
+  const {
+    totalAnnualPerks, totalClaimedAnnualValue, totalExpiredAnnualValue,
+    remainingValue, claimedPct, expiredPct, remainingPct
+  } = utilization;
+
+  const badgeMonth = document.getElementById('badge-period-month');
+  if (badgeMonth) badgeMonth.innerText = `(${counts.month})`;
+  const badgeQuarter = document.getElementById('badge-period-quarter');
+  if (badgeQuarter) badgeQuarter.innerText = `(${counts.quarter})`;
+  const badgeHalf = document.getElementById('badge-period-half');
+  if (badgeHalf) badgeHalf.innerText = `(${counts.half})`;
+  const badgeYear = document.getElementById('badge-period-year');
+  if (badgeYear) badgeYear.innerText = `(${counts.year})`;
+
+  const labelMonth = document.getElementById('label-period-month');
+  if (labelMonth) labelMonth.innerText = t('periodTabMonth');
+  const labelQuarter = document.getElementById('label-period-quarter');
+  if (labelQuarter) labelQuarter.innerText = isCadenceMode ? t('periodQuarterlyLabel') : t('periodTabQuarter');
+  const labelHalf = document.getElementById('label-period-half');
+  if (labelHalf) {
+    labelHalf.innerText = isCadenceMode
+      ? t('periodSemiAnnualLabel')
+      : (curMonth <= 6 ? t('periodTabHalfH1') : t('periodTabHalfH2'));
+  }
+  const labelYear = document.getElementById('label-period-year');
+  if (labelYear) labelYear.innerText = t('periodTabYear');
+
   const valEl = document.getElementById('monthly-remaining-val');
   if (valEl) valEl.innerText = monthlyUnclaimed.toFixed(2);
-
   const dueLabel = document.getElementById('monthly-due-label');
   if (dueLabel) dueLabel.innerText = t('monthlyDueLabel');
-
   const ratioEl = document.getElementById('monthly-claimed-ratio');
   if (ratioEl) ratioEl.innerText = `${monthlyClaimedCount} / ${totalMonthlyItems || 0}`;
-
   const unitLabel = document.getElementById('monthly-unit-label');
   if (unitLabel) unitLabel.innerText = t('usedUnit');
 
-  // Update Hero Card Annual Utilization (computed via shared computeAnnualUtilization above)
   const utilPctEl = document.getElementById('annual-utilization-pct');
-  if (utilPctEl) {
-    utilPctEl.innerText = `${claimedPct}%`;
-  }
-
+  if (utilPctEl) utilPctEl.innerText = `${claimedPct}%`;
   const annualAmount = document.getElementById('annual-value-amount');
   if (annualAmount) annualAmount.innerText = Math.round(totalAnnualPerks).toLocaleString();
-
   const annualUnit = document.getElementById('annual-unit-label');
   if (annualUnit) annualUnit.innerText = t('perYearUnit');
 
-  // Mini Utilization Bar: Emerald (Claimed) + Gray (Expired) + Transparent (Remaining)
   const segMonthly = document.getElementById('bar-segment-monthly');
   const segSemi = document.getElementById('bar-segment-semi');
   const segAnnual = document.getElementById('bar-segment-annual');
-
   if (segMonthly && segSemi && segAnnual) {
     segMonthly.style.width = `${claimedPct}%`;
     segSemi.style.width = `${expiredPct}%`;
     segAnnual.style.width = `${remainingPct}%`;
-
     segMonthly.title = `${t('barTitleClaimed')}: $${Math.round(totalClaimedAnnualValue).toLocaleString()} (${claimedPct}%)`;
     segSemi.title = `${t('barTitleExpired')}: $${Math.round(totalExpiredAnnualValue).toLocaleString()} (${expiredPct}%)`;
     segAnnual.title = `${t('barTitleRemaining')}: $${Math.round(remainingValue).toLocaleString()} (${remainingPct}%)`;
   }
 
-  // Micro Legend text
   const legClaimed = document.getElementById('legend-claimed');
   if (legClaimed) legClaimed.innerText = `${t('statClaimedPrefix')} $${Math.round(totalClaimedAnnualValue).toLocaleString()}`;
-
   const legExpired = document.getElementById('legend-expired');
   if (legExpired) legExpired.innerText = `${t('statExpiredPrefix')} $${Math.round(totalExpiredAnnualValue).toLocaleString()}`;
-
   const legRemaining = document.getElementById('legend-remaining');
   if (legRemaining) legRemaining.innerText = `${t('statRemainingPrefix')} $${Math.round(remainingValue).toLocaleString()}`;
 
-  // Balance Badge
   const badgeEl = document.getElementById('balance-badge');
   if (badgeEl) {
     if (ownedCount === 0) {
@@ -661,48 +477,62 @@ export function renderCredits() {
     donutBadge.className = 'px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold border border-white/25 backdrop-blur-sm transition inline-flex items-center gap-1 cursor-pointer';
   }
 
-  // Hidden alias button for verify.py
   const allBtn = document.getElementById('period-all-btn');
-  if (allBtn) {
-    allBtn.innerText = t('periodAll');
-  }
+  if (allBtn) allBtn.innerText = t('periodAll');
 
-  // Credits Count Label
   const countLabel = document.getElementById('credits-count-label');
-  if (countLabel) {
-    countLabel.innerText = `${preparedItems.length} ${t('itemsUnit')}`;
-  }
+  if (countLabel) countLabel.innerText = `${displayCount} ${t('itemsUnit')}`;
 
-  // Urgency hint under segmented tabs
   const hintEl = document.getElementById('credits-urgency-hint');
   if (hintEl) {
-    if (isCadenceMode) {
-      if (currentPeriodFilter === 'monthly') {
-        hintEl.innerText = t('creditsCadenceHintMonth');
-      } else if (currentPeriodFilter === 'quarterly') {
-        hintEl.innerText = t('creditsCadenceHintQuarter');
-      } else if (currentPeriodFilter === 'semiannual') {
-        hintEl.innerText = t('creditsCadenceHintHalf');
-      } else {
-        hintEl.innerText = t('creditsCadenceHintYear');
-      }
-    } else {
-      if (currentPeriodFilter === 'monthly') {
-        hintEl.innerText = t('creditsUrgencyHintMonth');
-      } else if (currentPeriodFilter === 'quarterly') {
-        hintEl.innerText = t('creditsUrgencyHintQuarter');
-      } else if (currentPeriodFilter === 'semiannual') {
-        hintEl.innerText = t('creditsUrgencyHintHalf');
-      } else {
-        hintEl.innerText = t('creditsUrgencyHintYear');
-      }
-    }
+    const map = isCadenceMode ? CADENCE_HINT_KEYS : URGENCY_HINT_KEYS;
+    const defaultKey = isCadenceMode ? 'creditsCadenceHintYear' : 'creditsUrgencyHintYear';
+    hintEl.innerText = t(map[currentPeriodFilter] || defaultKey);
+  }
+}
+
+export function renderCredits() {
+  const container = document.getElementById('credits-feed-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const curYear = selectedYear;
+  const curMonth = selectedMonth;
+  const allOwnedCredits = PRESET_CREDITS.filter(item => isCardOwned(item.cardId));
+  const ownedCredits = allOwnedCredits.filter(item => !isCreditMuted(item.id));
+  const mutedOwnedCredits = allOwnedCredits.filter(item => isCreditMuted(item.id));
+  const ownedCount = PRESET_CARDS.filter(c => isCardOwned(c.id)).length;
+  const isCadenceMode = currentCreditsViewMode === 'cadence';
+
+  const dashboard = computeCreditDashboardData({
+    ownedCredits,
+    curYear,
+    curMonth,
+    periodFilter: currentPeriodFilter,
+    viewMode: currentCreditsViewMode
+  });
+
+  if (ownedCount === 0 || dashboard.preparedItems.length === 0) {
+    renderCreditsEmptyState(container, ownedCount);
+  } else {
+    dashboard.preparedItems.forEach(entry => {
+      container.appendChild(buildCreditFeedItemElement(entry, curYear, curMonth));
+    });
   }
 
-  // Render collapsible muted section at bottom of credits feed
-  renderMutedCreditsSection(mutedOwnedCredits);
+  updateCreditsDashboardSummary({
+    ownedCount,
+    monthlyUnclaimed: dashboard.monthlyUnclaimed,
+    monthlyClaimedCount: dashboard.monthlyClaimedCount,
+    totalMonthlyItems: dashboard.totalMonthlyItems,
+    utilization: dashboard.utilization,
+    counts: dashboard.counts,
+    displayCount: dashboard.preparedItems.length,
+    isCadenceMode,
+    curMonth
+  });
 
-  // Update Net Effective AF indicators & progress
+  renderMutedCreditsSection(mutedOwnedCredits);
   renderNetEffectiveAF();
 }
 

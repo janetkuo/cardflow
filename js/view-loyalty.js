@@ -1,83 +1,18 @@
 // CardFlow Loyalty Subview: FNC Tracker, Loyalty Statuses & Transfer Cheat Sheet
 
 import { currentLang, t, pickText } from './i18n.js';
-import { PRESET_CARDS } from './data.js';
 import {
   today, selectedYear, appState, saveState,
   escapeHtml, parseLocalYmd, isCardOwned
 } from './state.js';
+import { deriveAutoFncs } from './logic.js';
 
 export function renderFncs() {
   const container = document.getElementById('fnc-cards-container');
   if (!container) return;
   container.innerHTML = '';
 
-  const ownedBrilliant = isCardOwned('bonvoy-brilliant');
-  const ownedIhg = isCardOwned('ihg-premier');
-
-  // Build combined list of FNCs:
-  // 1. Auto-derived from owned hotel cards
-  const autoFncs = [];
-  const curMonth = today.getMonth() + 1;
-  if (ownedBrilliant) {
-    const meta = appState.cardMeta?.['bonvoy-brilliant'] || {};
-    const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
-    const annMonthStr = String(renewMonth).padStart(2, '0');
-    const grantYear = (selectedYear === today.getFullYear() && curMonth < renewMonth) ? selectedYear - 1 : selectedYear;
-    const expireYear = grantYear + 1;
-    const expireDate = `${expireYear}-${annMonthStr}-28`;
-    const autoKey = `auto_fnc_brilliant_${grantYear}`;
-    const used = !!appState.fncsClaimed?.[autoKey];
-
-    autoFncs.push({
-      id: autoKey,
-      isAuto: true,
-      cardId: 'bonvoy-brilliant',
-      name: {
-        en: 'Marriott 85k Free Night Award (Annual Renewal)',
-        'zh-TW': '萬豪 85,000 分年度免費住宿券 (自動推算)'
-      },
-      issuer: 'Marriott',
-      points: '85,000 pts',
-      grantNote: {
-        en: `Issued ~Month ${renewMonth} · Valid 1 yr`,
-        'zh-TW': `約每年 ${renewMonth} 月出帳入帳 · 效期 1 年`
-      },
-      expireDate: expireDate,
-      used: used
-    });
-  }
-
-  if (ownedIhg) {
-    const meta = appState.cardMeta?.['ihg-premier'] || {};
-    const renewMonth = meta.renewMonth && meta.renewMonth !== 'No AF' ? Number(meta.renewMonth) : (meta.openedMonth ? Number(meta.openedMonth) : 6);
-    const annMonthStr = String(renewMonth).padStart(2, '0');
-    const grantYear = (selectedYear === today.getFullYear() && curMonth < renewMonth) ? selectedYear - 1 : selectedYear;
-    const expireYear = grantYear + 1;
-    const expireDate = `${expireYear}-${annMonthStr}-28`;
-    const autoKey = `auto_fnc_ihg_${grantYear}`;
-    const used = !!appState.fncsClaimed?.[autoKey];
-
-    autoFncs.push({
-      id: autoKey,
-      isAuto: true,
-      cardId: 'ihg-premier',
-      name: {
-        en: 'IHG 50k Free Night Award (Annual Renewal)',
-        'zh-TW': 'IHG 50,000 分年度免費住宿券 (自動推算)'
-      },
-      issuer: 'IHG',
-      points: '50,000 pts',
-      grantNote: {
-        en: `Issued ~Month ${renewMonth} · Valid 1 yr`,
-        'zh-TW': `約每年 ${renewMonth} 月出帳入帳 · 效期 1 年`
-      },
-      expireDate: expireDate,
-      used: used
-    });
-  }
-
-  const allFncs = [...autoFncs, ...(appState.fncs || [])];
+  const allFncs = [...deriveAutoFncs(selectedYear, today), ...(appState.fncs || [])];
 
   if (allFncs.length === 0) {
     container.innerHTML = `
