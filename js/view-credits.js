@@ -1,6 +1,6 @@
 // CardFlow Credits Subview: Timeline/Cadence Filters, Claim/Skip/Mute, Reset Month & Net Effective AF
 
-import { currentLang, t } from './i18n.js';
+import { t, pickText } from './i18n.js';
 import { PRESET_CARDS, PRESET_CREDITS } from './data.js';
 import {
   selectedYear, selectedMonth, appState, saveState,
@@ -160,7 +160,7 @@ export function renderNetEffectiveAF() {
       `;
     } else {
       cardsListContainer.innerHTML = cardStats.map(({ card, claimed, netCost, pct }) => {
-        const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+        const nick = pickText(card.nickname);
         const isFree = card.annualFee === 0;
         const isCardBreakEven = isFree || (claimed >= card.annualFee);
 
@@ -480,9 +480,9 @@ export function renderCredits() {
     `;
   } else {
     preparedItems.forEach(({ item, urgency, stateKey, isClaimed, isSkipped }) => {
-      const titleText = typeof item.title === 'object' ? (item.title[currentLang] || item.title['zh-TW']) : item.title;
-      const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
-      const tipText = typeof item.tip === 'object' ? (item.tip[currentLang] || item.tip['zh-TW']) : item.tip;
+      const titleText = pickText(item.title);
+      const cardText = pickText(item.card);
+      const tipText = pickText(item.tip);
 
       let cycleBadgeHtml = '';
       if (isClaimed) {
@@ -539,7 +539,7 @@ export function renderCredits() {
       if (isSkipped) {
         statusSubText = t('statusSkipped');
       } else if (!isClaimed && urgency.isExpiringSoon) {
-        statusSubText = currentLang === 'zh-TW' ? '本月截止' : 'Expires this mo';
+        statusSubText = t('expiresThisMo');
       }
 
       let checkBtnHtml = '';
@@ -722,8 +722,8 @@ export function renderMutedCreditsSection(mutedCredits) {
   if (countBadge) countBadge.innerText = mutedCredits.length;
 
   list.innerHTML = mutedCredits.map(item => {
-    const titleText = typeof item.title === 'object' ? (item.title[currentLang] || item.title['zh-TW']) : item.title;
-    const cardText = typeof item.card === 'object' ? (item.card[currentLang] || item.card['zh-TW']) : item.card;
+    const titleText = pickText(item.title);
+    const cardText = pickText(item.card);
     const periodLabel = item.period === 'monthly' ? t('periodTabMonth') :
                         item.period === 'quarterly' ? t('periodQuarterly') :
                         item.period === 'semiannual' ? t('periodSemiAnnual') : t('periodTabYear');
@@ -776,8 +776,8 @@ export function openPerkActionModal(creditId, stateKey) {
   const muteTitleEl = document.getElementById('perk-action-mute-title');
   const muteSubEl = document.getElementById('perk-action-mute-sub');
 
-  const cardText = typeof credit.card === 'object' ? (credit.card[currentLang] || credit.card['zh-TW']) : credit.card;
-  const titleText = typeof credit.title === 'object' ? (credit.title[currentLang] || credit.title['zh-TW']) : credit.title;
+  const cardText = pickText(credit.card);
+  const titleText = pickText(credit.title);
 
   if (cardNameEl) cardNameEl.innerText = cardText;
   if (titleEl) titleEl.innerText = titleText;

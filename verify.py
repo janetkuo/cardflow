@@ -315,6 +315,33 @@ def check_dom_ids():
         print("❌ index.html must load ./js/main.js as ES module")
         return False
 
+    # Guard against styles.css build drift: verify static/template CSS classes exist in prebuilt styles.css
+    styles_path = os.path.join(base_dir, 'styles.css')
+    input_css_path = os.path.join(base_dir, 'src/input.css')
+    if not os.path.exists(input_css_path) or not os.path.exists(styles_path):
+        print("❌ Both src/input.css and prebuilt styles.css must exist")
+        return False
+    with open(styles_path) as f:
+        built_css = f.read()
+    custom_classes = {
+        'donut-slice', 'period-filter-btn', 'issuer-filter-btn', 'adv-cat-btn',
+        'card-ownership-filter-btn', 'palette-btn', 'hide-scrollbar', 'animate-fade-in',
+        'fade-in', 'cardflow-app'
+    }
+    missing_css_classes = []
+    for fname, content in [('index.html', html)] + module_srcs:
+        cleaned = re.sub(r'\$\{[^{}]*\}', ' ', content)
+        for m in re.finditer(r'(?:class=|className\s*=\s*)[\"\'`]([^\"\'`\n]+)[\"\'`]', cleaned):
+            for cls in m.group(1).split():
+                if cls in custom_classes or not re.match(r'^[a-zA-Z!-]', cls):
+                    continue
+                esc = re.sub(r'([^\w-])', r'\\\1', cls)
+                if '.' + esc not in built_css:
+                    missing_css_classes.append((fname, cls))
+    if missing_css_classes:
+        print(f"❌ Utility classes missing from prebuilt styles.css (rebuild Tailwind): {missing_css_classes[:10]}")
+        return False
+
     print(f"   ✅ {len(all_needed_ids)} DOM IDs, {len(used_actions)} delegated data-actions ({len(registered_actions)} handlers), Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 

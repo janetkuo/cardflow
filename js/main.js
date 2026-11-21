@@ -120,7 +120,7 @@ export function setupModals() {
           setAppState(normalizeAppState(parsed, true));
           saveState();
           applyLanguage(currentLang);
-          showToast(currentLang === 'zh-TW' ? '備份資料還原成功！' : 'Data restored successfully!');
+          showToast(t('toastDataRestored'));
           if (settingsModal) closeModalEl(settingsModal);
         } catch (err) {
           showToast(t('invalidBackupFile'), 3500);
@@ -135,12 +135,9 @@ export function setupModals() {
   const resetBtn = document.getElementById('reset-factory-btn');
   if (resetBtn) {
     resetBtn.onclick = () => {
-      const confirmMsg = currentLang === 'zh-TW'
-        ? '確定要清除所有本機資料（已選卡片、折抵進度與房券），重設為初始狀態嗎？此動作無法復原。'
-        : 'Are you sure you want to clear all data (cards, claimed credits, and awards) and reset to initial state? This cannot be undone.';
       showConfirmDialog({
         title: t('confirmFactoryResetTitle'),
-        message: confirmMsg,
+        message: t('confirmFactoryResetDesc'),
         confirmLabel: t('confirmBtnProceed'),
         dangerous: true,
         onConfirm: () => {
@@ -149,7 +146,7 @@ export function setupModals() {
           saveState();
           renderAllViews();
           closeModalEl(settingsModal);
-          showToast(currentLang === 'zh-TW' ? '已成功清除資料並恢復初始狀態' : 'All data reset to initial state');
+          showToast(t('toastFactoryResetDone'));
         }
       });
     };
@@ -313,7 +310,7 @@ export function setupModals() {
     saveClientIdBtn.onclick = () => {
       const val = clientIdInput.value.trim();
       localStorage.setItem(GDRIVE_CLIENT_ID_KEY, val);
-      showToast(currentLang === 'zh-TW' ? 'Google OAuth Client ID 已儲存！' : 'Google OAuth Client ID saved!');
+      showToast(t('toastClientIdSaved'));
       updateDriveUI();
     };
   }
@@ -434,7 +431,7 @@ export function init() {
   document.getElementById('restore-banner-btn')?.addEventListener('click', () => {
     if (bannerEl) bannerEl.classList.remove('hidden');
     localStorage.removeItem(BANNER_KEY);
-    showToast(currentLang === 'zh-TW' ? '已恢復顯示頂部提醒橫條。' : 'Top notification banner restored.');
+    showToast(t('toastBannerRestored'));
   });
 
   document.getElementById('banner-reset-month-btn')?.addEventListener('click', resetCurrentMonth);

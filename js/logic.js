@@ -1,6 +1,6 @@
 // CardFlow Pure Calculations, Cycle Logic & SVG Arc Helpers
 
-import { currentLang, t } from './i18n.js';
+import { t } from './i18n.js';
 import { PRESET_CREDITS } from './data.js';
 import { appState, today, selectedYear, selectedMonth, isCreditMuted } from './state.js';
 
@@ -171,13 +171,14 @@ export function getCreditCycleInfo(item, curYear, curMonth) {
   const curDay = today.getDate();
   const isCurrentViewingMonth = (selectedYear === today.getFullYear() && selectedMonth === (today.getMonth() + 1));
 
+  const formatDaysText = (days) => (days === 0 ? t('dueToday') : t('daysRemaining').replace('{n}', days));
+
   if (item.period === 'monthly') {
     const lastDayOfMonth = new Date(curYear, curMonth, 0).getDate();
     if (isCurrentViewingMonth) {
       daysRemaining = Math.max(0, lastDayOfMonth - curDay);
       if (daysRemaining <= 7) isExpiringImminent = true;
-      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
-      cycleText = `${daysText} · ${t('resetsMonthly')}`;
+      cycleText = `${formatDaysText(daysRemaining)} · ${t('resetsMonthly')}`;
     } else {
       cycleText = t('resetsMonthly');
     }
@@ -188,8 +189,7 @@ export function getCreditCycleInfo(item, curYear, curMonth) {
     if (isCurrentViewingMonth && isQuarterEndMonth) {
       daysRemaining = Math.max(0, lastDayOfQMonth - curDay);
       if (daysRemaining <= 14) isExpiringImminent = true;
-      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
-      cycleText = `${daysText} · ${t('resetsQuarterly')}`;
+      cycleText = `${formatDaysText(daysRemaining)} · ${t('resetsQuarterly')}`;
     } else {
       cycleText = `Q${curQuarter} · ${t('resetsQuarterly')}`;
     }
@@ -200,8 +200,7 @@ export function getCreditCycleInfo(item, curYear, curMonth) {
     if (isCurrentViewingMonth && isHalfEndMonth) {
       daysRemaining = Math.max(0, lastDayOfHMonth - curDay);
       if (daysRemaining <= 20) isExpiringImminent = true;
-      const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
-      cycleText = `${daysText} · ${t('resetsSemiannual')}`;
+      cycleText = `${formatDaysText(daysRemaining)} · ${t('resetsSemiannual')}`;
     } else {
       cycleText = `${curHalf === 1 ? 'H1' : 'H2'} · ${t('resetsSemiannual')}`;
     }
@@ -212,8 +211,7 @@ export function getCreditCycleInfo(item, curYear, curMonth) {
           const lastDayOfAnniv = new Date(curYear, openedMonth, 0).getDate();
           daysRemaining = Math.max(0, lastDayOfAnniv - curDay);
           if (daysRemaining <= 30) isExpiringImminent = true;
-          const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
-          cycleText = `${daysText} · ${t('resetsAnniversary')}`;
+          cycleText = `${formatDaysText(daysRemaining)} · ${t('resetsAnniversary')}`;
         } else {
           cycleText = `${t('cadenceAnniversary')} · ${openedMonth} ${t('monthUnit')}`;
         }
@@ -226,8 +224,7 @@ export function getCreditCycleInfo(item, curYear, curMonth) {
         const lastDayOfYear = 31;
         daysRemaining = Math.max(0, lastDayOfYear - curDay);
         if (daysRemaining <= 30) isExpiringImminent = true;
-        const daysText = daysRemaining === 0 ? (currentLang === 'zh-TW' ? '今日到期' : 'Due today') : t('daysRemaining').replace('{n}', daysRemaining);
-        cycleText = `${daysText} · ${t('resetsAnnual')}`;
+        cycleText = `${formatDaysText(daysRemaining)} · ${t('resetsAnnual')}`;
       } else {
         cycleText = t('cadenceAnnual');
       }

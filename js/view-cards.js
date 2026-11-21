@@ -1,6 +1,6 @@
 // CardFlow Cards Grid Subview: Portfolio Filtering, Compact/Detailed View & Deep Links
 
-import { currentLang, t } from './i18n.js';
+import { t, pickText } from './i18n.js';
 import { DUPLICATE_PERK_GROUPS, PRESET_CARDS } from './data.js';
 import {
   today, selectedYear, appState,
@@ -108,15 +108,15 @@ export function renderCards() {
     if (currentOwnershipFilter === 'unowned' && isOwned) return false;
     if (currentIssuerFilter !== 'all' && c.issuer !== currentIssuerFilter) return false;
     if (searchVal) {
-      const nick = typeof c.nickname === 'object' ? (c.nickname[currentLang] || c.nickname['zh-TW']) : c.nickname;
+      const nick = pickText(c.nickname);
       const matchName = c.name.toLowerCase().includes(searchVal);
       const matchNick = nick.toLowerCase().includes(searchVal);
       const matchCat = c.categories.some(cat => {
-        const catName = typeof cat.name === 'object' ? (cat.name[currentLang] || cat.name['zh-TW']) : cat.name;
+        const catName = pickText(cat.name);
         return catName.toLowerCase().includes(searchVal) || cat.mult.toLowerCase().includes(searchVal);
       });
       const matchPerk = c.perks.some(p => {
-        const perkTitle = typeof p.title === 'object' ? (p.title[currentLang] || p.title['zh-TW']) : p.title;
+        const perkTitle = pickText(p.title);
         return perkTitle.toLowerCase().includes(searchVal);
       });
       return matchName || matchNick || matchCat || matchPerk;
@@ -158,7 +158,7 @@ export function renderCards() {
       container.innerHTML = `
         <div class="col-span-1 sm:col-span-2 p-8 text-center bg-white dark:bg-slate-900/90 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
           <div class="text-3xl mb-2">🔍</div>
-          <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${currentLang === 'zh-TW' ? '找不到符合條件的卡片' : 'No matching cards found'}</div>
+          <div class="text-xs font-bold text-slate-700 dark:text-slate-200">${t('noMatchingCards')}</div>
         </div>
       `;
     }
@@ -170,7 +170,7 @@ export function renderCards() {
     const el = document.createElement('div');
     el.className = `p-4 sm:p-5 rounded-3xl transition flex flex-col justify-between ${isOwned ? 'bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'bg-slate-50/70 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 opacity-65 hover:opacity-100'}`;
 
-    const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+    const nick = pickText(card.nickname);
     const meta = appState.cardMeta?.[card.id];
     let renewMonth = null;
     if (meta && meta.renewMonth !== undefined && meta.renewMonth !== null) {
@@ -178,7 +178,7 @@ export function renderCards() {
     } else if (meta && meta.openedMonth) {
       renewMonth = card.annualFee === 0 ? t('noAnnualFeeLabel') : `${meta.openedMonth} ${t('monthUnit')}`;
     } else if (card.renewMonth) {
-      renewMonth = typeof card.renewMonth === 'object' ? (card.renewMonth[currentLang] || card.renewMonth['zh-TW']) : card.renewMonth;
+      renewMonth = pickText(card.renewMonth);
     }
     const openedYearVal = meta?.openedYear || null;
 
@@ -262,11 +262,11 @@ export function renderCards() {
       </div>
     ` : '';
 
-    const signupBonus = card.signupBonus ? (typeof card.signupBonus === 'object' ? (card.signupBonus[currentLang] || card.signupBonus['zh-TW']) : card.signupBonus) : null;
-    const useForText = card.useFor ? (typeof card.useFor === 'object' ? (card.useFor[currentLang] || card.useFor['zh-TW']) : card.useFor) : null;
+    const signupBonus = card.signupBonus ? pickText(card.signupBonus) : null;
+    const useForText = card.useFor ? pickText(card.useFor) : null;
 
     let catList = card.categories.map(cat => {
-      const catName = typeof cat.name === 'object' ? (cat.name[currentLang] || cat.name['zh-TW']) : cat.name;
+      const catName = pickText(cat.name);
       return `
         <div class="flex items-center justify-between text-xs py-0.5 border-b border-slate-100 dark:border-slate-800/60">
           <span class="text-slate-600 dark:text-slate-400 font-medium">${catName}</span>
@@ -276,8 +276,8 @@ export function renderCards() {
     }).join('');
 
     let perkList = card.perks.map(p => {
-      const title = typeof p.title === 'object' ? (p.title[currentLang] || p.title['zh-TW']) : p.title;
-      const note = typeof p.note === 'object' ? (p.note[currentLang] || p.note['zh-TW']) : p.note;
+      const title = pickText(p.title);
+      const note = pickText(p.note);
 
       let overlapBadgeHtml = '';
       if (p.group && isOwned) {
@@ -296,7 +296,7 @@ export function renderCards() {
             tipText = t('overlapBadgeBackup');
           }
 
-          const tipTitle = groupMeta ? (groupMeta.tip[currentLang] || groupMeta.tip['zh-TW']) : '';
+          const tipTitle = groupMeta ? pickText(groupMeta.tip) : '';
 
           overlapBadgeHtml = `
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 shrink-0" title="${tipTitle}">

@@ -1,6 +1,6 @@
 // CardFlow Loyalty Subview: FNC Tracker, Loyalty Statuses & Transfer Cheat Sheet
 
-import { currentLang, t } from './i18n.js';
+import { currentLang, t, pickText } from './i18n.js';
 import { PRESET_CARDS } from './data.js';
 import {
   today, selectedYear, appState, saveState,
@@ -98,8 +98,8 @@ export function renderFncs() {
     const diffDays = isNaN(expDate.getTime()) ? 0 : Math.round((expDate - todayMidnight) / (1000 * 60 * 60 * 24));
     const isUrgent = diffDays <= 60 && !fnc.used;
 
-    const nameText = escapeHtml(typeof fnc.name === 'object' ? (fnc.name[currentLang] || fnc.name['zh-TW']) : fnc.name);
-    const grantText = fnc.grantNote ? escapeHtml(typeof fnc.grantNote === 'object' ? (fnc.grantNote[currentLang] || fnc.grantNote['zh-TW']) : fnc.grantNote) : null;
+    const nameText = escapeHtml(pickText(fnc.name));
+    const grantText = fnc.grantNote ? escapeHtml(pickText(fnc.grantNote)) : null;
     const safeIssuer = escapeHtml(fnc.issuer);
     const safePoints = escapeHtml(fnc.points);
     const safeExpire = escapeHtml(fnc.expireDate);
@@ -189,11 +189,11 @@ export function renderLoyaltyStatusCards() {
 
   container.innerHTML = statuses.map(s => {
     const isUnlocked = s.cardIds.some(cid => isCardOwned(cid));
-    const statusName = s.name[currentLang] || s.name['zh-TW'];
-    const statusDesc = s.desc[currentLang] || s.desc['zh-TW'];
+    const statusName = pickText(s.name);
+    const statusDesc = pickText(s.desc);
     const badgeText = isUnlocked
-      ? (s.badge[currentLang] || s.badge['zh-TW'])
-      : (currentLang === 'zh-TW' ? '未持有對應卡片' : 'Card Required');
+      ? pickText(s.badge)
+      : t('cardRequiredBadge');
     const badgeCls = isUnlocked
       ? s.badgeCls
       : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-700';

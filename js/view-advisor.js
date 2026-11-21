@@ -1,7 +1,7 @@
 // CardFlow Advisor & Analytics Subview: Donut Chart, Chase 5/24, Overlap Optimizer & Spend Advisor
 
 import { CREDIT_CATEGORY_META } from './palettes.js';
-import { currentLang, t } from './i18n.js';
+import { t, pickText } from './i18n.js';
 import { DUPLICATE_PERK_GROUPS, PRESET_CARDS, PRESET_CREDITS, ADVISOR_RULES } from './data.js';
 import {
   ADVISOR_MODE_KEY, today, appState,
@@ -73,7 +73,7 @@ export function renderDonutChart() {
 
   if (sortedCats.length === 1) {
     const c = sortedCats[0];
-    const catName = c.name[currentLang] || c.name['zh-TW'];
+    const catName = pickText(c.name);
     svg.innerHTML = `
       <path class="donut-slice" fill="${c.color}"
             d="${describeDonutArc(100, 100, 58, 84, 0, 179.99)} ${describeDonutArc(100, 100, 58, 84, 180, 359.99)}"
@@ -92,7 +92,7 @@ export function renderDonutChart() {
 
     let currentAngle = 0;
     svg.innerHTML = sortedCats.map((c, idx) => {
-      const catName = c.name[currentLang] || c.name['zh-TW'];
+      const catName = pickText(c.name);
       const sliceDeg = degs[idx];
       const startAngle = currentAngle;
       const endAngle = startAngle + sliceDeg;
@@ -133,7 +133,7 @@ export function renderDonutChart() {
 
   // Render Legend
   legend.innerHTML = sortedCats.map(c => {
-    const catName = c.name[currentLang] || c.name['zh-TW'];
+    const catName = pickText(c.name);
     const pct = Math.round((c.amount / totalAnnual) * 100);
     return `
       <div class="flex items-center justify-between gap-1 text-[11px] p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
@@ -209,7 +209,7 @@ export function renderChase524() {
       if (monthsElapsed >= 0 && monthsElapsed < 24) {
         in24Count++;
         const cardObj = PRESET_CARDS.find(c => c.id === id);
-        const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : id;
+        const nick = cardObj ? pickText(cardObj.nickname) : id;
         recentCards.push({
           name: nick,
           date: `${meta.openedYear}/${meta.openedMonth}`,
@@ -266,35 +266,32 @@ export function renderOverlapOptimizer() {
     const hasOverlap = ownedCards.length >= 2;
     if (hasOverlap) totalOverlaps++;
 
-    const groupTitle = typeof group.name === 'object' ? (group.name[currentLang] || group.name['zh-TW']) : group.name;
-    const groupTip = typeof group.tip === 'object' ? (group.tip[currentLang] || group.tip['zh-TW']) : group.tip;
+    const groupTitle = pickText(group.name);
+    const groupTip = pickText(group.tip);
 
     let statusPill = '';
     let cardsSummaryHtml = '';
 
     if (ownedCards.length === 0) {
-      statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500">${currentLang === 'zh-TW' ? '未持有' : 'Unowned'}</span>`;
+      statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500">${t('unownedLabel')}</span>`;
 
       const libraryCards = PRESET_CARDS.filter(c => c.perks && c.perks.some(p => p.group === group.id));
-      const libNames = libraryCards.map(c => {
-        const nick = typeof c.nickname === 'object' ? (c.nickname[currentLang] || c.nickname['zh-TW']) : c.nickname;
-        return nick;
-      }).join('、');
+      const libNames = libraryCards.map(c => pickText(c.nickname)).join('、');
 
       cardsSummaryHtml = `
         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-          ${currentLang === 'zh-TW' ? `全卡庫提供卡片：${libNames}` : `Library benchmark: ${libNames}`}
+          ${t('libraryBenchmarkPrefix')}${libNames}
         </div>
       `;
     } else {
       if (hasOverlap) {
         statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">⚠️ ${t('overlapBadgePrefix')} ${ownedCards.length} ${t('overlapBadgeSuffix')}</span>`;
       } else {
-        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60">✨ ${currentLang === 'zh-TW' ? '1張卡涵蓋' : '1 Card Owned'}</span>`;
+        statusPill = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60">✨ ${t('singleCardOwnedBadge')}</span>`;
       }
 
       const cardBadges = ownedCards.map(c => {
-        const nick = typeof c.nickname === 'object' ? (c.nickname[currentLang] || c.nickname['zh-TW']) : c.nickname;
+        const nick = pickText(c.nickname);
         const perkObj = c.perks.find(p => p.group === group.id);
         const isBest = perkObj && perkObj.best;
         const badgeClass = isBest
@@ -326,7 +323,7 @@ export function renderOverlapOptimizer() {
         </div>
         ${cardsSummaryHtml}
         <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 text-[10.5px] text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
-          <span class="font-bold text-indigo-600 dark:text-indigo-400">💡 ${currentLang === 'zh-TW' ? '最佳策略：' : 'Optimal Action: '}</span>
+          <span class="font-bold text-indigo-600 dark:text-indigo-400">💡 ${t('optimalActionPrefix')}</span>
           ${groupTip}
         </div>
       </div>
@@ -428,7 +425,7 @@ export function selectAdvisorCategory(cat) {
     }
     const cardObj = PRESET_CARDS.find(c => c.id === topCardId);
     const topMeta = modeData.cards[topCardId];
-    const topNick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : topCardId;
+    const topNick = cardObj ? pickText(cardObj.nickname) : topCardId;
 
     const isFtfWarning = isOverseas && cardObj && !cardObj.noFtf;
 
@@ -473,7 +470,7 @@ export function selectAdvisorCategory(cat) {
             </span>
           </div>
           <p class="text-[11px] ${noteTheme} leading-relaxed">
-            ${topMeta ? (topMeta.note[currentLang] || topMeta.note['zh-TW']) : ''}
+            ${topMeta ? pickText(topMeta.note) : ''}
           </p>
         </div>
       `;
@@ -494,9 +491,9 @@ export function selectAdvisorCategory(cat) {
     if (!cMeta) return '';
     const isOwned = isCardOwned(cId);
     const cardObj = PRESET_CARDS.find(c => c.id === cId);
-    const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : cId;
-    const badgeText = typeof cMeta.badge === 'object' ? (cMeta.badge[currentLang] || cMeta.badge['zh-TW']) : cMeta.badge;
-    const noteText = typeof cMeta.note === 'object' ? (cMeta.note[currentLang] || cMeta.note['zh-TW']) : cMeta.note;
+    const nick = cardObj ? pickText(cardObj.nickname) : cId;
+    const badgeText = pickText(cMeta.badge);
+    const noteText = pickText(cMeta.note);
 
     return `
       <div class="p-3 rounded-2xl border transition ${isOwned ? 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 shadow-xs' : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/50 opacity-75'}">
@@ -523,7 +520,7 @@ export function selectAdvisorCategory(cat) {
     const trapCardsHtml = modeData.ftfTraps.map(trap => {
       const isOwned = isCardOwned(trap.id);
       const cardObj = PRESET_CARDS.find(c => c.id === trap.id);
-      const nick = cardObj ? (typeof cardObj.nickname === 'object' ? (cardObj.nickname[currentLang] || cardObj.nickname['zh-TW']) : cardObj.nickname) : trap.id;
+      const nick = cardObj ? pickText(cardObj.nickname) : trap.id;
       return `
         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] ${isOwned ? 'font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-200 border border-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200'}">
           ${nick} (${trap.rate}) ${isOwned ? `· ${t('cardOwned')}` : ''}
@@ -535,10 +532,10 @@ export function selectAdvisorCategory(cat) {
       <div class="p-3 rounded-2xl bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 mt-2 space-y-1.5">
         <div class="text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
           <span>⚠️</span>
-          <span>${currentLang === 'zh-TW' ? '海外交易手續費 (FTF) 避雷指南' : 'Foreign Transaction Fee (FTF) Traps'}</span>
+          <span>${t('ftfTrapsTitle')}</span>
         </div>
         <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-          ${currentLang === 'zh-TW' ? '以下卡片出國或刷外幣會額外收取手續費，請務必收進皮夾避免刷卡倒賠：' : 'The following cards charge foreign transaction fees. Never swipe them outside the US:'}
+          ${t('ftfTrapsDesc')}
         </p>
         <div class="flex flex-wrap gap-1.5 pt-0.5">
           ${trapCardsHtml}
@@ -547,7 +544,7 @@ export function selectAdvisorCategory(cat) {
     `;
   }
 
-  const catTitle = rule.title[currentLang] || rule.title['zh-TW'];
+  const catTitle = pickText(rule.title);
   const modeBadgeText = isOverseas ? t('advisorModeOverseasBadge') : t('advisorModeDomesticBadge');
   const modeBadgeClass = isOverseas
     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700/60'

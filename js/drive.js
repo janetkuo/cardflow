@@ -1,6 +1,6 @@
 // CardFlow Google Drive Cloud Sync Module
 
-import { currentLang, t } from './i18n.js';
+import { t } from './i18n.js';
 import { appState, setAppState, normalizeAppState, saveState } from './state.js';
 import { showToast, showConfirmDialog, closeModalEl } from './ui-core.js';
 
@@ -90,7 +90,7 @@ export function updateDriveUI() {
   const lastSync = localStorage.getItem(GDRIVE_LAST_SYNC_KEY);
   if (lastSyncEl) {
     if (lastSync) {
-      lastSyncEl.innerText = `${currentLang === 'zh-TW' ? '最後同步' : 'Last sync'}: ${lastSync}`;
+      lastSyncEl.innerText = `${t('gdriveLastSync')}: ${lastSync}`;
     } else {
       lastSyncEl.innerText = t('gdriveLastSyncLabel');
     }
@@ -132,7 +132,7 @@ export function requestGoogleDriveToken(onSuccess, onError) {
   }
 
   if (typeof window === 'undefined' || typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.oauth2) {
-    showToast(currentLang === 'zh-TW' ? 'Google 服務腳本尚未載入完成，請檢查網路連線或重新整理頁面。' : 'Google Identity Services library not yet loaded. Please check your internet connection.', 3500);
+    showToast(t('gdriveGisNotLoaded'), 3500);
     notifyError(new Error('GIS not loaded'));
     return;
   }
@@ -154,7 +154,7 @@ export function requestGoogleDriveToken(onSuccess, onError) {
           const errCode = resp?.error || 'oauth_cancelled';
           console.error('Google OAuth error:', resp);
           if (resp && resp.error && resp.error !== 'popup_closed_by_user') {
-            showToast((currentLang === 'zh-TW' ? 'Google 登入失敗: ' : 'Google Sign-in failed: ') + (resp.error_description || resp.error), 3500);
+            showToast(t('gdriveSignInFailedPrefix') + (resp.error_description || resp.error), 3500);
           }
           notifyError(new Error(errCode));
         }
@@ -168,7 +168,7 @@ export function requestGoogleDriveToken(onSuccess, onError) {
     gdriveTokenClient.requestAccessToken({ prompt: '' });
   } catch (err) {
     console.error('Token Client init failed:', err);
-    showToast((currentLang === 'zh-TW' ? '初始化 Google 登入失敗: ' : 'Failed to init Google Sign-in: ') + err.message, 3500);
+    showToast(t('gdriveInitFailedPrefix') + err.message, 3500);
     notifyError(err);
   }
 }
@@ -260,7 +260,7 @@ export async function backupToGoogleDrive(isSilent = false) {
       } catch (err) {
         console.error('Drive backup error:', err);
         if (!isSilent) {
-          showToast((currentLang === 'zh-TW' ? '備份至 Google Drive 失敗: ' : 'Backup to Google Drive failed: ') + err.message, 3500);
+          showToast(t('gdriveBackupFailedPrefix') + err.message, 3500);
         }
       } finally {
         isDriveBackupInFlight = false;
@@ -301,10 +301,8 @@ export async function restoreFromGoogleDrive() {
         const parsed = await downloadRes.json();
         const normalized = normalizeAppState(parsed, true);
 
-        const modTimeStr = existingFile.modifiedTime ? new Date(existingFile.modifiedTime).toLocaleString() : '未知';
-        const confirmMsg = currentLang === 'zh-TW'
-          ? `找到雲端備份（更新時間: ${modTimeStr}），確定要還原覆蓋目前資料嗎？`
-          : `Found cloud backup (modified: ${modTimeStr}). Restore and overwrite current state?`;
+        const modTimeStr = existingFile.modifiedTime ? new Date(existingFile.modifiedTime).toLocaleString() : t('gdriveUnknownTime');
+        const confirmMsg = t('gdriveRestoreConfirmTemplate').replace('{time}', modTimeStr);
 
         showConfirmDialog({
           title: t('confirmDriveRestoreTitle'),
@@ -322,7 +320,7 @@ export async function restoreFromGoogleDrive() {
         });
       } catch (err) {
         console.error('Drive restore error:', err);
-        showToast((currentLang === 'zh-TW' ? '從 Google Drive 還原失敗: ' : 'Restore from Google Drive failed: ') + err.message, 3500);
+        showToast(t('gdriveRestoreFailedPrefix') + err.message, 3500);
       } finally {
         if (restoreBtn) restoreBtn.disabled = false;
       }
@@ -366,5 +364,5 @@ export function signOutGoogleDrive() {
   localStorage.removeItem(GDRIVE_USER_EMAIL_KEY);
   localStorage.removeItem(GDRIVE_CONNECTED_KEY);
   updateDriveUI();
-  showToast(currentLang === 'zh-TW' ? '已登出 Google 帳號' : 'Signed out of Google account');
+  showToast(t('gdriveSignedOutToast'));
 }

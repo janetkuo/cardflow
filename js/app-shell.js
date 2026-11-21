@@ -1,7 +1,7 @@
 // CardFlow App Shell: Cross-View Orchestration, Theme, Palette, Localization & Navigation
 
 import { MORANDI_PALETTES } from './palettes.js';
-import { LANG_KEY, currentLang, setCurrentLang, t } from './i18n.js';
+import { LANG_KEY, currentLang, setCurrentLang, t, pickText } from './i18n.js';
 import { PRESET_CARDS, PRESET_CREDITS } from './data.js';
 import {
   THEME_KEY, PALETTE_KEY, ACTIVE_TAB_KEY, VALID_SUBVIEWS,
@@ -120,7 +120,7 @@ export function renderPalettePicker() {
     btn.setAttribute('data-palette-id', p.id);
     btn.innerHTML = `
       <span class="w-5 h-5 rounded-full shadow-xs" style="background-color: ${p.primary}"></span>
-      <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">${p.name[currentLang] || p.name['zh-TW']}</span>
+      <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">${pickText(p.name)}</span>
     `;
     container.appendChild(btn);
   });
@@ -398,7 +398,7 @@ export function jumpToCredit(creditId) {
     }, 120);
   }
 
-  const title = typeof credit.title === 'object' ? (credit.title[currentLang] || credit.title['zh-TW']) : credit.title;
+  const title = pickText(credit.title);
   showToast(`${t('toastJumpedToCredit')}: ${title}`);
 }
 

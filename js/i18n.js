@@ -384,7 +384,32 @@ export const I18N = {
     confirmResetMonthDesc: 'Reset all claimed and skipped credits for the active month?',
     confirmFactoryResetTitle: 'Clear All Local Data',
     confirmDriveRestoreTitle: 'Restore from Google Drive',
-    toastMonthReset: 'Active month credits reset.'
+    toastMonthReset: 'Active month credits reset.',
+    dueToday: 'Due today',
+    expiresThisMo: 'Expires this mo',
+    noMatchingCards: 'No matching cards found',
+    cardRequiredBadge: 'Card Required',
+    toastDataRestored: 'Data restored successfully!',
+    confirmFactoryResetDesc: 'Are you sure you want to clear all data (cards, claimed credits, and awards) and reset to initial state? This cannot be undone.',
+    toastFactoryResetDone: 'All data reset to initial state',
+    toastClientIdSaved: 'Google OAuth Client ID saved!',
+    toastBannerRestored: 'Top notification banner restored.',
+    gdriveLastSync: 'Last sync',
+    gdriveGisNotLoaded: 'Google Identity Services library not yet loaded. Please check your internet connection.',
+    gdriveSignInFailedPrefix: 'Google Sign-in failed: ',
+    gdriveInitFailedPrefix: 'Failed to init Google Sign-in: ',
+    gdriveBackupFailedPrefix: 'Backup to Google Drive failed: ',
+    gdriveRestoreConfirmTemplate: 'Found cloud backup (modified: {time}). Restore and overwrite current state?',
+    gdriveUnknownTime: 'Unknown',
+    gdriveRestoreFailedPrefix: 'Restore from Google Drive failed: ',
+    gdriveSignedOutToast: 'Signed out of Google account',
+    unownedLabel: 'Unowned',
+    singleCardOwnedBadge: '1 Card Owned',
+    optimalActionPrefix: 'Optimal Action: ',
+    libraryBenchmarkPrefix: 'Library benchmark: ',
+    ftfTrapsTitle: 'Foreign Transaction Fee (FTF) Traps',
+    ftfTrapsDesc: 'The following cards charge foreign transaction fees. Never swipe them outside the US:',
+    annualNoPerksInPeriod: 'No perks active in this period'
   },
   'zh-TW': {
     appTitle: 'CardFlow - 智慧信用卡與常客權益管家 (2026/2027 最新版)',
@@ -761,7 +786,32 @@ export const I18N = {
     confirmResetMonthDesc: '確定要重置本月份的所有折抵與略過狀態嗎？',
     confirmFactoryResetTitle: '清除所有本機資料',
     confirmDriveRestoreTitle: '從 Google Drive 還原',
-    toastMonthReset: '已重置本月折抵狀態'
+    toastMonthReset: '已重置本月折抵狀態',
+    dueToday: '今日到期',
+    expiresThisMo: '本月截止',
+    noMatchingCards: '找不到符合條件的卡片',
+    cardRequiredBadge: '未持有對應卡片',
+    toastDataRestored: '備份資料還原成功！',
+    confirmFactoryResetDesc: '確定要清除所有本機資料（已選卡片、折抵進度與房券），重設為初始狀態嗎？此動作無法復原。',
+    toastFactoryResetDone: '已成功清除資料並恢復初始狀態',
+    toastClientIdSaved: 'Google OAuth Client ID 已儲存！',
+    toastBannerRestored: '已恢復顯示頂部提醒橫條。',
+    gdriveLastSync: '最後同步',
+    gdriveGisNotLoaded: 'Google 服務腳本尚未載入完成，請檢查網路連線或重新整理頁面。',
+    gdriveSignInFailedPrefix: 'Google 登入失敗: ',
+    gdriveInitFailedPrefix: '初始化 Google 登入失敗: ',
+    gdriveBackupFailedPrefix: '備份至 Google Drive 失敗: ',
+    gdriveRestoreConfirmTemplate: '找到雲端備份（更新時間: {time}），確定要還原覆蓋目前資料嗎？',
+    gdriveUnknownTime: '未知',
+    gdriveRestoreFailedPrefix: '從 Google Drive 還原失敗: ',
+    gdriveSignedOutToast: '已登出 Google 帳號',
+    unownedLabel: '未持有',
+    singleCardOwnedBadge: '1張卡涵蓋',
+    optimalActionPrefix: '最佳策略：',
+    libraryBenchmarkPrefix: '全卡庫提供卡片：',
+    ftfTrapsTitle: '海外交易手續費 (FTF) 避雷指南',
+    ftfTrapsDesc: '以下卡片出國或刷外幣會額外收取手續費，請務必收進皮夾避免刷卡倒賠：',
+    annualNoPerksInPeriod: '目前無此週期之權益'
   }
 };
 
@@ -769,4 +819,11 @@ export const I18N = {
 export function t(key) {
   const dict = I18N[currentLang] || I18N['zh-TW'];
   return dict[key] || I18N['zh-TW'][key] || I18N.en[key] || key;
+}
+
+export function pickText(val) {
+  if (val && typeof val === 'object') {
+    return val[currentLang] || val['zh-TW'] || val.en || '';
+  }
+  return val ?? '';
 }

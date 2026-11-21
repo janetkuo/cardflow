@@ -1,6 +1,6 @@
 // CardFlow Modals & Portfolio Actions: Manage Cards, Card Dates/Decisions, Demo Pack & Annual Breakdown
 
-import { currentLang, t } from './i18n.js';
+import { currentLang, t, pickText } from './i18n.js';
 import { PRESET_CARDS, PRESET_CREDITS } from './data.js';
 import {
   selectedYear, selectedMonth, appState, saveState,
@@ -67,7 +67,7 @@ export function openCardDateModal(cardId) {
   if (!modal || !card) return;
 
   activeCardDateId = cardId;
-  const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+  const nick = pickText(card.nickname);
 
   const subEl = document.getElementById('card-date-modal-sub');
   if (subEl) {
@@ -360,7 +360,7 @@ export function renderAnnualBreakdownModal() {
     },
     {
       id: 'semiannual',
-      title: currentLang === 'zh-TW' ? '半年期折抵' : 'Semi-Annual',
+      title: t('periodSemiAnnualLabel'),
       icon: '🌓',
       colorBadge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60',
       formulaText: currentLang === 'zh-TW' ? `${fmt(semiFace)}/半年 × 2 次` : `${fmt(semiFace)}/cycle × 2 cycles`,
@@ -385,8 +385,8 @@ export function renderAnnualBreakdownModal() {
   container.innerHTML = utilizationCardHtml + netAfModalHtml + sections.map(sec => {
     const itemsHtml = sec.items.length > 0
       ? sec.items.map(it => {
-          const tText = typeof it.title === 'object' ? (it.title[currentLang] || it.title['zh-TW']) : it.title;
-          const cText = typeof it.card === 'object' ? (it.card[currentLang] || it.card['zh-TW']) : it.card;
+          const tText = pickText(it.title);
+          const cText = pickText(it.card);
           return `
             <div class="flex items-center justify-between text-[11px] py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-0">
               <span class="truncate text-slate-700 dark:text-slate-300 font-medium mr-2">
@@ -398,7 +398,7 @@ export function renderAnnualBreakdownModal() {
             </div>
           `;
         }).join('')
-      : `<div class="text-[11px] text-slate-400 py-1 italic">${currentLang === 'zh-TW' ? '目前無此週期之權益' : 'No perks active in this period'}</div>`;
+      : `<div class="text-[11px] text-slate-400 py-1 italic">${t('annualNoPerksInPeriod')}</div>`;
 
     return `
       <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-2.5">
@@ -450,7 +450,7 @@ export function renderManageCardsChecklist() {
 
   container.innerHTML = PRESET_CARDS.map(card => {
     const owned = isCardOwned(card.id);
-    const nick = typeof card.nickname === 'object' ? (card.nickname[currentLang] || card.nickname['zh-TW']) : card.nickname;
+    const nick = pickText(card.nickname);
     const issuerBg = card.issuer === 'Amex' ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border-sky-200' :
                      card.issuer === 'Chase' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200' :
                      'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200';
