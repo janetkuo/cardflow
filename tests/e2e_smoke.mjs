@@ -86,7 +86,7 @@ async function run() {
     assert.notEqual(bgColor, 'rgba(0, 0, 0, 0)', 'Expected body background color from styles.css');
 
     // 2. Load Demo Starter Pack & verify live credit calculation
-    await page.locator('#credits-feed-container button[onclick="loadDemoStarterPack()"]').click();
+    await page.locator('#credits-feed-container button[data-action="load-demo-pack"]').click();
     await page.waitForSelector('#credit-item-bb-dining');
     const beforeRemaining = parseFloat(await page.locator('#monthly-remaining-val').innerText());
     assert.ok(beforeRemaining >= 35, `Expected demo pack monthly remaining >= 35, got ${beforeRemaining}`);
@@ -95,6 +95,13 @@ async function run() {
     await page.locator('#credit-item-bb-dining button').first().click();
     const afterClaim = parseFloat(await page.locator('#monthly-remaining-val').innerText());
     assert.equal(afterClaim, beforeRemaining - 25, 'Expected monthly remaining to drop by $25 after claim');
+
+    // Keyboard accessibility check for delegated [role="button"][data-action]
+    await page.locator('#hero-net-af-box').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('#annual-breakdown-modal:not(.hidden)');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#annual-breakdown-modal', { state: 'hidden' });
 
     // 3. Navigate through all 4 subviews
     await page.locator('#nav-btn-cards').click();

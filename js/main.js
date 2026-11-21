@@ -1,4 +1,4 @@
-// CardFlow Entry Point, Event Bindings, Window Bridge & PWA Registration
+// CardFlow Entry Point, Delegated Event Dispatcher & PWA Registration
 
 import { currentLang, t } from './i18n.js';
 import {
@@ -12,20 +12,28 @@ import {
   updateDriveUI, backupToGoogleDrive, restoreFromGoogleDrive, handleDriveAutoSync,
   signOutGoogleDrive, registerDriveRestoreCallback
 } from './drive.js';
+import { renderFncs, toggleFncStatus } from './view-loyalty.js';
+import { setAdvisorMode, selectAdvisorCategory } from './view-advisor.js';
 import {
-  applyTheme, applyPalette, applyLanguage, renderAllViews, renderCards, renderFncs,
-  selectAllCards, loadDemoStarterPack,
-  openCardDateModal, closeCardDateModal, saveCardDate, clearCardDate,
-  openManageCardsModal, closeManageCardsModal,
-  openAnnualBreakdownModal, closeAnnualBreakdownModal, switchPeriodFromModal,
+  renderCards, setOwnershipFilter, setCardsViewMode,
+  toggleCardDetailExpand, setCurrentIssuerFilter
+} from './view-cards.js';
+import {
   setCreditsViewMode, setPeriodFilter, toggleMutedCreditsSection,
   openPerkActionModal, closePerkActionModal, skipActivePerk, muteActivePerk,
-  toggleCreditSkip, muteCredit, unmuteCredit, toggleCreditClaim,
-  setOwnershipFilter, setCardsViewMode, toggleCardDetailExpand, toggleCardOwnership,
-  jumpToCredit, jumpToLoyalty, toggleFncStatus,
-  setAdvisorMode, selectAdvisorCategory, getActiveTab, switchSubView, initFoldScreenObserver,
-  resetCurrentMonth, setCurrentIssuerFilter
-} from './views.js';
+  toggleCreditSkip, unmuteCredit, toggleCreditClaim, resetCurrentMonth
+} from './view-credits.js';
+import {
+  toggleCardOwnership, selectAllCards, loadDemoStarterPack,
+  openCardDateModal, closeCardDateModal, saveCardDate, clearCardDate,
+  openManageCardsModal, closeManageCardsModal,
+  openAnnualBreakdownModal, closeAnnualBreakdownModal
+} from './view-modals.js';
+import {
+  applyTheme, applyPalette, applyLanguage, renderAllViews,
+  switchPeriodFromModal, jumpToCredit, jumpToLoyalty,
+  getActiveTab, switchSubView, initFoldScreenObserver
+} from './app-shell.js';
 
 registerAutoSyncHandler(handleDriveAutoSync);
 registerDriveRestoreCallback(() => applyLanguage(currentLang));
@@ -332,6 +340,72 @@ export function setupModals() {
   }
 }
 
+// --- 19b. DELEGATED EVENT DISPATCHER ---
+const ACTION_HANDLERS = {
+  'apply-palette': (el) => applyPalette(el.dataset.paletteId),
+  'close-annual-and-open-manage': () => {
+    closeAnnualBreakdownModal();
+    openManageCardsModal();
+  },
+  'jump-to-credit': (el) => jumpToCredit(el.dataset.creditId),
+  'jump-to-loyalty': () => jumpToLoyalty(),
+  'load-demo-pack': () => loadDemoStarterPack(),
+  'open-annual-breakdown': () => openAnnualBreakdownModal(),
+  'open-card-date': (el) => openCardDateModal(el.dataset.cardId),
+  'open-manage-cards': () => openManageCardsModal(),
+  'open-perk-action': (el) => openPerkActionModal(el.dataset.creditId, el.dataset.stateKey),
+  'select-advisor-category': (el) => selectAdvisorCategory(el.dataset.cat),
+  'set-advisor-mode': (el) => setAdvisorMode(el.dataset.mode),
+  'set-credits-view-mode': (el) => setCreditsViewMode(el.dataset.mode),
+  'set-ownership-filter': (el) => setOwnershipFilter(el.dataset.filter),
+  'set-period-filter': (el) => setPeriodFilter(el.dataset.period),
+  'switch-period-from-modal': (el) => switchPeriodFromModal(el.dataset.period),
+  'switch-subview': (el) => switchSubView(el.dataset.tab),
+  'toggle-card-expand': (el) => toggleCardDetailExpand(el.dataset.cardId),
+  'toggle-card-ownership': (el) => toggleCardOwnership(el.dataset.cardId),
+  'toggle-credit-claim': (el) => toggleCreditClaim(el.dataset.stateKey),
+  'toggle-credit-skip': (el) => toggleCreditSkip(el.dataset.stateKey),
+  'toggle-fnc-status': (el) => toggleFncStatus(el.dataset.fncId),
+  'unmute-credit': (el) => unmuteCredit(el.dataset.creditId)
+};
+
+let delegatedEventsBound = false;
+
+export function setupDelegatedEvents() {
+  if (delegatedEventsBound || typeof document === 'undefined' || typeof document.addEventListener !== 'function') {
+    return;
+  }
+  delegatedEventsBound = true;
+
+  const dispatchAction = (el) => {
+    const action = el?.dataset?.action;
+    if (!action) return;
+    const handler = ACTION_HANDLERS[action];
+    if (handler) {
+      handler(el);
+    }
+  };
+
+  document.addEventListener('click', (e) => {
+    const actionEl = e.target?.closest ? e.target.closest('[data-action]') : null;
+    if (actionEl) {
+      dispatchAction(actionEl);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const actionEl = e.target?.closest ? e.target.closest('[data-action]') : null;
+    if (!actionEl) return;
+    const tag = actionEl.tagName;
+    if (tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+      return;
+    }
+    e.preventDefault();
+    dispatchAction(actionEl);
+  });
+}
+
 // --- 20. INITIALIZATION & BINDINGS ---
 export function init() {
   loadState();
@@ -376,13 +450,6 @@ export function init() {
   document.getElementById('mob-nav-loyalty')?.addEventListener('click', () => switchSubView('loyalty'));
   document.getElementById('mob-nav-advisor')?.addEventListener('click', () => switchSubView('advisor'));
 
-  ['all', 'monthly', 'quarterly', 'semiannual', 'annual'].forEach(p => {
-    const btn = document.getElementById(`period-${p}-btn`);
-    if (btn) {
-      btn.addEventListener('click', () => setPeriodFilter(p));
-    }
-  });
-
   ['all', 'amex', 'chase', 'c1'].forEach(iss => {
     const btn = document.getElementById(`issuer-${iss}-btn`);
     if (btn) {
@@ -401,6 +468,7 @@ export function init() {
   document.getElementById('cards-view-compact-btn')?.addEventListener('click', () => setCardsViewMode('compact'));
   document.getElementById('cards-view-detailed-btn')?.addEventListener('click', () => setCardsViewMode('detailed'));
 
+  setupDelegatedEvents();
   initFoldScreenObserver();
   setupModals();
   applyLanguage(currentLang);
@@ -515,31 +583,4 @@ if ('serviceWorker' in navigator) {
   } else {
     bindPwaUpdateBtn();
   }
-}
-
-// Expose inline event handler functions on window for HTML onclick bindings
-if (typeof window !== 'undefined') {
-  Object.assign(window, {
-    closeAnnualBreakdownModal,
-    jumpToCredit,
-    jumpToLoyalty,
-    loadDemoStarterPack,
-    openAnnualBreakdownModal,
-    openCardDateModal,
-    openManageCardsModal,
-    openPerkActionModal,
-    selectAdvisorCategory,
-    setAdvisorMode,
-    setCreditsViewMode,
-    setOwnershipFilter,
-    setPeriodFilter,
-    switchPeriodFromModal,
-    switchSubView,
-    toggleCardDetailExpand,
-    toggleCardOwnership,
-    toggleCreditClaim,
-    toggleCreditSkip,
-    toggleFncStatus,
-    unmuteCredit
-  });
 }

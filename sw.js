@@ -1,5 +1,5 @@
 // CardFlow Service Worker - Offline Caching & Instant Network-First Updates
-const CACHE_NAME = 'cardflow-tracker-v20';
+const CACHE_NAME = 'cardflow-tracker-v21';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,12 @@ const ASSETS = [
   './js/logic.js',
   './js/ui-core.js',
   './js/drive.js',
-  './js/views.js',
+  './js/view-loyalty.js',
+  './js/view-advisor.js',
+  './js/view-cards.js',
+  './js/view-credits.js',
+  './js/view-modals.js',
+  './js/app-shell.js',
   './js/main.js',
   './manifest.json',
   './icon.svg',

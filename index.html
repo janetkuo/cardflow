@@ -205,7 +205,7 @@
           </div>
 
           <!-- Net Effective Annual Fee Progress Strip in Hero Banner -->
-          <div id="hero-net-af-box" class="bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/20 shadow-xs space-y-1.5 cursor-pointer hover:bg-white/15 transition" onclick="openAnnualBreakdownModal()" title="點擊查看年度實質淨年費與回本結構 / View Net Effective AF & break-even breakdown">
+          <div id="hero-net-af-box" role="button" tabindex="0" data-action="open-annual-breakdown" class="bg-white/10 dark:bg-black/20 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/20 shadow-xs space-y-1.5 cursor-pointer hover:bg-white/15 transition" title="點擊查看年度實質淨年費與回本結構 / View Net Effective AF & break-even breakdown">
             <div class="flex items-center justify-between text-xs font-bold">
               <span class="flex items-center gap-1.5 text-white/95">
                 <span>💰</span>
@@ -229,10 +229,10 @@
         <!-- View Mode Segmented Switch: Timeline vs Pure Cadence -->
         <div class="flex items-center justify-between gap-2 px-1">
           <div class="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800/90 rounded-xl text-xs font-bold shadow-inner">
-            <button id="view-mode-timeline-btn" onclick="setCreditsViewMode('timeline')" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold">
+            <button id="view-mode-timeline-btn" data-action="set-credits-view-mode" data-mode="timeline" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold">
               <span>⏳</span><span id="label-view-mode-timeline">時間軸視角</span>
             </button>
-            <button id="view-mode-cadence-btn" onclick="setCreditsViewMode('cadence')" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold">
+            <button id="view-mode-cadence-btn" data-action="set-credits-view-mode" data-mode="cadence" class="py-1 px-2.5 rounded-lg transition flex items-center gap-1 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold">
               <span>🎯</span><span id="label-view-mode-cadence">純週期視角</span>
             </button>
           </div>
@@ -242,25 +242,25 @@
         </div>
 
         <div class="grid grid-cols-4 gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-2xl shadow-inner text-center font-bold text-xs">
-          <button id="period-monthly-btn" onclick="setPeriodFilter('monthly')" class="period-filter-btn py-1.5 px-1 rounded-xl transition bg-indigo-600 text-white shadow-xs cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-monthly-btn" data-action="set-period-filter" data-period="monthly" class="period-filter-btn py-1.5 px-1 rounded-xl transition bg-indigo-600 text-white shadow-xs cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-month">本月</span>
             <span id="badge-period-month" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-quarterly-btn" onclick="setPeriodFilter('quarterly')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-quarterly-btn" data-action="set-period-filter" data-period="quarterly" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-quarter">本季</span>
             <span id="badge-period-quarter" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-semiannual-btn" onclick="setPeriodFilter('semiannual')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-semiannual-btn" data-action="set-period-filter" data-period="semiannual" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-half">下半年</span>
             <span id="badge-period-half" class="text-[10px] opacity-80">(0)</span>
           </button>
-          <button id="period-annual-btn" onclick="setPeriodFilter('annual')" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
+          <button id="period-annual-btn" data-action="set-period-filter" data-period="annual" class="period-filter-btn py-1.5 px-1 rounded-xl transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1">
             <span id="label-period-year">全年度</span>
             <span id="badge-period-year" class="text-[10px] opacity-80">(0)</span>
           </button>
         </div>
         <!-- Hidden alias for period-all-btn to satisfy verify.py -->
-        <button id="period-all-btn" class="hidden" aria-hidden="true"></button>
+        <button id="period-all-btn" data-action="set-period-filter" data-period="all" class="hidden" aria-hidden="true"></button>
 
         <div class="flex items-center justify-between text-xs font-semibold text-slate-400 px-1">
           <span id="credits-urgency-hint" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">⚡ 依緊迫性排序 · 含當月即將到期之非每月福利</span>
@@ -420,11 +420,11 @@
 
         <!-- Location Mode Segmented Bar (Domestic vs Overseas) -->
         <div class="p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-bold">
-          <button id="adv-loc-domestic-btn" onclick="setAdvisorMode('domestic')" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs font-bold">
+          <button id="adv-loc-domestic-btn" data-action="set-advisor-mode" data-mode="domestic" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-xs font-bold">
             <span>🇺🇸</span>
             <span id="adv-loc-domestic-label">美國境內消費</span>
           </button>
-          <button id="adv-loc-overseas-btn" onclick="setAdvisorMode('overseas')" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold">
+          <button id="adv-loc-overseas-btn" data-action="set-advisor-mode" data-mode="overseas" class="flex-1 py-1.5 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold">
             <span>🌍</span>
             <span id="cat-label-foreign">海外 / 外幣消費 (0% FTF)</span>
           </button>
@@ -432,31 +432,31 @@
 
         <!-- Category Selector Compact Chips -->
         <div class="flex flex-wrap gap-1.5">
-          <button onclick="selectAdvisorCategory('dining')" id="adv-dining-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs">
+          <button data-action="select-advisor-category" data-cat="dining" id="adv-dining-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs">
             <span class="text-sm">🍽️</span>
             <span id="cat-label-dining">餐廳與外送</span>
           </button>
-          <button onclick="selectAdvisorCategory('grocery')" id="adv-grocery-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="grocery" id="adv-grocery-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">🛒</span>
             <span id="cat-label-grocery">超市生鮮採買</span>
           </button>
-          <button onclick="selectAdvisorCategory('flights')" id="adv-flights-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="flights" id="adv-flights-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">✈️</span>
             <span id="cat-label-flights">機票預訂</span>
           </button>
-          <button onclick="selectAdvisorCategory('hotels')" id="adv-hotels-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="hotels" id="adv-hotels-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">🏨</span>
             <span id="cat-label-hotels">飯店住宿</span>
           </button>
-          <button onclick="selectAdvisorCategory('gas')" id="adv-gas-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="gas" id="adv-gas-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">⛽</span>
             <span id="cat-label-gas">加油與交通</span>
           </button>
-          <button onclick="selectAdvisorCategory('office')" id="adv-office-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="office" id="adv-office-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">📦</span>
             <span id="cat-label-office">辦公文具與電信</span>
           </button>
-          <button onclick="selectAdvisorCategory('catchall')" id="adv-catchall-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button data-action="select-advisor-category" data-cat="catchall" id="adv-catchall-btn" class="adv-cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <span class="text-sm">⚡</span>
             <span id="cat-label-catchall">一般日常消費 (萬用 2x)</span>
           </button>

@@ -24,7 +24,12 @@ MODULE_FILES = [
     'js/logic.js',
     'js/ui-core.js',
     'js/drive.js',
-    'js/views.js',
+    'js/view-loyalty.js',
+    'js/view-advisor.js',
+    'js/view-cards.js',
+    'js/view-credits.js',
+    'js/view-modals.js',
+    'js/app-shell.js',
     'js/main.js'
 ]
 
@@ -143,6 +148,7 @@ def check_js_syntax():
       body: {{ appendChild: () => {{}} }},
       addEventListener: () => {{}},
       getElementById: () => ({{
+        dataset: {{}},
         classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }},
         setAttribute: () => {{}},
         addEventListener: () => {{}},
@@ -155,6 +161,7 @@ def check_js_syntax():
       }}),
       querySelectorAll: () => [],
       createElement: () => ({{
+        dataset: {{}},
         classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }},
         setAttribute: () => {{}},
         addEventListener: () => {{}},
@@ -199,7 +206,7 @@ def check_js_syntax():
     return True
 
 def check_dom_ids():
-    print("🔍 [2/7] Checking DOM bindings, onclick/window bridge, CSS classes & PWA assets...")
+    print("🔍 [2/7] Checking DOM bindings, delegated actions, CSS classes & PWA assets...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     html_path = os.path.join(base_dir, 'index.html')
     sw_path = os.path.join(base_dir, 'sw.js')
@@ -224,30 +231,31 @@ def check_dom_ids():
         print(f"❌ Missing element IDs in index.html: {missing}")
         return False
 
-    # Check inline onclick="..." function calls exist in js/*.js AND are exposed on window in js/main.js
-    defined_fns = set(re.findall(r'(?:export\s+)?(?:async\s+)?function\s+([a-zA-Z0-9_]+)\s*\(', all_js))
-    main_js = dict(module_srcs).get('js/main.js', '')
-    bridge_match = re.search(r'Object\.assign\(window,\s*\{(.*?)\}\);', main_js, re.DOTALL)
-    window_bridged = set(re.findall(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\b', bridge_match.group(1))) if bridge_match else set()
-
-    missing_onclick = []
-    unbridged_onclick = []
+    # Enforce zero inline DOM event attributes and zero Object.assign(window, ...) global leakage
+    inline_handler_hits = []
     for fname, content in [('index.html', html)] + module_srcs:
-        for m in re.finditer(r'onclick=[\"\']([^\"\']+)[\"\']', content):
-            expr = m.group(1)
-            for cm in re.finditer(r'(?<![.\w])([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', expr):
-                fn_name = cm.group(1)
-                if fn_name in ('if', 'for', 'while', 'switch', 'catch'):
-                    continue
-                if fn_name not in defined_fns:
-                    missing_onclick.append((fname, fn_name))
-                elif fn_name not in window_bridged:
-                    unbridged_onclick.append((fname, fn_name))
-    if missing_onclick:
-        print(f"❌ Undefined inline onclick handlers detected: {missing_onclick}")
+        for m in re.finditer(r'\bon(?:click|keydown|keyup|keypress|change|input|submit)\s*=\s*[\"\']', content):
+            inline_handler_hits.append((fname, m.group(0)))
+    if inline_handler_hits:
+        print(f"❌ Inline event attributes detected (use data-action delegation instead): {inline_handler_hits}")
         return False
-    if unbridged_onclick:
-        print(f"❌ Inline onclick handlers missing from window bridge in js/main.js: {unbridged_onclick}")
+
+    main_js = dict(module_srcs).get('js/main.js', '')
+    if re.search(r'Object\.assign\s*\(\s*window\b', main_js):
+        print("❌ Global window function bridge (Object.assign(window, ...)) detected in js/main.js")
+        return False
+
+    # Verify every data-action attribute in index.html and js/*.js maps to ACTION_HANDLERS in js/main.js
+    handlers_match = re.search(r'const ACTION_HANDLERS\s*=\s*\{(.*?)\n\};', main_js, re.DOTALL)
+    registered_actions = set(re.findall(r"^\s*'([a-z0-9-]+)'\s*:", handlers_match.group(1), re.MULTILINE)) if handlers_match else set()
+    used_actions = set()
+    for fname, content in [('index.html', html)] + module_srcs:
+        used_actions.update(re.findall(r'data-action=[\"\']([a-z0-9-]+)[\"\']', content))
+        used_actions.update(re.findall(r"setAttribute\(\s*['\"]data-action['\"]\s*,\s*['\"]([a-z0-9-]+)['\"]", content))
+
+    unhandled_actions = used_actions - registered_actions
+    if unhandled_actions:
+        print(f"❌ data-action values missing from ACTION_HANDLERS in js/main.js: {sorted(unhandled_actions)}")
         return False
 
     # Check for non-existent Tailwind slate-*50 utility classes
@@ -307,7 +315,7 @@ def check_dom_ids():
         print("❌ index.html must load ./js/main.js as ES module")
         return False
 
-    print(f"   ✅ {len(all_needed_ids)} DOM IDs, {len(window_bridged)} bridged onclick handlers, Tailwind classes & {len(sw_assets)} PWA assets verified.")
+    print(f"   ✅ {len(all_needed_ids)} DOM IDs, {len(used_actions)} delegated data-actions ({len(registered_actions)} handlers), Tailwind classes & {len(sw_assets)} PWA assets verified.")
     return True
 
 def check_i18n_symmetry():
@@ -472,6 +480,7 @@ def run_jsc_in_app_env(eval_body):
       const classes = new Set();
       return {{
         id: id || '',
+        dataset: {{}},
         children: [],
         className: '',
         disabled: false,
@@ -1201,7 +1210,7 @@ def check_native_esm_boot_with_node():
     defineGlobal('navigator', { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } });
     defineGlobal('window', { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} });
     const makeNode = (id = '') => ({
-      id, children: [], className: '', disabled: false, checked: false,
+      id, dataset: {}, children: [], className: '', disabled: false, checked: false,
       classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true },
       setAttribute: () => {}, addEventListener: () => {},
       appendChild: function(c) { this.children.push(c); if (c && c.innerHTML) this.innerHTML += c.innerHTML; },
@@ -1209,11 +1218,15 @@ def check_native_esm_boot_with_node():
       querySelectorAll: () => [], style: {}, innerHTML: '', innerText: '', title: '', placeholder: '', value: ''
     });
     const domNodes = {};
+    const docHandlers = {};
     defineGlobal('document', {
       readyState: 'interactive',
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} }, lang: 'zh-TW' },
       head: { appendChild: () => {} }, body: { appendChild: () => {} },
-      addEventListener: () => {},
+      addEventListener: (evt, fn) => {
+        docHandlers[evt] = docHandlers[evt] || [];
+        docHandlers[evt].push(fn);
+      },
       getElementById: (id) => (domNodes[id] ||= makeNode(id)),
       querySelectorAll: () => [],
       createElement: () => makeNode('')
@@ -1224,11 +1237,23 @@ def check_native_esm_boot_with_node():
       console.error('Native ESM boot failed to populate #credits-feed-container immediately when readyState=interactive');
       process.exit(1);
     }
-    if (typeof globalThis.window.setCreditsViewMode !== 'function') {
-      console.error('Native ESM boot did not attach window.setCreditsViewMode');
+    if (typeof globalThis.window.setCreditsViewMode !== 'undefined') {
+      console.error('Global window bridge leakage detected: window.setCreditsViewMode should not be set');
       process.exit(1);
     }
-    console.log('   ✅ Native Node ESM boot (./js/main.js with readyState=interactive) populated feed immediately.');
+    if (!docHandlers.click?.length || !docHandlers.keydown?.length) {
+      console.error('Delegated click/keydown listeners not registered on document');
+      process.exit(1);
+    }
+    const demoTarget = { dataset: { action: 'load-demo-pack' } };
+    const clickEvt = { target: { closest: (sel) => sel === '[data-action]' ? demoTarget : null } };
+    docHandlers.click.forEach(fn => fn(clickEvt));
+    const afterDemo = JSON.parse(globalThis.localStorage.getItem('cardflow_state_v1') || '{}');
+    if (!afterDemo.ownedCards?.csp) {
+      console.error('Delegated data-action dispatch failed for load-demo-pack');
+      process.exit(1);
+    }
+    console.log('   ✅ Native Node ESM boot + delegated [data-action] dispatch (0 window bridge globals) passed.');
     """
     proc = subprocess.run(['node', '--input-type=module', '-'], input=esm_boot, capture_output=True, text=True, cwd=base_dir)
     if proc.returncode != 0:
@@ -1284,7 +1309,7 @@ def check_drive_async_with_node():
     const sessionStorage = {{ _s: {{}}, getItem: (k) => sessionStorage._s[k] ?? null, setItem: (k, v) => {{ sessionStorage._s[k] = String(v); }} }};
     const navigator = {{ serviceWorker: {{ register: () => Promise.resolve(), addEventListener: () => {{}} }} }};
     const window = {{ addEventListener: () => {{}}, innerWidth: 1024, matchMedia: () => ({{ matches: false }}), location: {{ reload: () => {{}}, hash: '' }}, scrollTo: () => {{}} }};
-    const makeNode = (id = '') => ({{ id, children: [], className: '', disabled: false, checked: false, classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }}, setAttribute: () => {{}}, addEventListener: () => {{}}, appendChild: () => {{}}, remove: () => {{}}, scrollIntoView: () => {{}}, focus: () => {{}}, click: () => {{}}, reset: () => {{}}, querySelectorAll: () => [], style: {{}}, innerHTML: '', innerText: '', title: '', placeholder: '', value: '' }});
+    const makeNode = (id = '') => ({{ id, dataset: {{}}, children: [], className: '', disabled: false, checked: false, classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}}, contains: () => true }}, setAttribute: () => {{}}, addEventListener: () => {{}}, appendChild: () => {{}}, remove: () => {{}}, scrollIntoView: () => {{}}, focus: () => {{}}, click: () => {{}}, reset: () => {{}}, querySelectorAll: () => [], style: {{}}, innerHTML: '', innerText: '', title: '', placeholder: '', value: '' }});
     const domNodes = {{}};
     const document = {{
       documentElement: {{ classList: {{ add: () => {{}}, remove: () => {{}}, toggle: () => {{}} }}, style: {{ setProperty: () => {{}} }}, lang: 'zh-TW' }},
