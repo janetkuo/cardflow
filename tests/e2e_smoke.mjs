@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import http from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,12 +13,21 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const PORT = 18090;
 const BASE_URL = `http://127.0.0.1:${PORT}/index.html`;
 
+function probeHttp(url) {
+  return new Promise((resolve, reject) => {
+    const req = http.get(url, res => {
+      res.resume();
+      resolve(res.statusCode >= 200 && res.statusCode < 400);
+    });
+    req.on('error', reject);
+  });
+}
+
 async function waitForServer(url, timeoutMs = 10000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      const res = await fetch(url);
-      if (res.ok) return;
+      if (await probeHttp(url)) return;
     } catch (_) {}
     await new Promise(r => setTimeout(r, 150));
   }
