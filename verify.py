@@ -1190,15 +1190,16 @@ def check_native_esm_boot_with_node():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     esm_boot = """
     const storage = {};
-    globalThis.localStorage = {
+    const defineGlobal = (k, v) => Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+    defineGlobal('localStorage', {
       getItem: (k) => storage[k] !== undefined ? storage[k] : null,
       setItem: (k, v) => { storage[k] = String(v); },
       removeItem: (k) => { delete storage[k]; },
       clear: () => { Object.keys(storage).forEach(k => delete storage[k]); }
-    };
-    globalThis.sessionStorage = { _s: {}, getItem: (k) => globalThis.sessionStorage._s[k] ?? null, setItem: (k, v) => { globalThis.sessionStorage._s[k] = String(v); } };
-    globalThis.navigator = { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } };
-    globalThis.window = { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} };
+    });
+    defineGlobal('sessionStorage', { _s: {}, getItem: (k) => globalThis.sessionStorage._s[k] ?? null, setItem: (k, v) => { globalThis.sessionStorage._s[k] = String(v); } });
+    defineGlobal('navigator', { serviceWorker: { register: () => Promise.resolve(), addEventListener: () => {} } });
+    defineGlobal('window', { addEventListener: () => {}, innerWidth: 1024, matchMedia: () => ({ matches: false }), location: { reload: () => {}, hash: '' }, scrollTo: () => {} });
     const makeNode = (id = '') => ({
       id, children: [], className: '', disabled: false, checked: false,
       classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true },
@@ -1208,7 +1209,7 @@ def check_native_esm_boot_with_node():
       querySelectorAll: () => [], style: {}, innerHTML: '', innerText: '', title: '', placeholder: '', value: ''
     });
     const domNodes = {};
-    globalThis.document = {
+    defineGlobal('document', {
       readyState: 'interactive',
       documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {} }, style: { setProperty: () => {} }, lang: 'zh-TW' },
       head: { appendChild: () => {} }, body: { appendChild: () => {} },
@@ -1216,7 +1217,7 @@ def check_native_esm_boot_with_node():
       getElementById: (id) => (domNodes[id] ||= makeNode(id)),
       querySelectorAll: () => [],
       createElement: () => makeNode('')
-    };
+    });
     await import('./js/main.js');
     const feed = globalThis.document.getElementById('credits-feed-container');
     if (!feed.innerHTML || feed.innerHTML.trim().length < 20) {
