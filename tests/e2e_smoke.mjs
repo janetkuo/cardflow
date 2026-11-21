@@ -108,7 +108,7 @@ async function run() {
     // 4. Bilingual toggle, Dark Mode toggle & Modal Escape close
     await page.locator('#lang-toggle-btn').click();
     assert.equal(await page.getAttribute('html', 'lang'), 'en');
-    assert.equal((await page.locator('#tab-label-credits').innerText()).trim(), 'Due Credits');
+    assert.equal((await page.locator('#tab-label-credits').innerText()).trim(), 'Credits Due');
     await page.locator('#lang-toggle-btn').click();
     assert.equal(await page.getAttribute('html', 'lang'), 'zh-TW');
 
