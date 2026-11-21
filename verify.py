@@ -432,7 +432,7 @@ def check_card_portfolio():
 def check_privacy_guardrails():
     print("🔍 [5/7] Scanning for privacy guardrail leaks (Generic Patterns)...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    scanned_files = MODULE_FILES + ['index.html', 'sw.js', 'verify.py', 'tests/e2e_smoke.mjs']
+    scanned_files = MODULE_FILES + ['index.html', 'sw.js', 'verify.py', 'tests/e2e_smoke.mjs', 'README.md', 'GEMINI.md']
 
     has_error = False
 
@@ -446,8 +446,11 @@ def check_privacy_guardrails():
         # Generic pattern for local home directories (no hardcoded usernames)
         path_matches = re.findall(r"/(?:Users|home)/[a-zA-Z0-9._-]+", content)
         if path_matches:
-            # Allow verify.py pattern reference itself
-            clean_matches = [m for m in path_matches if not m.startswith('/(?:Users|home)')]
+            # Allow verify.py pattern reference and generic '...' doc placeholders
+            clean_matches = [
+                m for m in path_matches
+                if not m.startswith('/(?:Users|home)') and m not in ('/Users/...', '/home/...')
+            ]
             if clean_matches:
                 print(f"❌ Absolute local home path pattern detected in {fn}: {clean_matches}")
                 has_error = True
