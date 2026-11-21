@@ -220,8 +220,11 @@ async function run() {
 
     // 7. Mobile / Folded Phone (375x812) responsive layout & bottom nav check
     await page.setViewportSize({ width: 375, height: 812 });
-    const screenModeLabel = await page.locator('#screen-mode-text').innerText();
-    assert.ok(screenModeLabel.includes('Folded'), `Expected Folded indicator at 375px, got ${screenModeLabel}`);
+    await page.waitForFunction(() => {
+      const txt = document.getElementById('screen-mode-text')?.textContent || '';
+      return window.innerWidth === 375 && txt.includes('Folded');
+    });
+    assert.equal(await page.locator('#mob-nav-credits').isVisible(), true, 'Expected mobile bottom nav visible at 375px');
 
     const mobileTabs = [
       ['#mob-nav-credits', '#subview-credits'],
