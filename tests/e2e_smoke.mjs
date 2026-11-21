@@ -119,13 +119,13 @@ async function run() {
     await page.locator('#open-settings-btn').click();
     await page.waitForSelector('#settings-modal:not(.hidden)');
     await page.keyboard.press('Escape');
-    await page.waitForSelector('#settings-modal.hidden');
+    await page.waitForSelector('#settings-modal', { state: 'hidden' });
 
     // 5. In-app Confirm Modal (non-blocking) for Reset Month
     await page.locator('#banner-reset-month-btn').click();
     await page.waitForSelector('#confirm-modal:not(.hidden)');
     await page.locator('#confirm-modal-ok-btn').click();
-    await page.waitForSelector('#confirm-modal.hidden');
+    await page.waitForSelector('#confirm-modal', { state: 'hidden' });
     const afterReset = parseFloat(await page.locator('#monthly-remaining-val').innerText());
     assert.equal(afterReset, beforeRemaining, 'Expected Reset Month to restore full monthly remaining balance');
 
