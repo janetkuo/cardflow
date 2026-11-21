@@ -55,9 +55,19 @@ async function run() {
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        if (!text.includes('accounts.google.com')) {
-          errors.push(`console.error: ${text}`);
+        const url = msg.location()?.url || '';
+        const isExternalResourceErr =
+          url.includes('accounts.google.com') ||
+          text.includes('accounts.google.com') ||
+          (text === 'Failed to load resource: net::ERR_FAILED' && !url.startsWith(`http://127.0.0.1:${PORT}`));
+        if (!isExternalResourceErr) {
+          errors.push(`console.error: ${text}${url ? ` (${url})` : ''}`);
         }
+      }
+    });
+    page.on('response', res => {
+      if (res.url().startsWith(`http://127.0.0.1:${PORT}`) && res.status() >= 400) {
+        errors.push(`same-origin HTTP ${res.status()}: ${res.url()}`);
       }
     });
     page.on('requestfailed', req => {
